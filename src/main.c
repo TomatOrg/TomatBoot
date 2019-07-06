@@ -17,16 +17,12 @@ static boot_config_t* get_boot_config() {
 
     boot_config_t* config = calloc(sizeof(boot_config_t) + sizeof(boot_entry_t) * 2, 1);
     config->default_option = 0;
-    config->entry_count = 2;
+    config->entry_count = 1;
     config->entries[0].size = sizeof(boot_entry_t);
-    memcpy(config->entries[0].name, L"Kretlim", sizeof(L"Kretlim"));
-    memcpy(config->entries[0].filename, L"kretlim.elf", sizeof(L"kretlim.elf"));
-    memcpy(config->entries[0].command_line, L"", sizeof(L""));
+    memcpy(config->entries[0].name, L"Reset", sizeof(L"Reset"));
+    memcpy(config->entries[0].filename, L"shutdown.elf", sizeof(L"shutdown.elf"));
+    memcpy(config->entries[0].command_line, L"reset", sizeof(L"reset"));
 
-    config->entries[1].size = sizeof(boot_entry_t);
-    memcpy(config->entries[1].name, L"Kretlim Debug", sizeof(L"Kretlim Debug"));
-    memcpy(config->entries[1].filename, L"kretlim.elf", sizeof(L"kretlim.elf"));
-    memcpy(config->entries[1].command_line, L"logger=debug", sizeof(L"logger=debug"));
     return config;
 }
 
@@ -37,18 +33,10 @@ EFI_STATUS EFIAPI EfiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *System
     gST = SystemTable;
     gBS = SystemTable->BootServices;
     gImageHandle = ImageHandle;
-
-    // read the boot config
+    
     boot_config_t* config = get_boot_config();
     boot_entry_t* entry = start_menu(config);
-
-    gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_WHITE, EFI_BLACK));
-    gST->ConOut->ClearScreen(gST->ConOut);
-    printf(L"Booting `%s` (%s)\n\r", entry->name, entry->filename);
-    printf(L"Command line: `%s`\n\r", entry->command_line);
-    // TODO: Boot modules
-    
-    while(1);
+    load_kernel(entry);
 
     return EFI_SUCCESS;
 }

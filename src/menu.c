@@ -121,6 +121,8 @@ static boot_entry_t* edit_command(boot_config_t* config) {
         }
         entry = (boot_entry_t*)(((size_t)entry) + entry->size);
     }
+
+    return NULL;
 }
 
 boot_entry_t* start_menu(boot_config_t* config) {
@@ -133,7 +135,7 @@ boot_entry_t* start_menu(boot_config_t* config) {
         if(gST->ConIn->ReadKeyStroke(gST->ConIn, &key) != EFI_SUCCESS) continue;
 
         if(key.UnicodeChar == L'E' || key.UnicodeChar == L'e') {
-            boot_module_entry_t* entry = edit_command(config);
+            boot_entry_t* entry = edit_command(config);
             if(entry != 0) {
                 return entry;
             }

@@ -55,6 +55,11 @@ void* memset(void* ptr, int value, size_t num) {
     return ptr;
 }
 
+int strcmp(const char* str1, const char* str2) {
+    while(*str1++ == *str2++ && *str1 != 0);
+    return *(str1 - 1) - *(str2 - 1);
+}
+
 size_t wcslen(const wchar_t* str) {
     size_t len = 0;
 	while (str[len++] != 0);

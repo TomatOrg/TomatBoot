@@ -118,6 +118,7 @@ size_t snprintf(wchar_t* buffer, size_t bufferSize, const wchar_t* format, ...) 
 size_t vsnprintf(wchar_t* buf, size_t len, const wchar_t* fmt, va_list arg) {
 	uint64_t i;
 	wchar_t *s;
+	char* a;
 	wchar_t num_buf[NUM_BUF_LEN];
 	
 	while(*fmt && len) {
@@ -230,6 +231,15 @@ size_t vsnprintf(wchar_t* buf, size_t len, const wchar_t* fmt, va_list arg) {
 				while (*s) {
 					FMT_PUT(buf, len, *s);
 					s++;
+				}
+				break;
+			}
+
+			case 'a': {
+				a = va_arg(arg, char *);
+				while (*a) {
+					FMT_PUT(buf, len, (wchar_t)*a);
+					a++;
 				}
 				break;
 			}

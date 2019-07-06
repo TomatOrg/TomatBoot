@@ -114,13 +114,8 @@ typedef unsigned int									UINT32;
 typedef signed long long								INT64;
 typedef unsigned long long								UINT64;
 
-#ifdef _M_AMD64
 typedef INT64											INTN;
 typedef UINT64											UINTN;
-#else
-typedef INT32											INTN;
-typedef UINT32											UINTN;
-#endif
 
 typedef char											CHAR8;
 typedef unsigned short									CHAR16;

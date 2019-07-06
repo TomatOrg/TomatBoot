@@ -17,7 +17,7 @@ Same as UEFI state after ExitBootServices
 Described in the boot headers
 
 ## Header
-You will need to have a section in your binary named `.kretlim-boot` and it is defined as follows
+You will need to have a section in your binary named `.kboot.header` and it is defined as follows
 ```c
 struct kboot_header {
   struct {

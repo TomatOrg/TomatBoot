@@ -1,5 +1,6 @@
 # Sources, all c files basically
-SRCS += $(shell find . -name '*.c')
+SRCS += $(shell find src -name '*.c')
+SRCS += $(shell find lib -name '*.c')
 OBJS := $(SRCS:%.c=build/%.o)
 OBJDIRS := $(dir $(OBJS))
 
@@ -28,12 +29,12 @@ LDFLAGS += \
 	-Wl,-subsystem:efi_application \
 	-fuse-ld=lld-link
 
-.PHONY: all clean BOOTX64.efi BOOTX64.dll
+.PHONY: all clean BOOTX64.EFI
 
 #########################
 # Compiling
 #########################
-all: BOOTX64.EFI
+all: BOOTX64.EFI shutdown
 
 # Shortcuts
 BOOTX64.EFI: bin/BOOTX64.EFI 
@@ -50,15 +51,28 @@ build/%:
 	mkdir -p $@
 
 #########################
+# Default boot modules
+#########################
+
+shutdown: bin/shutdown.elf
+
+bin/shutdown.elf: modules/boot-shutdown/bin/shutdown.elf
+	cp modules/boot-shutdown/bin/shutdown.elf bin/shutdown.elf
+
+modules/boot-shutdown/bin/shutdown.elf:
+	$(MAKE) -C modules/boot-shutdown/
+
+#########################
 # QEMU SHIT REEEEE
 #########################
-qemu: BOOTX64.EFI OVMF.fd image/EFI/BOOT/BOOTX64.EFI
+qemu: OVMF.fd image
 	qemu-system-x86_64 -bios OVMF.fd -net none -hda fat:rw:image
 
-image/EFI/BOOT/BOOTX64.EFI: bin/BOOTX64.EFI
+image: BOOTX64.EFI shutdown
 	rm -rf image
 	mkdir -p image/EFI/BOOT
 	cp bin/BOOTX64.EFI image/EFI/BOOT/
+	cp bin/shutdown.elf image/
 
 OVMF.fd:
 	wget http://downloads.sourceforge.net/project/edk2/OVMF/OVMF-X64-r15214.zip
@@ -67,4 +81,5 @@ OVMF.fd:
 
 # Clean everything
 clean:
+	$(MAKE) -C modules/boot-shutdown/ clean 
 	rm -rf build bin image
