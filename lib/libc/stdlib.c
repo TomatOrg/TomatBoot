@@ -3,7 +3,7 @@
 
 void* malloc(size_t s) {
     void* ptr;
-    gBS->AllocatePool(EfiBootServicesData, s + sizeof(size_t), &ptr);
+    gBS->AllocatePool(EfiLoaderData, s + sizeof(size_t), &ptr);
     *(size_t*)ptr = s;
     return (void*)((char*)ptr + sizeof(size_t));
 }

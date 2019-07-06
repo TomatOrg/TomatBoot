@@ -45,11 +45,7 @@ _______________________________________________
 
 #define EFI_SUCCESS 0
 
-#ifdef _M_AMD64
 #define HIGH_BIT (1ULL << 63)
-#else 
-#define HIGH_BIT (1 << 31)
-#endif
 
 #define EFI_LOAD_ERROR				(1  | HIGH_BIT)
 #define EFI_INVALID_PARAMETER		(2  | HIGH_BIT)
@@ -92,11 +88,7 @@ _______________________________________________
 #define EFI_WARN_STALE_DATA			5
 #define EFI_WARN_FILE_SYSTEM		6
 
-#ifdef __GNUC__
 #define EFIAPI __attribute__((ms_abi))
-#else
-#define EFIAPI __cdecl
-#endif
 
 #define IN 
 #define OUT 

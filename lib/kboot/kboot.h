@@ -11,12 +11,6 @@ typedef struct kboot_header {
       uint8_t type;
       uint64_t direct_mapping_base;
   } mapping;
-  
-  struct {
-    uint8_t bpp;
-    uint32_t width;
-    uint32_t height;
-  } framebuffer;
 } kboot_header_t;
 
 typedef struct kboot_info {
@@ -30,7 +24,6 @@ typedef struct kboot_info {
         uint64_t framebuffer_addr;
         uint32_t width;
         uint32_t height;
-        uint32_t bpp;
     } framebuffer;
 
     struct {

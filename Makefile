@@ -29,7 +29,13 @@ LDFLAGS += \
 	-Wl,-subsystem:efi_application \
 	-fuse-ld=lld-link
 
-.PHONY: all clean BOOTX64.EFI
+.PHONY: \
+	all \
+	clean \
+	shutdown \
+	modules/boot-shutdown/bin/shutdown.elf \
+	BOOTX64.EFI \
+	image
 
 #########################
 # Compiling
@@ -66,7 +72,7 @@ modules/boot-shutdown/bin/shutdown.elf:
 # QEMU SHIT REEEEE
 #########################
 qemu: OVMF.fd image
-	qemu-system-x86_64 -bios OVMF.fd -net none -hda fat:rw:image
+	qemu-system-x86_64 -bios OVMF.fd -net none -hda fat:rw:image -monitor stdio
 
 image: BOOTX64.EFI shutdown
 	rm -rf image
