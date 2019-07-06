@@ -87,10 +87,12 @@ image: \
 
 # Copy the bootloader itself
 image/EFI/BOOT/BOOTX64.EFI: BOOTX64.EFI
+	mkdir -p image/EFI/BOOT
 	cp bin/BOOTX64.EFI image/EFI/BOOT/BOOTX64.EFI
 
 # Copy the shutdown program
 image/shutdown.elf: shutdown.elf
+	mkdir -p image
 	cp bin/shutdown.elf image/shutdown.elf
 
 # Make sure we have the image builder
