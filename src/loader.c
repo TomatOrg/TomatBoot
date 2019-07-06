@@ -181,6 +181,23 @@ void load_kernel(boot_entry_t* entry) {
     kinfo->framebuffer.height = height;
     kinfo->framebuffer.framebuffer_addr = gop->Mode->FrameBufferBase;
 
+    EFI_GUID guids[] = {
+        EFI_ACPI_TABLE_GUID,
+        EFI_ACPI_20_TABLE_GUID,
+        ACPI_TABLE_GUID,
+        ACPI_10_TABLE_GUID,
+    };
+    kinfo->rsdp = 0;
+    for(size_t i = 0; i < 4; i++) {
+        EFI_CONFIGURATION_TABLE* t = gST->ConfigurationTable;
+        for(size_t j = 0; j < gST->NumberOfTableEntries && t; j++, t++) {
+            if(memcmp(&guids[i], &t->VendorGuid, 16) == 0) {
+                kinfo->rsdp = (uintptr_t)t->VendorTable;
+            }
+	    }
+    }
+    ASSERT(kinfo->rsdp != 0, "Could not find the ACPI table\n\r");
+
     // allocate memory for the efi mmap
     size_t mapSize;
     size_t mapKey;
