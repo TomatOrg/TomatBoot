@@ -1,6 +1,6 @@
 # kretlim-uefi-boot
 
-This bootloader is aimed at simplifying the process of loading a 64bit kernel, it will be done by loading the kernel using the correct virtual addresses specified, and give capabilities like creating a direct mapping at the specified address, giving the efi mmap directly to the kernel and more.
+This bootloader is aimed at simplifying the process of loading a 64bit kernel. It is done by allowing your kernel to simply be compiled
 
 You can find the [boot protocol specs here](boot-protocol.md)
 
