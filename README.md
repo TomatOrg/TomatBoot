@@ -11,12 +11,12 @@ You can find the [boot protocol specs here](boot-protocol.md)
     * allows to select between different boot options
     * allows to modify the command line for each option
 * kernel loading
-    * can boot elf64 kernels
-        * only identity mapping support currently
+    * elf64 binaries
 * boot info that contains:
     * full EFI Memory Map
     * the framebuffer address and size
     * command line options
+    * RSDP
 
 ## Soon:tm:
 * loading the boot list from a file

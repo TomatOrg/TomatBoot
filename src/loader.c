@@ -80,45 +80,34 @@ void load_kernel(boot_entry_t* entry) {
     ASSERT(read_size == sizeof(Elf64_Ehdr), L"File too small");
 
     // find the .kboot.header section
-    Elf64_Shdr section_header;
-    bool found = false;
-    for(int i = 0; i < header.e_shnum; i++) {
-        read_size = sizeof(Elf64_Shdr);
-        SetPosition(file, header.e_shoff + header.e_shentsize * i);   
-        ReadFile(file, &read_size, &section_header);
+    // Elf64_Shdr section_header;
+    // bool found = false;
+    // for(int i = 0; i < header.e_shnum; i++) {
+    //     read_size = sizeof(Elf64_Shdr);
+    //     SetPosition(file, header.e_shoff + header.e_shentsize * i);   
+    //     ReadFile(file, &read_size, &section_header);
         
-        read_size = 256;
-        SetPosition(file, strtab.sh_offset + section_header.sh_name);
-        ReadFile(file, &read_size, &name_buffer);
+    //     read_size = 256;
+    //     SetPosition(file, strtab.sh_offset + section_header.sh_name);
+    //     ReadFile(file, &read_size, &name_buffer);
         
-        if(strcmp(name_buffer, ".kboot.header") == 0) {
-            found = true;
-            break;
-        }
-    }
-    ASSERT(found, L"Could not find the `.kboot.header` section");
+    //     if(strcmp(name_buffer, ".kboot.header") == 0) {
+    //         found = true;
+    //         break;
+    //     }
+    // }
+    // ASSERT(found, L"Could not find the `.kboot.header` section");
 
     // read the header
-    kboot_header_t kheader = {0};
-    read_size = sizeof(kboot_header_t);
-    SetPosition(file, section_header.sh_offset);
-    ReadFile(file, &read_size, &kheader);
-    ASSERT(read_size == sizeof(kboot_header_t), L"File too small");
+    // kboot_header_t kheader = {0};
+    // read_size = sizeof(kboot_header_t);
+    // SetPosition(file, section_header.sh_offset);
+    // ReadFile(file, &read_size, &kheader);
+    // ASSERT(read_size == sizeof(kboot_header_t), L"File too small");
 
     // print the info for debugging
-    printf(L"kboot header:\n\r");
-    printf(L"  mapping: \n\r");
-    printf(L"    type: %s\n\r", kheader.mapping.type == KBOOT_MAPPING_VIRTUAL ? L"virtual" : L"identity");
-    if(kheader.mapping.type == KBOOT_MAPPING_VIRTUAL) {
-       printf(L"    direct mapping base: 0x%016llp\n\r", kheader.mapping.direct_mapping_base);
-    }
-
-    if(kheader.mapping.type == KBOOT_MAPPING_VIRTUAL) {
-        ASSERT(false, L"Virtual mapping not supported yet\n\r");
-    }else {
-        printf(L"Loading using identity maps\n\r");
-    }
-
+    //printf(L"kboot header:\n\r");
+    
     // we are going to put this in the actual 
     // physical address as specified
     Elf64_Phdr pheader;
@@ -203,31 +192,24 @@ void load_kernel(boot_entry_t* entry) {
     gBS->AllocatePages(AllocateAnyPages, EfiBootServicesData, ALIGN_UP(mapSize, 4096) / 4096, (uintptr_t*)&descs);
     kinfo->mmap.descriptors = descs;
 
-    // jump to the kernel
-    if(kheader.mapping.type == KBOOT_MAPPING_VIRTUAL) {
-        // for virtual addressing we need to add some shellcode 
-        // before doing anything
-        ASSERT(false, L"Virtual mapping not supported yet\n\r");
-    }else {
-        // for identity mapped we should be able to just exit boot services and call it
-        kboot_entry_function func = (kboot_entry_function)header.e_entry;
+    // for identity mapped we should be able to just exit boot services and call it
+    kboot_entry_function func = (kboot_entry_function)header.e_entry;
 
-        printf(L"Bai Bai\n\r");
-        gBS->ExitBootServices(gImageHandle, mapKey);
+    printf(L"Bai Bai\n\r");
+    gBS->ExitBootServices(gImageHandle, mapKey);
 
-        // disable interrupts
-        asm volatile("cli");
-        asm volatile("lidt (0)");
+    // disable interrupts
+    asm volatile("cli");
+    asm volatile("lidt (0)");
 
-        // finish the table by getting the memory map
-        // NOTE: This is completely valid according to the
-        //       the spec
-        gBS->GetMemoryMap(&mapSize, descs, &mapKey, &descSize, &descVersion);
-        kinfo->mmap.descriptor_size = descSize;
-        kinfo->mmap.counts = mapSize / descSize;
+    // finish the table by getting the memory map
+    // NOTE: This is completely valid according to the
+    //       the spec
+    gBS->GetMemoryMap(&mapSize, descs, &mapKey, &descSize, &descVersion);
+    kinfo->mmap.descriptor_size = descSize;
+    kinfo->mmap.counts = mapSize / descSize;
 
-        func(0xCAFEBABE, kinfo);
-    }
+    func(0xCAFEBABE, kinfo);
 
 failed:
     // TODO: press any key to shutdown
