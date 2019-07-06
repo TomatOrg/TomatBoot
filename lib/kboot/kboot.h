@@ -34,6 +34,6 @@ typedef struct kboot_info {
     uint64_t rsdp;
 } kboot_info_t;
 
-typedef void (*kboot_entry_function)(uint32_t magic, kboot_info_t* info);
+typedef __attribute__((sysv_abi)) void (*kboot_entry_function)(uint32_t magic, kboot_info_t* info);
 
 #endif

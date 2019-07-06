@@ -16,7 +16,8 @@ CFLAGS += \
 	-fno-stack-check \
 	-fno-stack-protector \
 	-fshort-wchar \
-	-mno-red-zone
+	-mno-red-zone \
+	-Werror
 
 # Set the include dirs
 CFLAGS += $(INCLUDE_DIRS:%=-I%)

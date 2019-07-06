@@ -167,12 +167,14 @@ void load_kernel(boot_entry_t* entry) {
     CloseFile(file);
 
     // allocate boot info
-    kboot_info_t* addr;
-    gBS->AllocatePages(AllocateAnyPages, EfiBootServicesData, ALIGN_UP(sizeof(kboot_info_t), 4096), (uintptr_t*)&addr);
+    kboot_info_t* kinfo;
+    size_t cmdline_length = wcslen(entry->command_line);
+    gBS->AllocatePages(AllocateAnyPages, EfiBootServicesData, ALIGN_UP(sizeof(kboot_info_t) + cmdline_length, 4096), (uintptr_t*)&kinfo);
     
     // prepare the boot info
-    addr->cmdline.length = wcslen(entry->command_line);
-    wide_to_ascii(entry->command_line, addr->cmdline.cmdline);
+    kinfo->cmdline.length = cmdline_length;
+    kinfo->cmdline.cmdline = (char*)((size_t)kinfo + sizeof(kboot_info_t));
+    wide_to_ascii(entry->command_line, kinfo->cmdline.cmdline);
 
     // set graphics mode
     EFI_GRAPHICS_OUTPUT_PROTOCOL* gop = 0;
@@ -186,9 +188,9 @@ void load_kernel(boot_entry_t* entry) {
     gop->SetMode(gop, gopModeIndex);
 
     // set the entries
-    addr->framebuffer.width = width;
-    addr->framebuffer.height = height;
-    addr->framebuffer.framebuffer_addr = gop->Mode->FrameBufferBase;
+    kinfo->framebuffer.width = width;
+    kinfo->framebuffer.height = height;
+    kinfo->framebuffer.framebuffer_addr = gop->Mode->FrameBufferBase;
 
     // allocate memory for the efi mmap
     size_t mapSize;
@@ -199,7 +201,7 @@ void load_kernel(boot_entry_t* entry) {
     mapSize += 64 * descSize; // take into account some changes after exiting boot services
     EFI_MEMORY_DESCRIPTOR* descs;
     gBS->AllocatePages(AllocateAnyPages, EfiBootServicesData, ALIGN_UP(mapSize, 4096) / 4096, (uintptr_t*)&descs);
-    addr->mmap.descriptors = descs;
+    kinfo->mmap.descriptors = descs;
 
     // jump to the kernel
     if(kheader.mapping.type == KBOOT_MAPPING_VIRTUAL) {
@@ -221,10 +223,10 @@ void load_kernel(boot_entry_t* entry) {
         // NOTE: This is completely valid according to the
         //       the spec
         gBS->GetMemoryMap(&mapSize, descs, &mapKey, &descSize, &descVersion);
-        addr->mmap.descriptor_size = descSize;
-        addr->mmap.counts = mapSize / descSize;
+        kinfo->mmap.descriptor_size = descSize;
+        kinfo->mmap.counts = mapSize / descSize;
 
-        func(0xCAFEBABE, addr);
+        func(0xCAFEBABE, kinfo);
     }
 
 failed:
