@@ -8,9 +8,28 @@ You can find the [boot protocol specs here](boot-protocol.md)
 
 ## Current Features
 * cool looking boot menu
-  * you can choose and edit the command line options of each entry
+    * allows to select between different boot options
+    * allows to modify the command line for each option
+* kernel loading
+    * can boot elf64 kernels
+        * only identity mapping support currently
+* boot info that contains:
+    * full EFI Memory Map
+    * the framebuffer address and size
+    * command line options
 
 ## Soon:tm:
-* actually loading the kernel
 * loading the boot list from a file
   * and a tool to create such file
+
+## Building
+
+You will need
+* clang
+* qemu (for running)
+
+All output binaries will be located in `bin`, all intermidiate files will be located in `build`
+
+To build the main bootloader simply run `make` and you should get the build EFI file in the `bin` folder
+
+To run in qemu you can use `make qemu`, this will create an `image` folder where it will put everything it needs and run qemu. This will also build the shutdown module.

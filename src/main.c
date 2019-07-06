@@ -17,11 +17,17 @@ static boot_config_t* get_boot_config() {
 
     boot_config_t* config = calloc(sizeof(boot_config_t) + sizeof(boot_entry_t) * 2, 1);
     config->default_option = 0;
-    config->entry_count = 1;
+    config->entry_count = 2;
+
     config->entries[0].size = sizeof(boot_entry_t);
     memcpy(config->entries[0].name, L"Reset", sizeof(L"Reset"));
     memcpy(config->entries[0].filename, L"shutdown.elf", sizeof(L"shutdown.elf"));
     memcpy(config->entries[0].command_line, L"reset", sizeof(L"reset"));
+
+    config->entries[1].size = sizeof(boot_entry_t);
+    memcpy(config->entries[1].name, L"Shutdown", sizeof(L"Shutdown"));
+    memcpy(config->entries[1].filename, L"shutdown.elf", sizeof(L"shutdown.elf"));
+    memcpy(config->entries[1].command_line, L"DOESN'T WORK", sizeof(L"DOESN'T WORK"));
 
     return config;
 }

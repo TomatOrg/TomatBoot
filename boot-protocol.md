@@ -8,9 +8,13 @@ One note worth mentioning is that all of the boot info structure, the efi memory
 
 ### CPU Mode
 * long mode
+* interrupts are off
 * nx bit enabled if possible
 
-### GDT, TSS and IDT
+### IDT
+will be nullified
+
+### GDT, TSS
 Same as UEFI state after ExitBootServices
 
 ### Paging
