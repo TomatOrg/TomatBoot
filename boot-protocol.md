@@ -18,18 +18,13 @@ Described in the boot headers
 
 ## Header
 You will need to have a section in your binary named `.kboot.header` and it is defined as follows
+
 ```c
 struct kboot_header {
   struct {
       uint8_t type;
       uint64_t direct_mapping_base;
   } mapping;
-  
-  struct {
-    uint8_t bpp;
-    uint32_t width;
-    uint32_t height;
-  } framebuffer;
 };
 ```
 ### Mapping
@@ -38,9 +33,6 @@ The mapping allows you to specify how the kernel should be mapped
 The possible mapping types are
 * `KBOOT_MAPPING_IDENTITY` (0) - we will identity map the whole memory, this means the entry needs to be as a physical address. 
 * `KBOOT_MAPPING_VIRTUAL` (1) - we will map the kernel to the higher half and direct map the memory as the `direct_mapping_base` specifies
-
-### Framebuffer
-The framebuffer allows you to configure the prefered bpp, width and height. if any of them is specified as zero, the bootloader will choose the highest value it can.
 
 ## Information structure
 The bootloader will treat entry function as the following format:
@@ -63,7 +55,6 @@ struct kboot_info {
     uint64_t framebuffer_addr;
     uint32_t width;
     uint32_t height;
-    uint32_t bpp;
   } framebuffer;
 
   struct {
@@ -79,7 +70,7 @@ struct kboot_info {
 The memory map is the exact copy of the UEFI one.
 
 ### Framebuffer
-The framebuffer will give the address of the vram (physical) and the dimensions of it
+The framebuffer will give the address of the vram (physical)
 
 ### Command line
 The command line is a string that can be defined at boot to change the kernel behaviour dynamically 
