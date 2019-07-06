@@ -1,0 +1,3 @@
+[submodule "modules/boot-shutdown"]
+	path = modules/boot-shutdown
+	url = git@github.com:kretlim/boot-shutdown.git

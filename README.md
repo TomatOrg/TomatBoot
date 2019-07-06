@@ -18,10 +18,6 @@ You can find the [boot protocol specs here](boot-protocol.md)
     * command line options
     * RSDP
 
-## Soon:tm:
-* loading the boot list from a file
-  * and a tool to create such file
-
 ## Building
 
 You will need

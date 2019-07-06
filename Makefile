@@ -71,21 +71,33 @@ modules/boot-shutdown/bin/shutdown.elf:
 #########################
 # QEMU SHIT REEEEE
 #########################
+
+# Test in qemu with the default image
 qemu: OVMF.fd image.img
 	qemu-system-x86_64 -drive if=pflash,format=raw,readonly,file=OVMF.fd -net none -hda image.img
 
+# Build the default image
 image.img: image-builder.py image
 	./image-builder.py image.yaml
 
-image: BOOTX64.EFI shutdown.elf
-	rm -rf image
-	mkdir -p image/EFI/BOOT
+# Make sure the folder has everythin we need
+image: \
+	image/EFI/BOOT/BOOTX64.EFI \
+	image/shutdown.elf  
+
+# Copy the bootloader itself
+image/EFI/BOOT/BOOTX64.EFI: BOOTX64.EFI
 	cp bin/BOOTX64.EFI image/EFI/BOOT/BOOTX64.EFI
+
+# Copy the shutdown program
+image/shutdown.elf: shutdown.elf
 	cp bin/shutdown.elf image/shutdown.elf
 
+# Make sure we have the image builder
 image-builder.py:
 	wget https://raw.githubusercontent.com/kretlim/image-builder/master/image-builder.py
 
+# Get the firmware
 OVMF.fd:
 	wget http://downloads.sourceforge.net/project/edk2/OVMF/OVMF-X64-r15214.zip
 	unzip OVMF-X64-r15214.zip OVMF.fd
