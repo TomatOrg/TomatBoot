@@ -71,14 +71,20 @@ modules/boot-shutdown/bin/shutdown.elf:
 #########################
 # QEMU SHIT REEEEE
 #########################
-qemu: OVMF.fd image
-	qemu-system-x86_64 -bios OVMF.fd -net none -hda fat:rw:image
+qemu: OVMF.fd image.img
+	qemu-system-x86_64 -drive if=pflash,format=raw,readonly,file=OVMF.fd -net none -hda image.img
+
+image.img: image-builder.py image
+	./image-builder.py image.yaml
 
 image: BOOTX64.EFI shutdown.elf
 	rm -rf image
 	mkdir -p image/EFI/BOOT
 	cp bin/BOOTX64.EFI image/EFI/BOOT/BOOTX64.EFI
 	cp bin/shutdown.elf image/shutdown.elf
+
+image-builder.py:
+	wget https://raw.githubusercontent.com/kretlim/image-builder/master/image-builder.py
 
 OVMF.fd:
 	wget http://downloads.sourceforge.net/project/edk2/OVMF/OVMF-X64-r15214.zip
@@ -88,4 +94,4 @@ OVMF.fd:
 # Clean everything
 clean:
 	$(MAKE) -C modules/boot-shutdown/ clean 
-	rm -rf build bin image
+	rm -rf build bin image image.img

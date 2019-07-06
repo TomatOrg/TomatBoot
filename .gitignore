@@ -1,6 +1,8 @@
 bin
 build
 image
+image.img
 .vscode
 
 OVMF.fd
+image-builder.py
