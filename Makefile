@@ -2,12 +2,20 @@
 CC = clang-8
 LD = ld.lld-8
 
+# Set the boot shutdown directories
+BOOT_SHUTDOWN_DIR = modules/boot-shutdown/
+BOOT_SHUTDOWN_DIR_BIN = bin/image
+
+# Set the bootloader directories
+KRETLIM_UEFI_BOOT_DIR_BIN = bin/image/EFI/BOOT
+
 .PHONY: all clean image qemu
 
 all: image
 
 # We wanna build the kretlim-uefi-boot of course
 include kretlim-uefi-boot.mk
+include modules/boot-shutdown/boot-shutdown.mk
 
 # Test in qemu with the default image
 qemu: tools/OVMF.fd image
@@ -17,13 +25,11 @@ qemu: tools/OVMF.fd image
 image: bin/image.img
 
 # Build the image
-bin/image.img: tools/image-builder.py kretlim-uefi-boot
-	mkdir -p bin/image/EFI/BOOT/
-	cp bin/BOOTX64.EFI bin/image/EFI/BOOT/BOOTX64.EFI
+bin/image.img: tools/image-builder.py kretlim-uefi-boot boot-shutdown
 	cd bin && ../tools/image-builder.py ../image.yaml
 
 # Clean everything
-clean: kretlim-uefi-boot-clean
+clean: kretlim-uefi-boot-clean boot-shutdown-clean
 
 clean-tools:
 	rm -rf tools
