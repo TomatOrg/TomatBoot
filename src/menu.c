@@ -128,6 +128,8 @@ static boot_entry_t* edit_command(boot_config_t* config) {
 boot_entry_t* start_menu(boot_config_t* config) {
     draw_menu(config);
 
+    selected_index = config->default_option;
+
     // boot menu
     while(1) {
         gBS->Stall(10);
