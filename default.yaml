@@ -1,0 +1,4 @@
+entries:
+- name: 'Hello There'
+  file: 'This does not exist'
+  cmd: 'This does not exist'

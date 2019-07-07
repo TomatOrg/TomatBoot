@@ -25,12 +25,14 @@ qemu: tools/OVMF.fd image
 image: bin/image.img
 
 # Build the image
-bin/image.img: tools/image-builder.py kretlim-uefi-boot boot-shutdown
+bin/image.img: tools/image-builder.py tools/kretlim-boot-config.py kretlim-uefi-boot boot-shutdown
+	./tools/kretlim-boot-config.py default.yaml bin/image/kbootcfg.bin
 	cd bin && ../tools/image-builder.py ../image.yaml
 
 # Clean everything
 clean: kretlim-uefi-boot-clean boot-shutdown-clean
 
+# delete all the tools
 clean-tools:
 	rm -rf tools
 
@@ -38,6 +40,11 @@ clean-tools:
 tools/image-builder.py:
 	mkdir -p tools
 	cd tools && wget https://raw.githubusercontent.com/kretlim/image-builder/master/image-builder.py
+
+# Get the boot config creator tool
+tools/kretlim-boot-config.py:
+	mkdir -p tools
+	cd tools && wget https://raw.githubusercontent.com/kretlim/kretlim-boot-config/master/kretlim-boot-config.py
 
 # Get the bios
 tools/OVMF.fd:

@@ -1,6 +1,8 @@
 #include "menu.h"
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <uefi/uefi.h>
 
 #define WSTRING_LEN(wstr) (sizeof(wstr) / sizeof(wchar_t))
@@ -44,11 +46,11 @@ static void draw_list(boot_config_t* config) {
             gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_WHITE, EFI_BLUE));
             clear_box(HW - lw / 2, HH - lh / 2 + i, lw, 1);
             gST->ConOut->SetCursorPosition(gST->ConOut, HW - lw / 2, HH - lh / 2 + i);
-            gST->ConOut->OutputString(gST->ConOut, entry->name);
+            printf(L"%a", entry->name);
         }else {
             gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_WHITE, EFI_LIGHTGRAY));
             gST->ConOut->SetCursorPosition(gST->ConOut, HW - lw / 2, HH - lh / 2 + i);
-            gST->ConOut->OutputString(gST->ConOut, entry->name);
+            printf(L"%a", entry->name);
         }
 
         entry = (boot_entry_t*)(((size_t)entry) + entry->size);
@@ -64,7 +66,7 @@ static void draw_command(boot_config_t* config) {
         if(selected_index == i) {
             gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_LIGHTGREEN, EFI_LIGHTGRAY));
             gST->ConOut->SetCursorPosition(gST->ConOut, HW - (text_width - 4) / 2, text_height - 1);
-            gST->ConOut->OutputString(gST->ConOut, entry->command_line);
+            printf(L"%a", entry->command_line);
             break;
         }
         entry = (boot_entry_t*)(((size_t)entry) + entry->size);
@@ -90,7 +92,7 @@ static boot_entry_t* edit_command(boot_config_t* config) {
     boot_entry_t* entry = config->entries;
     for(int i = 0; i < config->entry_count; i++) {
         if(selected_index == i) {
-            size_t len = wcslen(entry->command_line) - 1;
+            size_t len = strlen(entry->command_line) - 1;
             gST->ConOut->EnableCursor(gST->ConOut, 1);
             while(1) {
                 gST->ConOut->SetCursorPosition(gST->ConOut, (HW - (text_width - 4) / 2) + len, text_height - 1);
@@ -106,7 +108,7 @@ static boot_entry_t* edit_command(boot_config_t* config) {
                     }
                 }else if(key.UnicodeChar >= L' ' && key.UnicodeChar <= L'~') {
                     if(len < text_width - 4) {
-                        entry->command_line[len] = key.UnicodeChar;
+                        entry->command_line[len] = (char)key.UnicodeChar;
                         len++;
                         entry->command_line[len] = 0;
                         draw_command(config);
@@ -128,7 +130,7 @@ static boot_entry_t* edit_command(boot_config_t* config) {
 boot_entry_t* start_menu(boot_config_t* config) {
     draw_menu(config);
 
-    selected_index = config->default_option;
+    // selected_index = config->default_option;
 
     // boot menu
     while(1) {

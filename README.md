@@ -12,6 +12,7 @@ You can find the [boot protocol specs here](boot-protocol.md)
     * allows to modify the command line for each option
 * kernel loading
     * elf64 binaries
+    * can configure using the [boot config](https://github.com/kretlim/kretlim-boot-config)
 * boot info that contains:
     * full EFI Memory Map
     * the framebuffer address and size
@@ -21,6 +22,9 @@ You can find the [boot protocol specs here](boot-protocol.md)
 ## Requirements
 * make
 * clang-8
+
+### Optional
+* [requirements for kretlim boot config](https://github.com/kretlim/kretlim-boot-config) - for running
 * qemu (for running)
 
 ## Building

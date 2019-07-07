@@ -35,13 +35,23 @@ static void wide_to_ascii(const wchar_t* in, char* out) {
     *out = 0;
 }
 
+static void ascii_to_wide(const char* in, wchar_t* out) {
+    while(*in) {
+        *out++ = (wchar_t)*in;
+        in++;
+    }
+    *out = 0;
+}
+
+static wchar_t name_buffer[512];
+
 void load_kernel(boot_entry_t* entry) {
     gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_WHITE, EFI_BLACK));
     gST->ConOut->ClearScreen(gST->ConOut);
-    printf(L"Booting `%s` (%s)\n\r", entry->name, entry->filename);
-    printf(L"Command line: `%s`\n\r", entry->command_line);
-    char name_buffer[256];
- 
+    printf(L"Booting `%a` (%a)\n\r", entry->name, entry->filename);
+    printf(L"Command line: `%a`\n\r", entry->command_line);
+    ascii_to_wide(entry->filename, name_buffer);
+
     // get the root of the file system
     EFI_GUID sfpGuid = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;
 	EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* sfp = 0;
@@ -50,7 +60,7 @@ void load_kernel(boot_entry_t* entry) {
 	sfp->OpenVolume(sfp, &rootDir);
 
     // load the kernel
-    EFI_FILE_PROTOCOL* file = OpenFile(rootDir, entry->filename, EFI_FILE_MODE_READ, 0);
+    EFI_FILE_PROTOCOL* file = OpenFile(rootDir, name_buffer, EFI_FILE_MODE_READ, 0);
     if(file == NULL) goto failed;
 
     Elf64_Ehdr header;
@@ -157,13 +167,13 @@ void load_kernel(boot_entry_t* entry) {
 
     // allocate boot info
     kboot_info_t* kinfo;
-    size_t cmdline_length = wcslen(entry->command_line);
+    size_t cmdline_length = strlen(entry->command_line);
     gBS->AllocatePages(AllocateAnyPages, EfiBootServicesData, ALIGN_UP(sizeof(kboot_info_t) + cmdline_length, 4096), (uintptr_t*)&kinfo);
     
     // prepare the boot info
     kinfo->cmdline.length = cmdline_length;
     kinfo->cmdline.cmdline = (char*)((size_t)kinfo + sizeof(kboot_info_t));
-    wide_to_ascii(entry->command_line, kinfo->cmdline.cmdline);
+    memcpy(kinfo->cmdline.cmdline, entry->command_line, cmdline_length);
 
     // set graphics mode
     EFI_GRAPHICS_OUTPUT_PROTOCOL* gop = 0;
