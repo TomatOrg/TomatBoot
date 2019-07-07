@@ -23,7 +23,7 @@ bin/image.img: tools/image-builder.py kretlim-uefi-boot
 	cd bin && ../tools/image-builder.py ../image.yaml
 
 # Clean everything
-clean: kretlim-uefi-boot-Clean
+clean: kretlim-uefi-boot-clean
 
 clean-tools:
 	rm -rf tools
