@@ -18,14 +18,15 @@ You can find the [boot protocol specs here](boot-protocol.md)
     * command line options
     * RSDP
 
-## Building
-
-You will need
-* clang
+## Requirements
+* make
+* clang-8
 * qemu (for running)
 
-All output binaries will be located in `bin`, all intermidiate files will be located in `build`
+## Building
 
-To build the main bootloader simply run `make` and you should get the build EFI file in the `bin` folder
+### From another project
+To build in another project you can simply include the `kretlim-uefi-boot.mk` file in your project and call `kretlim-uefi-boot` as a target, there is also `kretlim-uefi-boot-clean` for cleaning the build stuff, this will create an `BOOTX64.EFI` file in the bin folder
 
-To run in qemu you can use `make qemu`, this will create an `image` folder where it will put everything it needs and run qemu. This will also build the shutdown module.
+### Testing in qemu
+Simply run `make qemu` and this should build everything to run in qemu, if you want just the image you can run `make image` or just `make`
