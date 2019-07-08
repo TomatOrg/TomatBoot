@@ -180,10 +180,9 @@ void load_kernel(boot_entry_t* entry) {
 	EFI_GUID gopGuid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 	gBS->LocateProtocol(&gopGuid, 0, (VOID**)&gop);
     ASSERT(gop != NULL, L"Failed to locate Graphics Output Protocol");
-    UINT32 width = 1920;
-	UINT32 height = 1080;
-    EFI_GRAPHICS_PIXEL_FORMAT pixel_format = PixelRedGreenBlueReserved8BitPerColor;
-    UINT32 gopModeIndex = GetGraphicsMode(gop, &width, &height, &pixel_format);
+    UINT32 width, height;
+    INT32 gopModeIndex = GetGraphicsMode(gop, &width, &height);
+    ASSERT(gopModeIndex >= 0, "Could not find GOP mode with RGBA format\n\r");
     gop->SetMode(gop, gopModeIndex);
 
     // set the entries

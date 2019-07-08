@@ -8,87 +8,30 @@ EFI_SYSTEM_TABLE* gST;
 EFI_BOOT_SERVICES* gBS;
 EFI_HANDLE gImageHandle;
 
-UINT32 GetGraphicsMode(EFI_GRAPHICS_OUTPUT_PROTOCOL* CONST gop, UINT32* CONST width, UINT32* CONST height, EFI_GRAPHICS_PIXEL_FORMAT* CONST format) {
+static const unsigned short* gop_mode_names[] = {
+	L"RGB (8x4)",
+	L"BGR (8x4)",
+	L"Bitmask",
+	L"BLT Only",
+};
+
+INT32 GetGraphicsMode(EFI_GRAPHICS_OUTPUT_PROTOCOL* CONST gop, UINT32* CONST width, UINT32* CONST height) {
 	EFI_GRAPHICS_OUTPUT_MODE_INFORMATION* pModeInfo = 0;
-
 	EFI_STATUS status = 0;
-	UINTN size = 0;
-
-	for (UINT32 i = 0; i < gop->Mode->MaxMode; i++) {
-		gop->QueryMode(gop, i, &size, &pModeInfo);
-		if (pModeInfo->HorizontalResolution == *width && pModeInfo->VerticalResolution == *height && pModeInfo->PixelFormat == *format) {
-			return i;
-		}
-	}
-	
-	UINT32 best = ~0;
-
-	if (*width == 0 && *height == 0) {
-		best = gop->Mode->MaxMode-1;
+	UINTN size = 0;	
+	INT32 best = gop->Mode->MaxMode-1;
+	while(best > 0) {
+		best--;
 
 		gop->QueryMode(gop, best, &size, &pModeInfo);
-
-		*width = pModeInfo->HorizontalResolution;
-		*height = pModeInfo->VerticalResolution;
-		*format = pModeInfo->PixelFormat;
-	} else {
-		UINT32 tmpWidth = *width;
-		UINT32 tmpIndex = 0;
-
-		for (UINT32 i = 0; i < gop->Mode->MaxMode; i++) {
-			gop->QueryMode(gop, i, &size, &pModeInfo);
-
-			INT32 w = (INT32)pModeInfo->HorizontalResolution;
-
-			INT32 wDiff = w - (INT32)(*width);
-
-			if (ABS(wDiff) < tmpWidth) {
-				tmpWidth = ABS(wDiff);
-				tmpIndex = i;
-			}
+		printf(L"\t%dx%d (%s)\n\r", pModeInfo->HorizontalResolution, pModeInfo->VerticalResolution, gop_mode_names[pModeInfo->PixelFormat]);
+		if(pModeInfo->PixelFormat == PixelBlueGreenRedReserved8BitPerColor) {
+			*width = pModeInfo->HorizontalResolution;
+			*height = pModeInfo->VerticalResolution;
+			return best;
 		}
-
-		gop->QueryMode(gop, tmpIndex, &size, &pModeInfo);
-
-		*width = pModeInfo->HorizontalResolution;
-		*height = pModeInfo->VerticalResolution;
-		*format = pModeInfo->PixelFormat;
-
-		best = tmpIndex;
-	}
-	
-	return best;
-}
-
-UINTN GetTextMode(EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL* CONST text, UINTN* CONST columns, UINTN* CONST rows) {
-	UINTN c;
-	UINTN r;
-
-	if (*columns == 80 && *rows == 25) return 0;
-
-	if (*columns == 80 && *rows == 50) {
-		if (text->QueryMode(text, 1, &c, &r) != EFI_UNSUPPORTED) {
-			return 1;
-		} 
-
-		*rows = 25;
-
-		return 0;
-	}
-
-	for (UINTN i = 2; i < text->Mode->MaxMode; i++) {
-		text->QueryMode(text, i, &c, &r);
-
-		if (c == *columns && r == *rows) {
-			return i;
-		}
-	}
-
-	UINTN best = text->Mode->MaxMode-1;
-
-	text->QueryMode(text, best, columns, rows);
-
-	return best;
+	}	
+	return -1;
 }
 
 EFI_FILE_PROTOCOL* OpenFile(EFI_FILE_PROTOCOL* CONST root, CONST CHAR16* CONST filename, UINT64 openMode, UINT64 attributes) {

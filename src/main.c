@@ -5,15 +5,13 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-
-#include <kboot/map.h>
-#include <kboot/buf.h>
+#include <stdlib.h>
 
 #include "menu.h"
 #include "loader.h"
 
 static boot_config_t* get_boot_config() {
-    boot_config_t* config = malloc(sizeof(boot_config_t));
+    boot_config_t* config = (boot_config_t*)malloc(sizeof(boot_config_t));
 
     // get the root of the file system
     EFI_GUID sfpGuid = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;
@@ -33,7 +31,7 @@ static boot_config_t* get_boot_config() {
     // allocate enough space for everything and read it
     printf(L"Found config file (%d entries)\n\r", config->entry_count);
     size_t total_size = sizeof(boot_config_t) + sizeof(boot_entry_t) * (config->entry_count);
-    config = realloc(config, total_size + (sizeof(boot_entry_t) * 2));
+    config = (boot_config_t*)realloc(config, total_size + (sizeof(boot_entry_t) * 2));
     SetPosition(file, 0);
     ReadFile(file, &total_size, config);
 

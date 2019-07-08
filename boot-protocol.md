@@ -76,6 +76,8 @@ The memory map is the exact copy of the UEFI one.
 ### Framebuffer
 The framebuffer will give the address of the vram (physical)
 
+The framebuffer is in a Blue Green Red Reserved (8 bits per channel, 4 channels)
+
 ### Command line
 The command line is a string that can be defined at boot to change the kernel behaviour dynamically 
 
