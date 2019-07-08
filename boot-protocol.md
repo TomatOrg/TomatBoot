@@ -18,25 +18,7 @@ will be nullified
 Same as UEFI state after ExitBootServices
 
 ### Paging
-Described in the boot headers
-
-## Header
-You will need to have a section in your binary named `.kboot.header` and it is defined as follows
-
-```c
-struct kboot_header {
-  struct {
-      uint8_t type;
-      uint64_t direct_mapping_base;
-  } mapping;
-};
-```
-### Mapping
-The mapping allows you to specify how the kernel should be mapped
-
-The possible mapping types are
-* `KBOOT_MAPPING_IDENTITY` (0) - we will identity map the whole memory, this means the entry needs to be as a physical address. 
-* `KBOOT_MAPPING_VIRTUAL` (1) - we will map the kernel to the higher half and direct map the memory as the `direct_mapping_base` specifies
+Identity mapping of all the memory
 
 ## Information structure
 The bootloader will treat entry function as the following format:
