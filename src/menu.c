@@ -128,9 +128,10 @@ static boot_entry_t* edit_command(boot_config_t* config) {
 }
 
 boot_entry_t* start_menu(boot_config_t* config) {
-    draw_menu(config);
-
     selected_index = config->default_option;
+
+    // render it!
+    draw_menu(config);
 
     // boot menu
     while(1) {
