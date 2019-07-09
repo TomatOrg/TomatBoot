@@ -176,7 +176,6 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
     printf(L"Searching for graphics mode (%dx%d - BGR8x4)\n\r", width, height);
     INT32 gopModeIndex = GetGraphicsMode(gop, &width, &height);
     ASSERT(gopModeIndex >= 0, L"Could not find GOP mode with BGR8x4 format and good width/height\n\r");
-    while(1);
     gop->SetMode(gop, gopModeIndex);
 
     // set the entries
