@@ -128,18 +128,18 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
                     ASSERT(
                         gBS->AllocatePages(
                             AllocateAddress, 
-                            EfiRuntimeServicesCode, 
+                            EfiReservedMemoryType, 
                             ALIGN_UP(pheader.p_memsz, 4096) / 4096, 
                             &addr) == EFI_SUCCESS,
-                        L"Failed to set pages as EfiRuntimeServicesCode");
+                        L"Failed to set pages as EfiReservedMemoryType");
                 }else {
                     ASSERT(
                         gBS->AllocatePages(
                             AllocateAddress, 
-                            EfiRuntimeServicesData, 
+                            EfiReservedMemoryType, 
                             ALIGN_UP(pheader.p_memsz, 4096) / 4096, 
                             &addr) == EFI_SUCCESS,
-                        L"Failed to set pages as EfiRuntimeServicesData");
+                        L"Failed to set pages as EfiReservedMemoryType");
                 }
 
                 // read the data
@@ -160,7 +160,7 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
     // allocate boot info
     kboot_info_t* kinfo;
     size_t cmdline_length = strlen(entry->command_line);
-    gBS->AllocatePages(AllocateAnyPages, EfiBootServicesData, ALIGN_UP(sizeof(kboot_info_t) + cmdline_length, 4096), (uintptr_t*)&kinfo);
+    gBS->AllocatePages(AllocateAnyPages, EfiReservedMemoryType, ALIGN_UP(sizeof(kboot_info_t) + cmdline_length, 4096), (uintptr_t*)&kinfo);
     
     // prepare the boot info
     kinfo->cmdline.length = cmdline_length;
@@ -208,8 +208,8 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
     gBS->GetMemoryMap(&mapSize, NULL, &mapKey, &descSize, &descVersion);
     mapSize += 64 * descSize; // take into account some changes after exiting boot services
     EFI_MEMORY_DESCRIPTOR* descs;
-    gBS->AllocatePages(AllocateAnyPages, EfiBootServicesData, ALIGN_UP(mapSize, 4096) / 4096, (uintptr_t*)&descs);
-    kinfo->mmap.descriptors = descs;
+    ASSERT(gBS->AllocatePages(AllocateAnyPages, EfiReservedMemoryType, ALIGN_UP(mapSize, 4096) / 4096, (uintptr_t*)&descs) == EFI_SUCCESS, L"Failed to allocate pages for thingy");
+    kinfo->mmap.descriptors = (kboot_mmap_entry_t*)descs;
 
     // for identity mapped we should be able to just exit boot services and call it
     kboot_entry_function func = (kboot_entry_function)header.e_entry;
@@ -225,9 +225,61 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
     // NOTE: This is completely valid according to the
     //       the spec
     gBS->GetMemoryMap(&mapSize, descs, &mapKey, &descSize, &descVersion);
-    kinfo->mmap.descriptor_size = descSize;
-    kinfo->mmap.counts = mapSize / descSize;
 
+    // do the initial convertion
+    EFI_MEMORY_DESCRIPTOR* desc = descs;
+    size_t index = 0;
+    for(int i = 0; i < mapSize / descSize; i++) {
+        uintptr_t addr = desc->PhysicalStart;
+        uintptr_t len = desc->NumberOfPages * 4096;
+        uint8_t type = 0;
+        switch(desc->Type) {
+            case EfiUnusableMemory:
+                type = KBOOT_MEMORY_TYPE_BAD_MEMORY;
+                break;
+            
+            case EfiACPIReclaimMemory:
+                type = KBOOT_MEMORY_TYPE_ACPI_RECLAIM;
+                break;
+            
+            case EfiLoaderCode:
+            case EfiLoaderData:
+            case EfiBootServicesCode:
+            case EfiBootServicesData:
+            case EfiConventionalMemory:
+            case EfiACPIMemoryNVS:
+                type = KBOOT_MEMORY_TYPE_ACPI_NVS;
+                break;
+
+            case EfiReservedMemoryType:
+            case EfiMemoryMappedIO:
+            case EfiMemoryMappedIOPortSpace:
+            case EfiRuntimeServicesCode:
+            case EfiRuntimeServicesData:
+            case EfiPalCode:
+            default:
+                type = KBOOT_MEMORY_TYPE_RESERVED;
+                break;
+        }
+
+        if(     kinfo->mmap.descriptors[index].addr + kinfo->mmap.descriptors[index].len == addr 
+            &&  kinfo->mmap.descriptors[index].type == type) {
+            // we can merge these
+            kinfo->mmap.descriptors[index].len += len;
+        }else {
+            // set a new type
+            kinfo->mmap.descriptors[index].addr = addr;
+            kinfo->mmap.descriptors[index].len = len;
+            kinfo->mmap.descriptors[index].type = type;
+            index++;
+            kinfo->mmap.counts++;
+        }
+
+        // next
+        desc = (EFI_MEMORY_DESCRIPTOR*)((uintptr_t)desc + descSize);
+    }
+
+    // split wherever we have our boot info
     func(0xCAFEBABE, kinfo);
 
 failed:

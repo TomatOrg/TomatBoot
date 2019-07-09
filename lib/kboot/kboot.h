@@ -3,11 +3,24 @@
 
 #include <stdint.h>
 
+#define KBOOT_MEMORY_TYPE_RESERVED      0
+#define KBOOT_MEMORY_TYPE_BAD_MEMORY    1
+#define KBOOT_MEMORY_TYPE_ACPI_RECLAIM  2
+#define KBOOT_MEMORY_TYPE_USABLE        3
+#define KBOOT_MEMORY_TYPE_ACPI_NVS      4
+#define KBOOT_MEMORY_TYPE_KBOOT         5
+#define KBOOT_MEMORY_TYPE_KERNEL        6
+
+typedef struct kboot_mmap_entry {
+    uint32_t type;
+    uint64_t addr;
+    uint64_t len;
+} __attribute__((packed)) kboot_mmap_entry_t;
+
 typedef struct kboot_info {
     struct {
         uint64_t counts;
-        uint64_t descriptor_size;
-        EFI_MEMORY_DESCRIPTOR* descriptors;
+        kboot_mmap_entry_t* descriptors;
     } __attribute__((packed)) mmap;
     
     struct {

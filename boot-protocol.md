@@ -4,12 +4,9 @@ Everything here is also defined in `kboot.h`
 
 ## Enviroment 
 
-One note worth mentioning is that all of the boot info structure, the efi memory map and any other information the bootloader passes to the user, is allocated as EfiRuntimeServicesData, which is technically reserved, but the kernel may choose to ignore that and still use that area (will be easy to know since we do not provide any runtime services).
-
 ### CPU Mode
 * long mode
 * interrupts are off
-* nx bit enabled if possible
 
 ### IDT
 will be nullified
@@ -33,8 +30,7 @@ The boot info structure is defined as
 struct kboot_info {
   struct {
     uint64_t counts;
-    uint64_t descriptor_size;
-    EFI_MEMORY_DESCRIPTOR* entries;
+    kboot_mmap_entry_t* entries;
   } mmap;
 
   struct {
@@ -52,8 +48,26 @@ struct kboot_info {
 }
 ```
 
+the mmap entry is defined as
+```c
+struct kboot_mmap_entry {
+  uint32_t type;
+  uint64_t addr;
+  uint64_t len;
+}
+```
+
+With the types being
+* `KBOOT_MEMORY_TYPE_RESERVED` (0) - same as e820 type
+* `KBOOT_MEMORY_TYPE_BAD_MEMORY` (1) - same as e820 type
+* `KBOOT_MEMORY_TYPE_ACPI_RECLAIM` (2) - same as e820 type
+* `KBOOT_MEMORY_TYPE_USABLE` (3) - same as e820 type
+* `KBOOT_MEMORY_TYPE_ACPI_NVS` (4) - same as e820 type
+
 ### Memory Map
-The memory map is the exact copy of the UEFI one.
+The memory map is created from the UEFI memory map using this table
+
+It is worth noting that the kernel code and data, as well as the boot info structure is marked as reserved.
 
 ### Framebuffer
 The framebuffer will give the address of the vram (physical)
