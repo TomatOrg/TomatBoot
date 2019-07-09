@@ -30,8 +30,9 @@ KRETLIM_UEFI_BOOT_CFLAGS += \
 	-fno-stack-check \
 	-fno-stack-protector \
 	-fshort-wchar \
-	-c \
-	-mno-red-zone
+	-g \
+	-mno-red-zone \
+	-Werror
 
 # Add all the includes
 KRETLIM_UEFI_BOOT_CFLAGS += $(KRETLIM_UEFI_BOOT_INCLUDE_DIRS:%=-I%)
@@ -62,7 +63,7 @@ $(KRETLIM_UEFI_BOOT_DIR_BIN)/BOOTX64.EFI: $(KRETLIM_UEFI_BOOT_OBJDIRS) $(KRETLIM
 
 # Build each of the c files
 $(KRETLIM_UEFI_BOOT_DIR_BUILD)/%.o: %.c
-	$(CC) $(KRETLIM_UEFI_BOOT_CFLAGS) -o $@ $<
+	$(CC) $(KRETLIM_UEFI_BOOT_CFLAGS) -c -o $@ $<
 
 # Create each of the dirs
 $(KRETLIM_UEFI_BOOT_DIR_BUILD)/%:

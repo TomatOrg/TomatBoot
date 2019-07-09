@@ -8,14 +8,6 @@
 #include <kboot/kboot.h>
 #include <elf64/elf64.h>
 
-// this is a shellcode we will load in order to switch the address space
-__attribute__((flatten))
-static void virtual_load_stub(uint64_t cr3) {
-    
-}
-__attribute__((flatten))
-static void virtual_load_stub_end() {}
-
 #define ALIGN_DOWN(n, a) (((uint64_t)n) & ~((a) - 1))
 #define ALIGN_UP(n, a) ALIGN_DOWN(((uint64_t)n) + (a) - 1, (a))
 
@@ -45,7 +37,7 @@ static void ascii_to_wide(const char* in, wchar_t* out) {
 
 static wchar_t name_buffer[512];
 
-void load_kernel(boot_entry_t* entry) {
+void load_kernel(boot_config_t* config, boot_entry_t* entry) {
     gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_WHITE, EFI_BLACK));
     gST->ConOut->ClearScreen(gST->ConOut);
     printf(L"Booting `%a` (%a)\n\r", entry->name, entry->filename);
@@ -180,9 +172,11 @@ void load_kernel(boot_entry_t* entry) {
 	EFI_GUID gopGuid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
 	gBS->LocateProtocol(&gopGuid, 0, (VOID**)&gop);
     ASSERT(gop != NULL, L"Failed to locate Graphics Output Protocol");
-    UINT32 width, height;
+    UINT32 width = config->max_width, height = config->max_height;
+    printf(L"Searching for graphics mode (%dx%d - BGR8x4)\n\r", width, height);
     INT32 gopModeIndex = GetGraphicsMode(gop, &width, &height);
-    ASSERT(gopModeIndex >= 0, "Could not find GOP mode with RGBA format\n\r");
+    ASSERT(gopModeIndex >= 0, L"Could not find GOP mode with BGR8x4 format and good width/height\n\r");
+    while(1);
     gop->SetMode(gop, gopModeIndex);
 
     // set the entries

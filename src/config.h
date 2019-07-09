@@ -20,6 +20,8 @@ typedef struct boot_entry {
 typedef struct boot_config {
     size_t default_option;
     size_t entry_count;
+    uint32_t max_width;
+    uint32_t max_height;
     boot_entry_t entries[0];
 } __attribute__((packed)) boot_config_t;
 

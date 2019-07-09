@@ -11,21 +11,21 @@ KRETLIM_UEFI_BOOT_DIR_BIN = bin/image/EFI/BOOT
 
 .PHONY: all clean image qemu
 
-all: image
+all: bin/image.img
 
 # We wanna build the kretlim-uefi-boot of course
 include kretlim-uefi-boot.mk
 include modules/boot-shutdown/boot-shutdown.mk
 
 # Test in qemu with the default image
-qemu: tools/OVMF.fd image
+qemu: tools/OVMF.fd bin/image.img
 	qemu-system-x86_64 -drive if=pflash,format=raw,readonly,file=tools/OVMF.fd -net none -hda bin/image.img
 
 # Shortcut
 image: bin/image.img
 
 # Build the image
-bin/image.img: tools/image-builder.py tools/kretlim-boot-config.py kretlim-uefi-boot boot-shutdown
+bin/image.img: tools/image-builder.py tools/kretlim-boot-config.py $(KRETLIM_UEFI_BOOT_DIR_BIN)/BOOTX64.EFI $(BOOT_SHUTDOWN_DIR_BIN)/shutdown.elf
 	./tools/kretlim-boot-config.py default.yaml bin/image/kbootcfg.bin
 	cd bin && ../tools/image-builder.py ../image.yaml
 

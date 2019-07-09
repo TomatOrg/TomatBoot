@@ -19,19 +19,28 @@ INT32 GetGraphicsMode(EFI_GRAPHICS_OUTPUT_PROTOCOL* CONST gop, UINT32* CONST wid
 	EFI_GRAPHICS_OUTPUT_MODE_INFORMATION* pModeInfo = 0;
 	EFI_STATUS status = 0;
 	UINTN size = 0;	
-	INT32 best = gop->Mode->MaxMode-1;
+	INT32 best = gop->Mode->MaxMode;
+	INTN found = 0; 
 	while(best > 0) {
 		best--;
 
 		gop->QueryMode(gop, best, &size, &pModeInfo);
 		printf(L"\t%dx%d (%s)\n\r", pModeInfo->HorizontalResolution, pModeInfo->VerticalResolution, gop_mode_names[pModeInfo->PixelFormat]);
-		if(pModeInfo->PixelFormat == PixelBlueGreenRedReserved8BitPerColor) {
+		
+		// only this format
+		if(!found && pModeInfo->PixelFormat == PixelBlueGreenRedReserved8BitPerColor) {
+			// max resolution
+			if(*width != 0 && *width < pModeInfo->HorizontalResolution) continue;
+			if(*height != 0 && *height < pModeInfo->VerticalResolution) continue;
+
+			// found a good mode
 			*width = pModeInfo->HorizontalResolution;
 			*height = pModeInfo->VerticalResolution;
-			return best;
+			
+			found = 1;
 		}
 	}	
-	return -1;
+	return found ? best : -1;
 }
 
 EFI_FILE_PROTOCOL* OpenFile(EFI_FILE_PROTOCOL* CONST root, CONST CHAR16* CONST filename, UINT64 openMode, UINT64 attributes) {

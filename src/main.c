@@ -82,8 +82,11 @@ EFI_STATUS EFIAPI EfiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *System
         while(1);
     }
 
-    load_kernel(entry);
-    while(1);
+    load_kernel(config, entry);
+
+    printf(L"Should not have got here...\n\r");
+    printf(L"Continuing in 10 seconds...\n\r");
+    gBS->Stall(10000);
 
     return EFI_SUCCESS;
 }

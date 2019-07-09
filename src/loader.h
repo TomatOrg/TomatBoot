@@ -3,6 +3,6 @@
 
 #include "config.h"
 
-void load_kernel(boot_entry_t* config);
+void load_kernel(boot_config_t* config, boot_entry_t* entry);
 
 #endif
