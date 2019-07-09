@@ -247,6 +247,9 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
             case EfiBootServicesCode:
             case EfiBootServicesData:
             case EfiConventionalMemory:
+                type = KBOOT_MEMORY_TYPE_USABLE;
+                break;
+
             case EfiACPIMemoryNVS:
                 type = KBOOT_MEMORY_TYPE_ACPI_NVS;
                 break;

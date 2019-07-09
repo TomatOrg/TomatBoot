@@ -8,8 +8,6 @@
 #define KBOOT_MEMORY_TYPE_ACPI_RECLAIM  2
 #define KBOOT_MEMORY_TYPE_USABLE        3
 #define KBOOT_MEMORY_TYPE_ACPI_NVS      4
-#define KBOOT_MEMORY_TYPE_KBOOT         5
-#define KBOOT_MEMORY_TYPE_KERNEL        6
 
 typedef struct kboot_mmap_entry {
     uint32_t type;
