@@ -14,7 +14,7 @@ You can find the [boot protocol specs here](boot-protocol.md)
     * elf64 binaries
     * can configure using the [boot config](https://github.com/kretlim/kretlim-boot-config)
 * boot info that contains:
-    * full EFI Memory Map
+    * full memory map
     * the framebuffer address and size
     * command line options
     * RSDP
