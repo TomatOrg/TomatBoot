@@ -265,10 +265,11 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
                 break;
         }
 
-        if(     kinfo->mmap.descriptors[index].addr + kinfo->mmap.descriptors[index].len == addr 
-            &&  kinfo->mmap.descriptors[index].type == type) {
+        if(     index > 0
+            &&  kinfo->mmap.descriptors[index - 1].addr + kinfo->mmap.descriptors[index - 1].len == addr 
+            &&  kinfo->mmap.descriptors[index - 1].type == type) {
             // we can merge these
-            kinfo->mmap.descriptors[index].len += len;
+            kinfo->mmap.descriptors[index - 1].len += len;
         }else {
             // set a new type
             kinfo->mmap.descriptors[index].addr = addr;
