@@ -12,12 +12,16 @@ You can find the [boot protocol specs here](boot-protocol.md)
     * allows to modify the command line for each option
 * kernel loading
     * elf64 binaries
-    * can configure using the [boot config](https://github.com/kretlim/kretlim-boot-config)
+    * can configure using the [boot config tool](https://github.com/TomatOrg/tomatboot-config)
 * boot info that contains:
     * full memory map
     * the framebuffer address and size
     * command line options
     * RSDP
+
+### TODO
+* Support boot modules
+* Somehow pass the boot driver
 
 ## Requirements
 * make
