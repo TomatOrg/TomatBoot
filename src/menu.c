@@ -10,7 +10,7 @@
 #define HH (text_height / 2)
 #define CENTER_STR(str) (HW - (WSTRING_LEN(str) / 2))
 
-#define KRETLIM_BOOT L"-Kretlim Boot-"
+#define KRETLIM_BOOT L"-TomatBoot-"
 #define PLEASE_SELECT L"Please select an image."
 #define ADDITIONAL_COMMANDS L"Press E to write additional commands."
 

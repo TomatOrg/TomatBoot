@@ -3,3 +3,6 @@ build
 image
 tools
 .vscode
+.idea
+CMake*
+cmake*

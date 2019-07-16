@@ -2,49 +2,80 @@
 CC = clang-8
 LD = ld.lld-8
 
-# Set the boot shutdown directories
-BOOT_SHUTDOWN_DIR = modules/boot-shutdown/
-BOOT_SHUTDOWN_DIR_BIN = bin/image
+#############################
+# We want to build an image
+#############################
 
-# Set the bootloader directories
-KRETLIM_UEFI_BOOT_DIR_BIN = bin/image/EFI/BOOT
+.PHONY: default all clean image qemu
+default: all
 
-.PHONY: all clean image qemu
+#############################
+# Setup the configs
+#############################
+
+TOMATBOOT_UEFI_DIR_BIN := bin/image/EFI/BOOT/
+TOMATBOOT_SHUTDOWN_DIR_BIN := bin/image/
+
+include tomatboot-uefi.mk
+
+#############################
+# Default config
+#############################
 
 all: bin/image.img
 
-# We wanna build the kretlim-uefi-boot of course
-include kretlim-uefi-boot.mk
-include modules/boot-shutdown/boot-shutdown.mk
+#############################
+# Start in qemu
+# Will also download the
+# OVMF bios
+#############################
 
 # Test in qemu with the default image
 qemu: tools/OVMF.fd bin/image.img
 	qemu-system-x86_64 -drive if=pflash,format=raw,readonly,file=tools/OVMF.fd -net none -hda bin/image.img
 
+#############################
+# Build an image
+#############################
+
 # Shortcut
 image: bin/image.img
 
 # Build the image
-bin/image.img: tools/image-builder.py tools/kretlim-boot-config.py $(KRETLIM_UEFI_BOOT_DIR_BIN)/BOOTX64.EFI $(BOOT_SHUTDOWN_DIR_BIN)/shutdown.elf
-	./tools/kretlim-boot-config.py default.yaml bin/image/kbootcfg.bin
-	cd bin && ../tools/image-builder.py ../image.yaml
+bin/image.img: tools/image-builder.py tools/tomatboot-config.py $(TOMATBOOT_UEFI_DIR_BIN)/BOOTX64.EFI $(TOMATBOOT_SHUTDOWN_DIR_BIN)/shutdown.elf
+	./tools/tomatboot-config.py config/test-boot-config.yaml bin/image/kbootcfg.bin
+	cd bin && ../tools/image-builder.py ../config/test-image.yaml
+
+#############################
+# Clean
+#############################
 
 # Clean everything
-clean: kretlim-uefi-boot-clean boot-shutdown-clean
+clean: tomatboot-uefi-clean
+	rm -rf bin build
 
 # delete all the tools
 clean-tools:
 	rm -rf tools
 
+#############################
+# Tools
+#############################
+
+# Maybe download some specific release instead of the latest?
+
 # Get the image builder tool
+# TODO: use https://github.com/vineyard-os/image-builder instead
 tools/image-builder.py:
 	mkdir -p tools
-	cd tools && wget https://raw.githubusercontent.com/kretlim/image-builder/master/image-builder.py
+	cd tools && wget https://raw.githubusercontent.com/TomatOrg/image-builder/master/image-builder.py
+	chmod +x tools/image-builder.py
 
 # Get the boot config creator tool
-tools/kretlim-boot-config.py:
+tools/tomatboot-config.py:
 	mkdir -p tools
-	cd tools && wget https://raw.githubusercontent.com/kretlim/kretlim-boot-config/master/kretlim-boot-config.py
+	cd tools && wget https://raw.githubusercontent.com/TomatOrg/tomatboot-config/master/tomatboot-config.py
+	chmod +x tools/tomatboot-config.py
 
 # Get the bios
 tools/OVMF.fd:
