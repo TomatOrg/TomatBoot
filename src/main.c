@@ -1,5 +1,5 @@
 #include <uefi/uefi.h>
-#include <kboot/kboot.h>
+#include <tboot/tboot.h>
 
 #include <stddef.h>
 #include <stdarg.h>
@@ -72,21 +72,22 @@ EFI_STATUS EFIAPI EfiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *System
     boot_config_t* config = get_boot_config();
     if(config == NULL) {
         printf(L"Error getting the config\n\r");
-        while(1);
+        goto error;
     }
 
     printf(L"Starting menu\n\r");
     boot_entry_t* entry = start_menu(config);
     if(entry == NULL) {
         printf(L"Error getting the entry\n\r");
-        while(1);
+        goto error;
     }
 
     load_kernel(config, entry);
 
     printf(L"Should not have got here...\n\r");
+
+error:
     printf(L"Continuing in 10 seconds...\n\r");
     gBS->Stall(10000);
-
-    return EFI_SUCCESS;
+    return EFI_LOAD_ERROR;
 }

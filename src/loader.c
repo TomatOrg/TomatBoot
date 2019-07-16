@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <uefi/uefi.h>
-#include <kboot/kboot.h>
+#include <tboot/tboot.h>
 #include <elf64/elf64.h>
 
 #define ALIGN_DOWN(n, a) (((uint64_t)n) & ~((a) - 1))
@@ -81,7 +81,7 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
     ReadFile(file, &read_size, &strtab);
     ASSERT(read_size == sizeof(Elf64_Ehdr), L"File too small");
 
-    // find the .kboot.header section
+    // find the .tboot.header section
     // Elf64_Shdr section_header;
     // bool found = false;
     // for(int i = 0; i < header.e_shnum; i++) {
@@ -93,12 +93,12 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
     //     SetPosition(file, strtab.sh_offset + section_header.sh_name);
     //     ReadFile(file, &read_size, &name_buffer);
         
-    //     if(strcmp(name_buffer, ".kboot.header") == 0) {
+    //     if(strcmp(name_buffer, ".tboot.header") == 0) {
     //         found = true;
     //         break;
     //     }
     // }
-    // ASSERT(found, L"Could not find the `.kboot.header` section");
+    // ASSERT(found, L"Could not find the `.tboot.header` section");
 
     // read the header
     // kboot_header_t kheader = {0};
@@ -108,7 +108,7 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
     // ASSERT(read_size == sizeof(kboot_header_t), L"File too small");
 
     // print the info for debugging
-    //printf(L"kboot header:\n\r");
+    //printf(L"tboot header:\n\r");
     
     // we are going to put this in the actual 
     // physical address as specified
@@ -158,14 +158,14 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
     CloseFile(file);
 
     // allocate boot info
-    kboot_info_t* kinfo;
+    tboot_info_t* tinfo;
     size_t cmdline_length = strlen(entry->command_line);
-    gBS->AllocatePages(AllocateAnyPages, EfiReservedMemoryType, ALIGN_UP(sizeof(kboot_info_t) + cmdline_length, 4096), (uintptr_t*)&kinfo);
+    gBS->AllocatePages(AllocateAnyPages, EfiReservedMemoryType, ALIGN_UP(sizeof(tboot_info_t) + cmdline_length, 4096), (uintptr_t*)&tinfo);
     
     // prepare the boot info
-    kinfo->cmdline.length = cmdline_length;
-    kinfo->cmdline.cmdline = (char*)((size_t)kinfo + sizeof(kboot_info_t));
-    memcpy(kinfo->cmdline.cmdline, entry->command_line, cmdline_length);
+    tinfo->cmdline.length = cmdline_length;
+    tinfo->cmdline.cmdline = (char*)((size_t)tinfo + sizeof(tboot_info_t));
+    memcpy(tinfo->cmdline.cmdline, entry->command_line, cmdline_length);
 
     // set graphics mode
     EFI_GRAPHICS_OUTPUT_PROTOCOL* gop = 0;
@@ -179,9 +179,9 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
     gop->SetMode(gop, gopModeIndex);
 
     // set the entries
-    kinfo->framebuffer.width = width;
-    kinfo->framebuffer.height = height;
-    kinfo->framebuffer.framebuffer_addr = gop->Mode->FrameBufferBase;
+    tinfo->framebuffer.width = width;
+    tinfo->framebuffer.height = height;
+    tinfo->framebuffer.addr = gop->Mode->FrameBufferBase;
 
     EFI_GUID guids[] = {
         EFI_ACPI_TABLE_GUID,
@@ -189,16 +189,16 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
         ACPI_TABLE_GUID,
         ACPI_10_TABLE_GUID,
     };
-    kinfo->rsdp = 0;
+    tinfo->rsdp = 0;
     for(size_t i = 0; i < 4; i++) {
         EFI_CONFIGURATION_TABLE* t = gST->ConfigurationTable;
         for(size_t j = 0; j < gST->NumberOfTableEntries && t; j++, t++) {
             if(memcmp(&guids[i], &t->VendorGuid, 16) == 0) {
-                kinfo->rsdp = (uintptr_t)t->VendorTable;
+                tinfo->rsdp = (uintptr_t)t->VendorTable;
             }
 	    }
     }
-    ASSERT(kinfo->rsdp != 0, "Could not find the ACPI table\n\r");
+    ASSERT(tinfo->rsdp != 0, "Could not find the ACPI table\n\r");
 
     // allocate memory for the efi mmap
     size_t mapSize;
@@ -209,10 +209,10 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
     mapSize += 64 * descSize; // take into account some changes after exiting boot services
     EFI_MEMORY_DESCRIPTOR* descs;
     ASSERT(gBS->AllocatePages(AllocateAnyPages, EfiReservedMemoryType, ALIGN_UP(mapSize, 4096) / 4096, (uintptr_t*)&descs) == EFI_SUCCESS, L"Failed to allocate pages for thingy");
-    kinfo->mmap.descriptors = (kboot_mmap_entry_t*)descs;
+    tinfo->mmap.entries = (tboot_mmap_entry_t*)descs;
 
     // for identity mapped we should be able to just exit boot services and call it
-    kboot_entry_function func = (kboot_entry_function)header.e_entry;
+    tboot_entry_function func = (tboot_entry_function)header.e_entry;
 
     printf(L"Bai Bai\n\r");
     gBS->ExitBootServices(gImageHandle, mapKey);
@@ -235,11 +235,11 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
         uint8_t type = 0;
         switch(desc->Type) {
             case EfiUnusableMemory:
-                type = KBOOT_MEMORY_TYPE_BAD_MEMORY;
+                type = TBOOT_MEMORY_TYPE_BAD_MEMORY;
                 break;
             
             case EfiACPIReclaimMemory:
-                type = KBOOT_MEMORY_TYPE_ACPI_RECLAIM;
+                type = TBOOT_MEMORY_TYPE_ACPI_RECLAIM;
                 break;
             
             case EfiLoaderCode:
@@ -247,11 +247,11 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
             case EfiBootServicesCode:
             case EfiBootServicesData:
             case EfiConventionalMemory:
-                type = KBOOT_MEMORY_TYPE_USABLE;
+                type = TBOOT_MEMORY_TYPE_USABLE;
                 break;
 
             case EfiACPIMemoryNVS:
-                type = KBOOT_MEMORY_TYPE_ACPI_NVS;
+                type = TBOOT_MEMORY_TYPE_ACPI_NVS;
                 break;
 
             case EfiReservedMemoryType:
@@ -261,22 +261,22 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
             case EfiRuntimeServicesData:
             case EfiPalCode:
             default:
-                type = KBOOT_MEMORY_TYPE_RESERVED;
+                type = TBOOT_MEMORY_TYPE_RESERVED;
                 break;
         }
 
         if(     index > 0
-            &&  kinfo->mmap.descriptors[index - 1].addr + kinfo->mmap.descriptors[index - 1].len == addr 
-            &&  kinfo->mmap.descriptors[index - 1].type == type) {
+            &&  tinfo->mmap.entries[index - 1].addr + tinfo->mmap.entries[index - 1].len == addr
+            &&  tinfo->mmap.entries[index - 1].type == type) {
             // we can merge these
-            kinfo->mmap.descriptors[index - 1].len += len;
+            tinfo->mmap.entries[index - 1].len += len;
         }else {
             // set a new type
-            kinfo->mmap.descriptors[index].addr = addr;
-            kinfo->mmap.descriptors[index].len = len;
-            kinfo->mmap.descriptors[index].type = type;
+            tinfo->mmap.entries[index].addr = addr;
+            tinfo->mmap.entries[index].len = len;
+            tinfo->mmap.entries[index].type = type;
             index++;
-            kinfo->mmap.counts++;
+            tinfo->mmap.count++;
         }
 
         // next
@@ -284,9 +284,9 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
     }
 
     // split wherever we have our boot info
-    func(0xCAFEBABE, kinfo);
+    func(TBOOT_MAGIC, tinfo);
 
 failed:
-    // TODO: press any key to shutdown
-    while(1);
+    // if we got an error this will just exit
+    return;
 }

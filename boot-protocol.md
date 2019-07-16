@@ -29,12 +29,12 @@ The boot info structure is defined as
 ```c
 struct kboot_info {
   struct {
-    uint64_t counts;
+    uint64_t count;
     kboot_mmap_entry_t* entries;
   } mmap;
 
   struct {
-    uint64_t framebuffer_addr;
+    uint64_t addr;
     uint32_t width;
     uint32_t height;
   } framebuffer;
@@ -70,9 +70,16 @@ The memory map is created from the UEFI memory map using this table
 It is worth noting that the kernel code and data, as well as the boot info structure is marked as reserved.
 
 ### Framebuffer
-The framebuffer will give the address of the vram (physical)
 
-The framebuffer is in a Blue Green Red Reserved (8 bits per channel, 4 channels)
+Gives the OS info about a framebuffer it can print to
+
+The framebuffer must be in BGR 32bpp format `0x__RRGGBB` (`_` has no meaning)
+
+#### Address
+The address to the start of the framebuffer
+
+#### width/height
+The width and height of the framebuffer in pixels
 
 ### Command line
 The command line is a string that can be defined at boot to change the kernel behaviour dynamically 
