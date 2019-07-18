@@ -195,6 +195,7 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
         for(size_t j = 0; j < gST->NumberOfTableEntries && t; j++, t++) {
             if(memcmp(&guids[i], &t->VendorGuid, 16) == 0) {
                 tinfo->rsdp = (uintptr_t)t->VendorTable;
+                break;
             }
 	    }
     }
