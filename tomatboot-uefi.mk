@@ -38,7 +38,7 @@ TOMATBOOT_UEFI_INCLUDE_DIRS += $(TOMATBOOT_UEFI_DIR)src/
 
 TOMATBOOT_SHUTDOWN_DIR ?= $(TOMATBOOT_UEFI_DIR)modules/shutdown/
 
-include modules/shutdown/tomatboot-shutdown.mk
+include $(TOMATBOOT_UEFI_DIR)modules/shutdown/tomatboot-shutdown.mk
 
 #########################
 # Flags
