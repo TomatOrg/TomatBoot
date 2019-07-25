@@ -230,6 +230,7 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
     // do the initial convertion
     EFI_MEMORY_DESCRIPTOR* desc = descs;
     size_t index = 0;
+    tinfo->mmap.count = 0;
     for(int i = 0; i < mapSize / descSize; i++) {
         uintptr_t addr = desc->PhysicalStart;
         uintptr_t len = desc->NumberOfPages * 4096;
