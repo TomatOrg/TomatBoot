@@ -37,6 +37,10 @@ static void ascii_to_wide(const char* in, wchar_t* out) {
 
 static wchar_t name_buffer[512];
 
+static inline void outb(uint16_t port, uint8_t data) {
+    asm volatile ("outb %0, %1" : : "a"(data), "Nd"(port));
+}
+
 void load_kernel(boot_config_t* config, boot_entry_t* entry) {
     gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_WHITE, EFI_BLACK));
     gST->ConOut->ClearScreen(gST->ConOut);
@@ -220,7 +224,6 @@ void load_kernel(boot_config_t* config, boot_entry_t* entry) {
 
     // disable interrupts
     asm volatile("cli");
-    asm volatile("lidt (0)");
 
     // finish the table by getting the memory map
     // NOTE: This is completely valid according to the
