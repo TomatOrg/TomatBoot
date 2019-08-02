@@ -3,19 +3,9 @@
 Everything here is also defined in `kboot.h`
 
 ## Enviroment 
+The same as UEFI after ExitBootServices basically.
 
-### CPU Mode
-* long mode
-* interrupts are off
-
-### IDT
-will be nullified
-
-### GDT, TSS
-Same as UEFI state after ExitBootServices
-
-### Paging
-Identity mapping of all the memory
+So you will have everything setup in long mode with identity mapping of the memory.
 
 ## Information structure
 The bootloader will treat entry function as the following format:
