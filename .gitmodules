@@ -1,3 +1,0 @@
-[submodule "modules/shutdown"]
-	path = modules/shutdown
-	url = git@github.com:TomatOrg/tomatboot-shutdown-module.git

@@ -1,86 +1,91 @@
 # Make sure we use the correct compilers
-CC = clang-8
-LD = ld.lld-8
+CC ?= clang-8
 
-#############################
-# We want to build an image
-#############################
+#########################
+# By default just build
+# the EFI
+#########################
 
-.PHONY: default all clean image qemu
-default: all
+all: $(TOMATBOOT_UEFI_DIR_BIN)/BOOTX64.EFI
 
-#############################
-# Setup the configs
-#############################
+#########################
+# Configuration
+#########################
 
-TOMATBOOT_UEFI_DIR_BIN := bin/image/EFI/BOOT/
-TOMATBOOT_SHUTDOWN_DIR_BIN := bin/image/
+TOMATBOOT_UEFI_DIR ?= $(notdir $(shell pwd)/)
+TOMATBOOT_UEFI_DIR_BIN ?= $(TOMATBOOT_UEFI_DIR)bin/
+TOMATBOOT_UEFI_DIR_BUILD ?= $(TOMATBOOT_UEFI_DIR)build/
 
-include tomatboot-uefi.mk
+#########################
+# All the source files
+#########################
 
-#############################
-# Default config
-#############################
+TOMATBOOT_UEFI_SRCS += $(shell find $(TOMATBOOT_UEFI_DIR)src/ -name '*.c')
+TOMATBOOT_UEFI_SRCS += $(shell find $(TOMATBOOT_UEFI_DIR)lib/ -name '*.c')
 
-all: bin/image.img
+# All the headers, we use them as dependency
+TOMATBOOT_UEFI_HDRS += $(shell find $(TOMATBOOT_UEFI_DIR)lib/ -name '*.h')
+TOMATBOOT_UEFI_HDRS += $(shell find $(TOMATBOOT_UEFI_DIR)src/ -name '*.h')
 
-#############################
-# Start in qemu
-# Will also download the
-# OVMF bios
-#############################
+# Get the objects and their dirs
+TOMATBOOT_UEFI_OBJS := $(TOMATBOOT_UEFI_SRCS:%.c=$(TOMATBOOT_UEFI_DIR_BUILD)/%.o)
+TOMATBOOT_UEFI_OBJDIRS := $(dir $(TOMATBOOT_UEFI_OBJS))
 
-# Test in qemu with the default image
-qemu: tools/OVMF.fd bin/image.img
-	qemu-system-x86_64 -drive if=pflash,format=raw,readonly,file=tools/OVMF.fd -net none -hda bin/image.img
+#########################
+# Include directories
+#########################
 
-#############################
-# Build an image
-#############################
+TOMATBOOT_UEFI_INCLUDE_DIRS += $(TOMATBOOT_UEFI_DIR)lib/
+TOMATBOOT_UEFI_INCLUDE_DIRS += $(TOMATBOOT_UEFI_DIR)lib/libc/
+TOMATBOOT_UEFI_INCLUDE_DIRS += $(TOMATBOOT_UEFI_DIR)src/
 
-# Shortcut
-image: bin/image.img
+#########################
+# Flags
+#########################
 
-# Build the image
-bin/image.img: tools/image-builder.py tools/tomatboot-config.py $(TOMATBOOT_UEFI_DIR_BIN)/BOOTX64.EFI $(TOMATBOOT_SHUTDOWN_DIR_BIN)/shutdown.elf
-	./tools/tomatboot-config.py config/test-boot-config.yaml bin/image/kbootcfg.bin
-	cd bin && ../tools/image-builder.py ../config/test-image.yaml
+# The flags
+TOMATBOOT_UEFI_CFLAGS += \
+	-target x86_64-unknown-windows \
+	-ffreestanding \
+	-fno-stack-check \
+	-fno-stack-protector \
+	-fshort-wchar \
+	-g \
+	-mno-red-zone \
+	-Werror
 
-#############################
+# Add all the includes
+TOMATBOOT_UEFI_CFLAGS += $(TOMATBOOT_UEFI_INCLUDE_DIRS:%=-I%)
+
+# Set the linking flags
+TOMATBOOT_UEFI_LDFLAGS += \
+	-target x86_64-unknown-windows \
+	-nostdlib \
+	-Wl,-entry:EfiMain \
+	-Wl,-subsystem:efi_application \
+	-fuse-ld=lld-link
+
+#########################
+# Cleaning
+#########################
+
 # Clean
-#############################
+clean:
+	rm -rf $(TOMATBOOT_UEFI_DIR_BUILD) $(TOMATBOOT_UEFI_DIR_BIN)
 
-# Clean everything
-clean: tomatboot-uefi-clean
-	rm -rf bin build
+#########################
+# Actual build process
+#########################
 
-# delete all the tools
-clean-tools:
-	rm -rf tools
+# Build the main efi file
+$(TOMATBOOT_UEFI_DIR_BIN)/BOOTX64.EFI: $(TOMATBOOT_UEFI_OBJDIRS) $(TOMATBOOT_UEFI_OBJS)
+	mkdir -p $(TOMATBOOT_UEFI_DIR_BIN)
+	$(CC) $(TOMATBOOT_UEFI_LDFLAGS) -o $@ $(TOMATBOOT_UEFI_OBJS)
 
-#############################
-# Tools
-#############################
+# Build each of the c files
+$(TOMATBOOT_UEFI_DIR_BUILD)/%.o: %.c
+	$(CC) $(TOMATBOOT_UEFI_CFLAGS) -D __FILENAME__="\"$<\"" -c -o $@ $<
 
-# Maybe download some specific release instead of the latest?
-
-# Get the image builder tool
-# TODO: use https://github.com/vineyard-os/image-builder instead
-tools/image-builder.py:
-	mkdir -p tools
-	cd tools && wget https://raw.githubusercontent.com/TomatOrg/image-builder/master/image-builder.py
-	chmod +x tools/image-builder.py
-
-# Get the boot config creator tool
-tools/tomatboot-config.py:
-	mkdir -p tools
-	cd tools && wget https://raw.githubusercontent.com/TomatOrg/tomatboot-config/master/tomatboot-config.py
-	chmod +x tools/tomatboot-config.py
-
-# Get the bios
-tools/OVMF.fd:
-	mkdir -p tools
-	cd tools && wget http://downloads.sourceforge.net/project/edk2/OVMF/OVMF-X64-r15214.zip
-	cd tools && unzip OVMF-X64-r15214.zip OVMF.fd
-	rm tools/OVMF-X64-r15214.zip
-
+# Create each of the dirs
+$(TOMATBOOT_UEFI_DIR_BUILD)/%:
+	mkdir -p $@
