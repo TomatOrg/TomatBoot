@@ -58,7 +58,7 @@ ExitBootServicesCallback (
 **/
 EFI_STATUS
 EFIAPI
-DxeDebugLibConstructor(
+DebugLibConstructor(
   IN EFI_HANDLE                 ImageHandle,
   IN EFI_SYSTEM_TABLE           *SystemTable
   )
@@ -88,7 +88,7 @@ DxeDebugLibConstructor(
 **/
 EFI_STATUS
 EFIAPI
-DxeDebugLibDestructor(
+DebugLibDestructor(
   IN EFI_HANDLE                 ImageHandle,
   IN EFI_SYSTEM_TABLE           *SystemTable
   )
