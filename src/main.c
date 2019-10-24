@@ -1,6 +1,7 @@
 #include <Uefi.h>
 #include <Library/BaseLib.h>
 #include <Library/DebugLib.h>
+#include "config.h"
 
 EFI_HANDLE gImageHandle;
 EFI_SYSTEM_TABLE* gST;
@@ -19,9 +20,7 @@ EFI_STATUS EFIAPI EfiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *System
     // setup all of the libraries
     DebugLibConstructor(ImageHandle, SystemTable);
 
-    SystemTable->ConOut->ClearScreen(SystemTable->ConOut);
-    DebugPrint(0, "Hello world!");
-
+    Config* config = ParseConfig();
 
     CpuBreakpoint();
 

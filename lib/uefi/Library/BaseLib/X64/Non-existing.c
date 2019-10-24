@@ -43,7 +43,7 @@
 
 **/
 
-#include "../BaseLibInternals.h"
+#include <Uefi.h>
 
 VOID
 EFIAPI
