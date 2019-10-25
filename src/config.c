@@ -37,8 +37,6 @@ void load_boot_config(boot_config_t* config) {
         UINTN size = sizeof(boot_config_t);
         ASSERT_EFI_ERROR(configFile->Read(configFile, &size, config));
         ASSERT_EFI_ERROR(configFile->Close(configFile));
-
-        DebugPrint(0, "%d", config->gfx_mode);
     }
 
     // verify config and change if needed

@@ -6,6 +6,10 @@ The idea of TomatBoot is to provide a simple interface for kernel developers to 
 (unlike most bootloaders which load you to 32bit). The reason for using a loader and not implementing UEFI directly is so
 you won't have to mix UEFI and your kernel code.
 
+![Boot menu](screenshots/bootmenu.png)
+
+![Setup](screenshots/setup.png)
+
 ## Features (WIP)
 
 Right now none are implemented so yeah

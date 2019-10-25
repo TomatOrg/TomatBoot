@@ -4,6 +4,8 @@
 #include <Protocol/DevicePathToText.h>
 
 #include <util/draw_utils.h>
+#include <Protocol/GraphicsOutput.h>
+#include <config.h>
 
 #include "main_menu.h"
 
@@ -41,15 +43,31 @@ static void draw() {
     UINTN height = 0;
     ASSERT_EFI_ERROR(gST->ConOut->QueryMode(gST->ConOut, gST->ConOut->Mode->Mode, &width, &height));
 
+    // read the config so I can display some stuff from it
+    boot_config_t config;
+    load_boot_config(&config);
+
+    // get GOP so we can query the resolutions
+    EFI_GRAPHICS_OUTPUT_PROTOCOL* gop = NULL;
+    ASSERT_EFI_ERROR(gBS->LocateProtocol(&gEfiGraphicsOutputProtocolGuid, NULL, (VOID**)&gop));
+    EFI_GRAPHICS_OUTPUT_MODE_INFORMATION* info = NULL;
+    UINTN sizeOfInfo = sizeof(EFI_GRAPHICS_OUTPUT_MODE_INFORMATION);
+    ASSERT_EFI_ERROR(gop->QueryMode(gop, config.gfx_mode, &sizeOfInfo, &info));
+
+    // display some nice info
     EFI_TIME time;
     ASSERT_EFI_ERROR(gRT->GetTime(&time, NULL));
     write_at(0, 4, "Current time: %d/%d/%d %d:%d", time.Day, time.Month, time.Year, time.Hour, time.Minute);
+    write_at(0, 5, "Graphics mode: %dx%d", info->HorizontalResolution, info->VerticalResolution);
+    write_at(0, 6, "Current OS: %a", "NULL");
 
+    // options for what we can do
     // TODO: Change colors for the button
-    write_at(0, 6, "Press B for BOOTMENY");
-    write_at(0, 7, "Press S for SETUP");
-    write_at(0, 8, "Press ESC for SHUTDOWN");
+    write_at(0, 8, "Press B for BOOTMENY");
+    write_at(0, 9, "Press S for SETUP");
+    write_at(0, 10, "Press ESC for SHUTDOWN");
 
+    // display the boot device path
     EFI_DEVICE_PATH_PROTOCOL* device_path = NULL;
     ASSERT_EFI_ERROR(gBS->OpenProtocol(
             gImageHandle,
@@ -65,6 +83,7 @@ static void draw() {
     write_at(0, 17, "%s", devpath);
     // TODO: How do I free the devpath?
 
+    // draw the logo
     draw_image(30 + ((width - 30) / 2) - 14, 1, tomato_image, 14, 13);
 }
 
