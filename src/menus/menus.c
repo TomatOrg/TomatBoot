@@ -5,8 +5,9 @@
 #include "menus.h"
 #include "main_menu.h"
 #include "setup_menu.h"
+#include "boot_menu.h"
 
-void NORETURN start_menus() {
+void start_menus() {
     menu_t current_menu = MENU_MAIN_MENU;
 
     while(TRUE) {
@@ -17,7 +18,7 @@ void NORETURN start_menus() {
                 break;
 
             case MENU_BOOT_MENU:
-                ASSERT(FALSE);
+                current_menu = enter_boot_menu();
                 break;
 
             case MENU_SETUP:
