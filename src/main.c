@@ -1,6 +1,7 @@
 #include <Uefi.h>
 #include <Library/BaseLib.h>
 #include <Library/DebugLib.h>
+#include <menus/menus.h>
 #include "config.h"
 
 EFI_HANDLE gImageHandle;
@@ -20,7 +21,8 @@ EFI_STATUS EFIAPI EfiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *System
     // setup all of the libraries
     DebugLibConstructor(ImageHandle, SystemTable);
 
-    Config* config = ParseConfig();
+    //Config* config = ParseConfig();
+    start_menus();
 
     CpuBreakpoint();
 
