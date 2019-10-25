@@ -45,6 +45,7 @@ OBJDIRS := $(dir $(OBJS))
 
 INCLUDE_DIRS += $(TOMATBOOT_UEFI_DIR)lib/uefi/Include
 INCLUDE_DIRS += $(TOMATBOOT_UEFI_DIR)lib/uefi/Include/X64
+INCLUDE_DIRS += $(TOMATBOOT_UEFI_DIR)lib/
 INCLUDE_DIRS += $(TOMATBOOT_UEFI_DIR)src/
 
 #########################
@@ -87,7 +88,11 @@ NASMFLAGS += $(INCLUDE_DIRS:%=-i %/)
 #########################
 
 test: tools/OVMF.fd bin/image.img
-	qemu-system-x86_64 -drive if=pflash,format=raw,readonly,file=tools/OVMF.fd -net none -hda bin/image.img
+	qemu-system-x86_64 \
+		-drive if=pflash,format=raw,readonly,file=tools/OVMF.fd \
+		-drive file=bin/image.img,media=disk,format=raw \
+		-debugcon stdio \
+		-machine q35
 
 # Build the image
 bin/image.img: tools/image-builder.py \

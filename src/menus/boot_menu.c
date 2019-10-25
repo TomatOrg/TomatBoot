@@ -3,6 +3,7 @@
 
 #include <util/draw_utils.h>
 #include <config.h>
+#include <loaders/tboot_loader.h>
 #include "boot_menu.h"
 
 static void draw() {
@@ -81,7 +82,7 @@ menu_t enter_boot_menu() {
 
             // choose an os to start
             }else {
-                // TODO: call the loader with the correct entry
+                load_tboot_binary(&boot_entries.entries[selected]);
             }
         }
     }

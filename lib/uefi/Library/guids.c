@@ -6,6 +6,11 @@
  
 #include <Uefi.h>
  
+#include <Guid/Acpi.h>
+EFI_GUID gEfiAcpiTableGuid = EFI_ACPI_TABLE_GUID;
+EFI_GUID gEfiAcpi10TableGuid = EFI_ACPI_TABLE_GUID;
+EFI_GUID gEfiAcpi20TableGuid = EFI_ACPI_20_TABLE_GUID;
+
 #include <Guid/EventGroup.h>
 EFI_GUID gEfiEventExitBootServicesGuid = EFI_EVENT_GROUP_EXIT_BOOT_SERVICES;
 EFI_GUID gEfiEventVirtualAddressChangeGuid = EFI_EVENT_GROUP_VIRTUAL_ADDRESS_CHANGE;
