@@ -9,12 +9,13 @@
 
 void start_menus() {
     menu_t current_menu = MENU_MAIN_MENU;
+    BOOLEAN first = TRUE;
 
     while(TRUE) {
         // choose the correct menu to display
         switch(current_menu) {
             case MENU_MAIN_MENU:
-                current_menu = enter_main_menu();
+                current_menu = enter_main_menu(first);
                 break;
 
             case MENU_BOOT_MENU:
@@ -30,5 +31,6 @@ void start_menus() {
                 break;
         }
 
+        first = FALSE;
     }
 }

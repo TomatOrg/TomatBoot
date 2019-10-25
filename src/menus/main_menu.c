@@ -6,6 +6,7 @@
 #include <util/draw_utils.h>
 #include <Protocol/GraphicsOutput.h>
 #include <config.h>
+#include <loaders/tboot_loader.h>
 
 #include "main_menu.h"
 
@@ -90,23 +91,61 @@ static void draw() {
     draw_image(30 + ((width - 30) / 2) - 14, 1, tomato_image, 14, 13);
 }
 
-menu_t enter_main_menu() {
-    draw();
+// dummy
+VOID TimerHandler(IN EFI_EVENT Event, IN VOID* Context) {}
 
+menu_t enter_main_menu(BOOLEAN first) {
+    draw();
+    ASSERT_EFI_ERROR(gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_RED, EFI_BLACK)));
+
+    // read the config
+    boot_config_t config;
+    load_boot_config(&config);
+
+    // create the timer event
+    EFI_EVENT events[2] = { gST->ConIn->WaitForKey };
+    ASSERT_EFI_ERROR(gBS->CreateEvent(EVT_TIMER | EVT_NOTIFY_WAIT, TPL_CALLBACK, TimerHandler, TimerHandler, &events[1]));
+
+    if(first) {
+        ASSERT_EFI_ERROR(gBS->SetTimer(events[1], TimerRelative, config.boot_delay * 10000000));
+    }
+
+    UINTN count = 2;
     do {
         // get key press
         UINTN which = 0;
         EFI_INPUT_KEY key = {};
-        ASSERT_EFI_ERROR(gBS->WaitForEvent(1, &gST->ConIn->WaitForKey, &which));
-        ASSERT_EFI_ERROR(gST->ConIn->ReadKeyStroke(gST->ConIn, &key));
 
-        // choose the menu or continue
-        if(key.UnicodeChar == L'b' || key.UnicodeChar == L'B') {
-            return MENU_BOOT_MENU;
-        } else if(key.UnicodeChar == L's' || key.UnicodeChar == L'S') {
-            return MENU_SETUP;
-        } else if(key.ScanCode == SCAN_ESC) {
-            return MENU_SHUTDOWN;
+        ASSERT_EFI_ERROR(gBS->WaitForEvent(count, events, &which));
+
+        // got a keypress
+        if(which == 0) {
+            // cancel timer and destroy it
+            if(count == 2) {
+                ASSERT_EFI_ERROR(gBS->SetTimer(events[1], TimerCancel, 0));
+                ASSERT_EFI_ERROR(gBS->CloseEvent(events[1]));
+                count = 1;
+            }
+
+            // get key
+            ASSERT_EFI_ERROR(gST->ConIn->ReadKeyStroke(gST->ConIn, &key));
+
+            // choose the menu or continue
+            if(key.UnicodeChar == L'b' || key.UnicodeChar == L'B') {
+                return MENU_BOOT_MENU;
+            } else if(key.UnicodeChar == L's' || key.UnicodeChar == L'S') {
+                return MENU_SETUP;
+            } else if(key.ScanCode == SCAN_ESC) {
+                return MENU_SHUTDOWN;
+            }
+
+        // got timeout
+        }else {
+            // close the event
+            ASSERT_EFI_ERROR(gBS->CloseEvent(events[1]));
+
+            // call the loader
+            load_tboot_binary(&boot_entries.entries[config.default_os]);
         }
     } while(TRUE);
 }
