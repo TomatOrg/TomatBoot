@@ -10,8 +10,6 @@ EFI_RUNTIME_SERVICES* gRT;
 EFI_BOOT_SERVICES* gBS;
 
 EFI_STATUS EFIAPI EfiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable) {
-    EFI_STATUS status = EFI_SUCCESS;
-
     // setup some stuff
     gImageHandle = ImageHandle;
     gST = SystemTable;
@@ -21,10 +19,12 @@ EFI_STATUS EFIAPI EfiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *System
     // setup all of the libraries
     DebugLibConstructor(ImageHandle, SystemTable);
 
-    //Config* config = ParseConfig();
+    // load the boot config
+    get_boot_entries(&boot_entries);
+
+    // start the menu thingy
     start_menus();
 
-    CpuBreakpoint();
-
-    return status;
+    // failed to load the kernel
+    return EFI_LOAD_ERROR;
 }

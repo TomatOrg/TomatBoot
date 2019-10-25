@@ -10,11 +10,13 @@ typedef struct boot_entry {
 } boot_entry_t;
 
 typedef struct boot_entries {
-    UINT8 count;
-    boot_entry_t entries;
+    UINTN count;
+    boot_entry_t* entries;
 } boot_entries_t;
 
-boot_entries_t* get_boot_entries();
+extern boot_entries_t boot_entries;
+
+void get_boot_entries(boot_entries_t* config);
 void free_boot_entries(boot_entries_t* config);
 
 typedef struct boot_config {

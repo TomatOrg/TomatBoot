@@ -54,16 +54,19 @@ static void draw() {
     UINTN sizeOfInfo = sizeof(EFI_GRAPHICS_OUTPUT_MODE_INFORMATION);
     ASSERT_EFI_ERROR(gop->QueryMode(gop, config.gfx_mode, &sizeOfInfo, &info));
 
+    // get the boot entry
+    boot_entry_t* entry = &boot_entries.entries[config.default_os];
+
     // display some nice info
     EFI_TIME time;
     ASSERT_EFI_ERROR(gRT->GetTime(&time, NULL));
     write_at(0, 4, "Current time: %d/%d/%d %d:%d", time.Day, time.Month, time.Year, time.Hour, time.Minute);
     write_at(0, 5, "Graphics mode: %dx%d", info->HorizontalResolution, info->VerticalResolution);
-    write_at(0, 6, "Current OS: %a", "NULL");
+    write_at(0, 6, "Current OS: %a (%a)", entry->name, entry->path);
 
     // options for what we can do
     // TODO: Change colors for the button
-    write_at(0, 8, "Press B for BOOTMENY");
+    write_at(0, 8, "Press B for BOOTMENU");
     write_at(0, 9, "Press S for SETUP");
     write_at(0, 10, "Press ESC for SHUTDOWN");
 

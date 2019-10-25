@@ -93,11 +93,13 @@ test: tools/OVMF.fd bin/image.img
 bin/image.img: tools/image-builder.py \
                $(TOMATBOOT_UEFI_DIR_BIN)/BOOTX64.EFI
 	mkdir -p bin/image/EFI/BOOT/
-	cp $(TOMATBOOT_UEFI_DIR_BIN)/BOOTX64.EFI bin/image/EFI/BOOT/
+	cp $(TOMATBOOT_UEFI_DIR_BIN)/BOOTX64.EFI $(TOMATBOOT_UEFI_DIR_BIN)/image/EFI/BOOT/
+	cp config/test-tomatboot.cfg $(TOMATBOOT_UEFI_DIR_BIN)/image/tomatboot.cfg
 	cd bin && ../tools/image-builder.py ../config/test-image.yaml
 
 # Download the tool
 # TODO: Checksum
+# TODO: Download specific version
 tools/image-builder.py:
 	mkdir -p tools
 	cd tools && wget https://raw.githubusercontent.com/TomatOrg/image-builder/master/image-builder.py

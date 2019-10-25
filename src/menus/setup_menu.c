@@ -122,9 +122,21 @@ menu_t enter_setup_menu() {
          * Default os to load
          */
         IF_SELECTED({
-
+            // check last button press
+            if(op == OP_INC) {
+                config.default_os++;
+                if(config.default_os >= boot_entries.count) {
+                    config.default_os = 0;
+                }
+            }else if(op == OP_DEC) {
+                config.default_os--;
+                if(config.default_os < 0) {
+                    config.default_os = (UINT32)boot_entries.count - 1;
+                }
+            }
         });
-        write_at(controls_start, control_line++, "Default OS: %a", "NULL");
+        boot_entry_t* entry = &boot_entries.entries[config.default_os];
+        write_at(controls_start, control_line++, "Default OS: %a (%a)", entry->name, entry->path);
 
         ////////////////////////////////////////////////////////////////////////
         // Input handling
