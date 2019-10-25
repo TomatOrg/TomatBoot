@@ -4,14 +4,12 @@
 
 #include "menus.h"
 #include "main_menu.h"
+#include "setup_menu.h"
 
 void NORETURN start_menus() {
     menu_t current_menu = MENU_MAIN_MENU;
 
     while(TRUE) {
-        // clea it
-        gST->ConOut->ClearScreen(gST->ConOut);
-
         // choose the correct menu to display
         switch(current_menu) {
             case MENU_MAIN_MENU:
@@ -23,7 +21,7 @@ void NORETURN start_menus() {
                 break;
 
             case MENU_SETUP:
-                ASSERT(FALSE);
+                current_menu = enter_setup_menu();
                 break;
 
             case MENU_SHUTDOWN:

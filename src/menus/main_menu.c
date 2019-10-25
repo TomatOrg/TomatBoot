@@ -32,6 +32,8 @@ static CHAR8 tomato_image[] = {
 };
 
 static void draw() {
+    clear_screen(EFI_TEXT_ATTR(EFI_LIGHTGRAY, EFI_BLACK));
+
     write_at(0, 1, "TomatBoot v2");
     write_at(0, 2, "Copyright (c) 2019 TomatOrg");
 
@@ -41,7 +43,7 @@ static void draw() {
 
     EFI_TIME time;
     ASSERT_EFI_ERROR(gRT->GetTime(&time, NULL));
-    write_at(0, 4, "Boot time: %d/%d/%d %d:%d", time.Day, time.Month, time.Year, time.Hour, time.Minute);
+    write_at(0, 4, "Current time: %d/%d/%d %d:%d", time.Day, time.Month, time.Year, time.Hour, time.Minute);
 
     // TODO: Change colors for the button
     write_at(0, 6, "Press B for BOOTMENY");
@@ -77,9 +79,9 @@ menu_t enter_main_menu() {
         ASSERT_EFI_ERROR(gST->ConIn->ReadKeyStroke(gST->ConIn, &key));
 
         // choose the menu or continue
-        if(key.UnicodeChar == L'B') {
+        if(key.UnicodeChar == L'b' || key.UnicodeChar == L'B') {
             return MENU_BOOT_MENU;
-        } else if(key.UnicodeChar == L'S') {
+        } else if(key.UnicodeChar == L's' || key.UnicodeChar == L'S') {
             return MENU_SETUP;
         } else if(key.ScanCode == SCAN_ESC) {
             return MENU_SHUTDOWN;
