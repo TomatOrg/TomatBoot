@@ -121,7 +121,7 @@ void load_boot_config(boot_config_t* config) {
     if(status == EFI_NOT_FOUND) {
         config->boot_delay = 4;
         config->default_os = 0;
-        config->gfx_mode = get_prev_mode(0); // get the highest resolution possible
+        config->gfx_mode = get_first_mode();
 
     // otherwise see if can read the config
     }else {

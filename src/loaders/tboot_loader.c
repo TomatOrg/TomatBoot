@@ -121,6 +121,7 @@ void load_tboot_binary(boot_entry_t* entry) {
             AllocateAnyPages,
             EfiReservedMemoryType,
             EFI_SIZE_TO_PAGES(AsciiStrLen(entry->cmd) + 1 + sizeof(tboot_info_t)), (EFI_PHYSICAL_ADDRESS*)&info));
+    SetMem(info, AsciiStrLen(entry->cmd) + 1 + sizeof(tboot_info_t), 0);
 
     // set the cmd
     info->cmdline.length = (UINT32) AsciiStrLen(entry->cmd);
@@ -240,6 +241,7 @@ void load_tboot_binary(boot_entry_t* entry) {
             info->mmap.entries[index].type = type;
             index++;
             info->mmap.count++;
+            DebugPrint(0, "%d\n", info->mmap.count);
         }
 
         // next
@@ -247,5 +249,6 @@ void load_tboot_binary(boot_entry_t* entry) {
     }
 
     // and call the kernel
+    DebugPrint(0, "calling kernel\n");
     kmain(TBOOT_MAGIC, info);
 }
