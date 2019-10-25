@@ -1,7 +1,12 @@
 #include <Uefi.h>
-#include <util/draw_utils.h>
-#include <Library/DebugLib.h>
 #include <Library/BaseLib.h>
+#include <Library/DebugLib.h>
+#include <Protocol/GraphicsOutput.h>
+
+#include <config.h>
+#include <util/draw_utils.h>
+#include <util/gop_utils.h>
+
 #include "setup_menu.h"
 
 static void draw() {
@@ -52,11 +57,16 @@ menu_t enter_setup_menu() {
     UINTN height = 0;
     ASSERT_EFI_ERROR(gST->ConOut->QueryMode(gST->ConOut, gST->ConOut->Mode->Mode, &width, &height));
 
+    // get GOP so we can query the resolutions
+    EFI_GRAPHICS_OUTPUT_PROTOCOL* gop = NULL;
+    ASSERT_EFI_ERROR(gBS->LocateProtocol(&gEfiGraphicsOutputProtocolGuid, NULL, (VOID**)&gop));
+
     // draw the initial menu
     draw();
 
     // for the different options
-    UINTN boot_delay = 2;
+    boot_config_t config = {};
+    load_boot_config(&config);
     UINTN op = NO_OP;
 
     // for drawing
@@ -67,6 +77,10 @@ menu_t enter_setup_menu() {
         UINTN control_line = control_line_start;
         fill_box(2, 1, width - 22, height - 2, EFI_TEXT_ATTR(EFI_BLUE, EFI_LIGHTGRAY));
 
+        ////////////////////////////////////////////////////////////////////////
+        // Setup entries
+        ////////////////////////////////////////////////////////////////////////
+
         /*
          * Boot delay: changes the amount of time it take to boot by default
          * min: 1 // just so you can have time to actually change shit
@@ -75,25 +89,46 @@ menu_t enter_setup_menu() {
         IF_SELECTED({
             // check last button press
             if(op == OP_INC) {
-                boot_delay++;
-                if(boot_delay > 30) {
-                    boot_delay = 30;
+                config.boot_delay++;
+                if(config.boot_delay > 30) {
+                    config.boot_delay = 30;
                 }
             }else if(op == OP_DEC) {
-                boot_delay--;
-                if(boot_delay <= 0) {
-                    boot_delay = 1;
+                config.boot_delay--;
+                if(config.boot_delay <= 0) {
+                    config.boot_delay = 1;
                 }
             }
         });
-        write_at(controls_start, control_line++, "Boot Delay: %d", boot_delay);
+        write_at(controls_start, control_line++, "Boot Delay: %d", config.boot_delay);
+
+
+        /*
+         * Graphics Mode: changes the resolution and format of the graphics buffer
+         */
+        IF_SELECTED({
+            if(op == OP_INC) {
+                config.gfx_mode = get_next_mode(config.gfx_mode);
+            }else if(op == OP_DEC) {
+                config.gfx_mode = get_prev_mode(config.gfx_mode);
+            }
+        });
+        EFI_GRAPHICS_OUTPUT_MODE_INFORMATION* info = NULL;
+        UINTN sizeOfInfo = sizeof(EFI_GRAPHICS_OUTPUT_MODE_INFORMATION);
+        ASSERT_EFI_ERROR(gop->QueryMode(gop, config.gfx_mode, &sizeOfInfo, &info));
+        write_at(controls_start, control_line++, "Graphics Mode: %dx%d (BGRA8)", info->HorizontalResolution, info->VerticalResolution);
 
         /*
          * Default os to load
          */
         IF_SELECTED({
+
         });
         write_at(controls_start, control_line++, "Default OS: %a", "NULL");
+
+        ////////////////////////////////////////////////////////////////////////
+        // Input handling
+        ////////////////////////////////////////////////////////////////////////
 
         // reset the op
         op = NO_OP;
@@ -128,7 +163,7 @@ menu_t enter_setup_menu() {
 
         // save and exit
         }else if(key.UnicodeChar == CHAR_CARRIAGE_RETURN) {
-            // TODO: Save
+            save_boot_config(&config);
             return MENU_MAIN_MENU;
 
         // quit, without saving
