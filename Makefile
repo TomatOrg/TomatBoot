@@ -145,7 +145,7 @@ $(TOMATBOOT_UEFI_DIR_BIN)/BOOTX64.EFI: $(OBJDIRS) $(OBJS)
 
 # Build each of the c files
 $(TOMATBOOT_UEFI_DIR_BUILD)/%.c.o: %.c
-	$(CLANG) $(CFLAGS) -D __FILENAME__="\"$<\"" -c -o $@ $<
+	$(CLANG) $(CFLAGS) -c -o $@ $<
 
 # Build each of the c files
 $(TOMATBOOT_UEFI_DIR_BUILD)/%.nasm.o: %.nasm

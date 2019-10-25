@@ -137,7 +137,7 @@ void load_tboot_binary(boot_entry_t* entry) {
         // check if this is a acpi table
         for(int j = 0; j < ARRAY_SIZE(acpi_table_guids); j++) {
             acpi_table_entry_t* e = &acpi_table_guids[j];
-            if(CompareGuid(&config_table.VendorGuid, e->guid) == 0) {
+            if(CompareGuid(&config_table.VendorGuid, e->guid)) {
                 if(table == NULL || index > j) {
                     // free if already found a good entry
                     if(table != NULL) {
@@ -156,12 +156,12 @@ void load_tboot_binary(boot_entry_t* entry) {
     info->rsdp = (UINT64)table;
 
     // set the graphics mode
-    UINTN width = 0;
-    UINTN height = 0;
-    ASSERT_EFI_ERROR(gST->ConOut->QueryMode(gST->ConOut, gST->ConOut->Mode->Mode, &width, &height));
-    info->framebuffer.width = (UINT32) width;
-    info->framebuffer.height = (UINT32) height;
+    info->framebuffer.width = gop->Mode->Info->HorizontalResolution;
+    info->framebuffer.height = gop->Mode->Info->VerticalResolution;
     info->framebuffer.addr = gop->Mode->FrameBufferBase;
+    DebugPrint(0, "Framebuffer addr: %d\n", info->framebuffer.addr);
+    DebugPrint(0, "Framebuffer width: %d\n", info->framebuffer.width);
+    DebugPrint(0, "Framebuffer height: %d\n", info->framebuffer.height);
 
     // allocate memory for the efi mmap
     UINTN mapSize = 0;
