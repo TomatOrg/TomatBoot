@@ -10,43 +10,35 @@ CLANG ?= clang-8
 default: all
 
 #########################
-# Configuration
-#########################
-
-TOMATBOOT_UEFI_DIR ?= $(notdir $(shell pwd)/)
-TOMATBOOT_UEFI_DIR_BIN ?= $(TOMATBOOT_UEFI_DIR)bin/
-TOMATBOOT_UEFI_DIR_BUILD ?= $(TOMATBOOT_UEFI_DIR)build/
-
-#########################
 # All the source files
 #########################
 
 # Actual sources
-SRCS += $(shell find $(TOMATBOOT_UEFI_DIR)src/ -name '*.c')
+SRCS += $(shell find ./src/ -name '*.c')
 
 # All the headers, we use them as dependency
-HDRS += $(shell find $(TOMATBOOT_UEFI_DIR)src/ -name '*.h')
+HDRS += $(shell find ./src/ -name '*.h')
 
 # UEFI Lib
-SRCS += $(shell find $(TOMATBOOT_UEFI_DIR)lib/uefi/Library -name '*.c')
-SRCS += $(shell find $(TOMATBOOT_UEFI_DIR)lib/uefi/Library -name '*.nasm')
-HDRS += $(shell find $(TOMATBOOT_UEFI_DIR)lib/uefi/Include -name '*.h')
+SRCS += $(shell find ./lib/uefi/Library -name '*.c')
+SRCS += $(shell find ./lib/uefi/Library -name '*.nasm')
+HDRS += $(shell find ./lib/uefi/Include -name '*.h')
 
 # Make sure we build the guids c file if it does not exists
-SRCS += $(TOMATBOOT_UEFI_DIR)lib/uefi/Library/guids.c
+SRCS += ./lib/uefi/Library/guids.c
 
 # Get the objects and their dirs
-OBJS := $(SRCS:%=$(TOMATBOOT_UEFI_DIR_BUILD)/%.o)
+OBJS := $(SRCS:%=./build/%.o)
 OBJDIRS := $(dir $(OBJS))
 
 #########################
 # Include directories
 #########################
 
-INCLUDE_DIRS += $(TOMATBOOT_UEFI_DIR)lib/uefi/Include
-INCLUDE_DIRS += $(TOMATBOOT_UEFI_DIR)lib/uefi/Include/X64
-INCLUDE_DIRS += $(TOMATBOOT_UEFI_DIR)lib/
-INCLUDE_DIRS += $(TOMATBOOT_UEFI_DIR)src/
+INCLUDE_DIRS += ./lib/uefi/Include
+INCLUDE_DIRS += ./lib/uefi/Include/X64
+INCLUDE_DIRS += ./lib/
+INCLUDE_DIRS += ./src/
 
 #########################
 # Flags
@@ -96,10 +88,10 @@ test: tools/OVMF.fd bin/image.img
 
 # Build the image
 bin/image.img: tools/image-builder.py \
-               $(TOMATBOOT_UEFI_DIR_BIN)/BOOTX64.EFI
-	mkdir -p bin/image/EFI/BOOT/
-	cp $(TOMATBOOT_UEFI_DIR_BIN)/BOOTX64.EFI $(TOMATBOOT_UEFI_DIR_BIN)/image/EFI/BOOT/
-	cp config/test-tomatboot.cfg $(TOMATBOOT_UEFI_DIR_BIN)/image/tomatboot.cfg
+               ./bin/BOOTX64.EFI
+	mkdir -p ./bin/image/EFI/BOOT/
+	cp ./bin/BOOTX64.EFI ./bin/image/EFI/BOOT/
+	cp ./config/test-tomatboot.cfg ./bin/image/tomatboot.cfg
 	cd bin && ../tools/image-builder.py ../config/test-image.yaml
 
 # Download the tool
@@ -124,33 +116,32 @@ tools/OVMF.fd:
 
 # Clean
 clean:
-	rm -rf $(TOMATBOOT_UEFI_DIR_BUILD) $(TOMATBOOT_UEFI_DIR_BIN)
+	rm -rf ./bin ./build
 
 #########################
 # Actual build process
 #########################
 
-all: $(TOMATBOOT_UEFI_DIR_BIN)/BOOTX64.EFI
+all: ./bin/BOOTX64.EFI
 
 # specifically for the uefi lib
 # we need to generate that file, have it depend on the includes of UEFI
-$(TOMATBOOT_UEFI_DIR)lib/uefi/Library/guids.c: $(shell find $(TOMATBOOT_UEFI_DIR)lib/uefi/Include -name '*.h')
-	cd $(TOMATBOOT_UEFI_DIR)lib/uefi/Library && python gen_guids.py
-
+./lib/uefi/Library/guids.c:
+	cd ./lib/uefi/Library && python gen_guids.py
 
 # Build the main efi file
-$(TOMATBOOT_UEFI_DIR_BIN)/BOOTX64.EFI: $(OBJDIRS) $(OBJS)
-	mkdir -p $(TOMATBOOT_UEFI_DIR_BIN)
+./bin/BOOTX64.EFI: $(OBJDIRS) $(OBJS)
+	mkdir -p bin
 	$(CLANG) $(LDFLAGS) -o $@ $(OBJS)
 
 # Build each of the c files
-$(TOMATBOOT_UEFI_DIR_BUILD)/%.c.o: %.c
+./build/%.c.o: %.c
 	$(CLANG) $(CFLAGS) -c -o $@ $<
 
 # Build each of the c files
-$(TOMATBOOT_UEFI_DIR_BUILD)/%.nasm.o: %.nasm
+./build/%.nasm.o: %.nasm
 	nasm $(NASMFLAGS) -o $@ $<
 
 # Create each of the dirs
-$(TOMATBOOT_UEFI_DIR_BUILD)/%:
+./build/%:
 	mkdir -p $@
