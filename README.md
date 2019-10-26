@@ -12,9 +12,7 @@ you won't have to mix UEFI and your kernel code.
 
 ![Boot Menu](screenshots/bootmenu.png)
 
-## Features (WIP)
-
-Right now none are implemented so yeah
+## Features
 
 * Boot menu
 	* change width and height
@@ -25,10 +23,10 @@ Right now none are implemented so yeah
 * Passing boot information to the kernel
 	* Command line
 	* Framebuffer
-	* ACPI table
-	* Memory Map
-	* Boot modules (additional files to load)
-	* Boot Device Path (?)
+	* ACPI table 
+	* Memory Map (to be changed)
+	* Boot modules (additional files to load) (not implemented yet)
+	* Boot Device Path (?) (not implemented yet)
 
 ## UEFI Library
 
