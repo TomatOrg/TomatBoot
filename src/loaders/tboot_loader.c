@@ -133,7 +133,7 @@ void load_tboot_binary(boot_entry_t* entry) {
     uint64_t tsc_freq = AsmReadTsc();
     gBS->Stall(1000);
     info->tsc_freq = (AsmReadTsc() - tsc_freq) * 1000;
-    DebugPrint(0, "TSC Freq: %d Hz\n", info->tsc_freq);
+    DebugPrint(0, "TSC Freq: %lld Hz\n", info->tsc_freq);
 
     // search for the ACPI table, prefer newer guids than older ones
     int index = 0;
@@ -166,7 +166,7 @@ void load_tboot_binary(boot_entry_t* entry) {
     info->framebuffer.width = gop->Mode->Info->HorizontalResolution;
     info->framebuffer.height = gop->Mode->Info->VerticalResolution;
     info->framebuffer.addr = gop->Mode->FrameBufferBase;
-    DebugPrint(0, "Framebuffer addr: %d\n", info->framebuffer.addr);
+    DebugPrint(0, "Framebuffer addr: %p\n", info->framebuffer.addr);
     DebugPrint(0, "Framebuffer width: %d\n", info->framebuffer.width);
     DebugPrint(0, "Framebuffer height: %d\n", info->framebuffer.height);
 
