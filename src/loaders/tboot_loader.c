@@ -129,6 +129,12 @@ void load_tboot_binary(boot_entry_t* entry) {
     CopyMem(info->cmdline.cmdline, entry->cmd, info->cmdline.length);
     DebugPrint(0, "Command line: %a\n", info->cmdline.cmdline);
 
+    // calculate the tsc freq
+    uint64_t tsc_freq = AsmReadTsc();
+    gBS->Stall(1000);
+    info->tsc_freq = (AsmReadTsc() - tsc_freq) * 1000;
+    DebugPrint(0, "TSC Freq: %d Hz\n", info->tsc_freq);
+
     // search for the ACPI table, prefer newer guids than older ones
     int index = 0;
     void* table = NULL;
@@ -241,7 +247,6 @@ void load_tboot_binary(boot_entry_t* entry) {
             info->mmap.entries[index].type = type;
             index++;
             info->mmap.count++;
-            DebugPrint(0, "%d\n", info->mmap.count);
         }
 
         // next
