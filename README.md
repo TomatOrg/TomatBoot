@@ -28,6 +28,38 @@ you won't have to mix UEFI and your kernel code.
 	* Boot modules (additional files to load) (not implemented yet)
 	* Boot Device Path (?) (not implemented yet)
 
+## How to
+
+### Building
+Being a loader it needs to be used in conjunction with another loader. For a project using TomatBoot you can see 
+[TomatOS](https://github.com/TomatOrg/TomatOS).
+
+Before anything we need to actually build the bootloader. To do so simply run the following:
+```shell script
+git clone git@github.com:TomatOrg/TomatBoot-UEFI.git
+cd TomatBoot-UEFI
+make
+```
+
+This will make the efi executable which will be found under `bin/BOOTX64.EFI`. in the final image you would want to 
+place it under `EFI/BOOT/BOOTX64.EFI`. Of course you will need to make sure the image is GPT partitioned and has a 
+EFI partition (in that partition you want to place the binary).
+
+Other than the binary, you will also need to provide a configuration file. For an example you can see the 
+[example config](config/test-tomatboot.cfg). The config file needs to be placed at the root of the efi partition 
+with the name `tomatboot.cfg`
+
+### Config format
+The configuration format is straight forward, it is a list of entries where each entry has the format:
+```
+:<name>
+PATH=<path to elf executeable>
+CMDLINE=<optional command line options>
+```
+
+
+
+
 ## UEFI Library
 
 The uefi library consists mainly of headers and source files taken directly from [EDK2](https://github.com/tianocore/edk2). The reason for that is 
