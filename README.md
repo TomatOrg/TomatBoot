@@ -57,9 +57,6 @@ PATH=<path to elf executeable>
 CMDLINE=<optional command line options>
 ```
 
-
-
-
 ## UEFI Library
 
 The uefi library consists mainly of headers and source files taken directly from [EDK2](https://github.com/tianocore/edk2). The reason for that is 
