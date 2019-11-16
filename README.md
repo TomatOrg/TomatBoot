@@ -25,6 +25,7 @@ you won't have to mix UEFI and your kernel code.
 	* Framebuffer
 	* ACPI table 
 	* Memory Map (to be changed)
+	* TSC frequency (ticks per second)
 	* Boot modules (additional files to load) (not implemented yet)
 	* Boot Device Path (?) (not implemented yet)
 
