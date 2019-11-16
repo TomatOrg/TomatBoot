@@ -29,6 +29,13 @@ you won't have to mix UEFI and your kernel code.
 	* Boot modules (additional files to load) (not implemented yet)
 	* Boot Device Path (?) (not implemented yet)
 
+## Boot Protocol
+### TomatBoot
+Currently this is the only supported boot protocol, the protocol is very simple, give a 64bit elf binary, we load it 
+as a static binary, and call it with two parameters, one being a magic, and the other being the boot info struct.
+
+For the header file with more definitions you can [click here](lib/tboot/tboot.h). 
+
 ## How to
 
 ### Building

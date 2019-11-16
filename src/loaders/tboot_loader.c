@@ -10,6 +10,9 @@
 #include <uefi/Include/Protocol/GraphicsOutput.h>
 #include "tboot_loader.h"
 
+#define CUSTOM_TYPE_BOOT_INFO   (0x80000000 + 0)
+#define CUSTOM_TYPE_KERNEL      (0x80000000 + 1)
+
 typedef struct acpi_table_entry {
     EFI_GUID* guid;
     UINTN size;
@@ -73,7 +76,7 @@ static tboot_entry_function load_elf_file(const CHAR8* path) {
             case PT_LOAD: {
                 // allocate the pages
                 EFI_PHYSICAL_ADDRESS addr = phdr.p_paddr;
-                ASSERT_EFI_ERROR(gBS->AllocatePages(AllocateAddress, EfiReservedMemoryType, EFI_SIZE_TO_PAGES(phdr.p_memsz), &addr));
+                ASSERT_EFI_ERROR(gBS->AllocatePages(AllocateAddress, CUSTOM_TYPE_KERNEL, EFI_SIZE_TO_PAGES(phdr.p_memsz), &addr));
 
                 // read the data
                 ASSERT_EFI_ERROR(file->SetPosition(file, phdr.p_offset));
@@ -119,7 +122,7 @@ void load_tboot_binary(boot_entry_t* entry) {
     tboot_info_t* info = NULL;
     ASSERT_EFI_ERROR(gBS->AllocatePages(
             AllocateAnyPages,
-            EfiReservedMemoryType,
+            CUSTOM_TYPE_BOOT_INFO,
             EFI_SIZE_TO_PAGES(AsciiStrLen(entry->cmd) + 1 + sizeof(tboot_info_t)), (EFI_PHYSICAL_ADDRESS*)&info));
     SetMem(info, AsciiStrLen(entry->cmd) + 1 + sizeof(tboot_info_t), 0);
 
@@ -152,7 +155,7 @@ void load_tboot_binary(boot_entry_t* entry) {
                     }
 
                     // allocate and copy it
-                    ASSERT_EFI_ERROR(gBS->AllocatePages(AllocateAnyPages, EfiReservedMemoryType, EFI_SIZE_TO_PAGES(e->size), (EFI_PHYSICAL_ADDRESS*)&table));
+                    ASSERT_EFI_ERROR(gBS->AllocatePages(AllocateAnyPages, CUSTOM_TYPE_BOOT_INFO, EFI_SIZE_TO_PAGES(e->size), (EFI_PHYSICAL_ADDRESS*)&table));
                     CopyMem(table, config_table.VendorTable, e->size);
                     index = j;
                 }
@@ -178,7 +181,7 @@ void load_tboot_binary(boot_entry_t* entry) {
     gBS->GetMemoryMap(&mapSize, NULL, NULL, &descSize, NULL);
     mapSize += 64 * descSize; // take into account some changes after exiting boot services
     EFI_MEMORY_DESCRIPTOR* descs = NULL;
-    ASSERT_EFI_ERROR(gBS->AllocatePages(AllocateAnyPages, EfiReservedMemoryType, EFI_SIZE_TO_PAGES(mapSize), (EFI_PHYSICAL_ADDRESS*)&descs));
+    ASSERT_EFI_ERROR(gBS->AllocatePages(AllocateAnyPages, CUSTOM_TYPE_BOOT_INFO, EFI_SIZE_TO_PAGES(mapSize), (EFI_PHYSICAL_ADDRESS*)&descs));
     ASSERT_EFI_ERROR(gBS->GetMemoryMap(&mapSize, descs, &mapKey, &descSize, &descVersion));
     info->mmap.entries = (tboot_mmap_entry_t*)descs;
     DebugPrint(0, "Memory map size: %d\n", mapSize);
@@ -222,6 +225,14 @@ void load_tboot_binary(boot_entry_t* entry) {
 
             case EfiACPIMemoryNVS:
                 type = TBOOT_MEMORY_TYPE_ACPI_NVS;
+                break;
+
+            case CUSTOM_TYPE_KERNEL:
+                type = TBOOT_MEMORY_TYPE_KERNEL;
+                break;
+
+            case CUSTOM_TYPE_BOOT_INFO:
+                type = TBOOT_MEMORY_TYPE_BOOT_INFO;
                 break;
 
             case EfiReservedMemoryType:
