@@ -31,8 +31,10 @@ CHAR8* read_line(EFI_FILE_PROTOCOL* file) {
             break;
         }
 
-        // read next character
-        length++;
+        // read next character if not a \r
+        if(path[length] != '\r') {
+            length++;
+        }
     }
 
     ASSERT(length < 255);
@@ -69,6 +71,8 @@ void get_boot_entries(boot_entries_t* entries) {
     entries->count = entryCount;
     ASSERT_EFI_ERROR(gBS->AllocatePool(EfiBootServicesData, sizeof(boot_entry_t) * entryCount, (VOID**)&entries->entries));
 
+    boot_module_t* last_module = NULL;
+
     // now do the actual processing of everything
     ASSERT_EFI_ERROR(file->SetPosition(file, 0));
     INTN index = -1;
@@ -82,6 +86,8 @@ void get_boot_entries(boot_entries_t* entries) {
             entries->entries[index].name = line + 1;
             entries->entries[index].path = NULL;
             entries->entries[index].cmd = NULL;
+            entries->entries[index].modules = NULL;
+            entries->entries[index].modules_count = 0;
 
         }else {
             // this is just a parameter
@@ -97,7 +103,34 @@ void get_boot_entries(boot_entries_t* entries) {
 
             // module path (can have multiple)
             }else if(AsciiStrnCmp(line, "MODULE=", 7) == 0) {
-                // TODO: Add module
+                line += 7;
+
+                // get the end of the name
+                CHAR8* path = line;
+                while(*path != 0 && *path != ',') {
+                    path++;
+                }
+
+                // make sure there is even a path
+                ASSERT(*path != 0);
+
+                // set the , to null termination and skip it
+                *path++ = 0;
+
+                // allocate the entry
+                if(last_module == NULL) {
+                    ASSERT_EFI_ERROR(gBS->AllocatePool(EfiBootServicesData, sizeof(boot_module_t), (void*)&last_module));
+                    entries->entries[index].modules = last_module;
+                }else {
+                    ASSERT_EFI_ERROR(gBS->AllocatePool(EfiBootServicesData, sizeof(boot_module_t), (void*)&last_module->next));
+                    last_module = last_module->next;
+                }
+
+                // set the info
+                last_module->path = path;
+                last_module->tag = line;
+                last_module->next = NULL;
+                entries->entries[index].modules_count++;
 
             // if nothing just free the line
             }else {

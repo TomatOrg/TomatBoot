@@ -19,6 +19,9 @@ EFI_GUID gEfiEventReadyToBootGuid = EFI_EVENT_GROUP_READY_TO_BOOT;
 EFI_GUID gEfiEventDxeDispatchGuid = EFI_EVENT_GROUP_DXE_DISPATCH_GUID;
 EFI_GUID gEfiEndOfDxeEventGroupGuid = EFI_END_OF_DXE_EVENT_GROUP_GUID;
 
+#include <Guid/FileInfo.h>
+EFI_GUID gEfiFileInfoGuid = EFI_FILE_INFO_ID;
+
 #include <Guid/HiiFormMapMethodGuid.h>
 EFI_GUID gEfiHiiStandardFormGuid = EFI_HII_STANDARD_FORM_GUID;
 

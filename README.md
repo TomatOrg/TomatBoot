@@ -26,7 +26,7 @@ you won't have to mix UEFI and your kernel code.
 	* ACPI table 
 	* Memory Map (to be changed)
 	* TSC frequency (ticks per second)
-	* Boot modules (additional files to load) (not implemented yet)
+	* Boot modules (additional files to load)
 	* Boot Device Path (?) (not implemented yet)
 
 ## Boot Protocol
@@ -53,6 +53,16 @@ This will make the efi executable which will be found under `bin/BOOTX64.EFI`. i
 place it under `EFI/BOOT/BOOTX64.EFI`. Of course you will need to make sure the image is GPT partitioned and has a 
 EFI partition (in that partition you want to place the binary).
 
+Example file structure inside the UEFI partition:
+```
+.
+├── EFI
+│   └── BOOT
+│       └── BOOTX64.EFI
+├── tomatboot.cfg
+└── tomatos.elf
+```
+
 Other than the binary, you will also need to provide a configuration file. For an example you can see the 
 [example config](config/test-tomatboot.cfg). The config file needs to be placed at the root of the efi partition 
 with the name `tomatboot.cfg`
@@ -63,16 +73,15 @@ The configuration format is straight forward, it is a list of entries where each
 :<name>
 PATH=<path to elf executeable>
 CMDLINE=<optional command line options>
+MODULE=<tag 1>,<path 1>
+MODULE=<tag 2>,<path 2>
+...
 ```
+
+little clarification on the module option, it can be found as many times as you want, the first part will be the tag to
+assign that module, and the path is what file to load.
 
 ## UEFI Library
 
 The uefi library consists mainly of headers and source files taken directly from [EDK2](https://github.com/tianocore/edk2). The reason for that is 
 to cut on development time and use existing headers, but not using EDK2 build system.
-
-The reason that I am not just using a submodle of edk2 is for two reasons:
-* EDK2 is HUGE and I don't want the builder to have to clone that all
-* I make some changes to make it actually work nicely without EDK2 build system
-
-The license of EDK2 can be found [here](lib/uefi/License.txt) and is redistributed under that license. Note that the rest of the code is
-distributed as the main license file shows.

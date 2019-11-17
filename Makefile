@@ -51,12 +51,11 @@ CFLAGS := \
 	-fno-stack-check \
 	-fno-stack-protector \
 	-fshort-wchar \
-	-g \
-	-flto \
-	-Ofast \
 	-mno-red-zone \
-	-std=c99 \
-	-Werror
+	-std=c11 \
+	-Werror \
+	-Ofast \
+	-flto
 
 # Add all the includes
 CFLAGS += $(INCLUDE_DIRS:%=-I%)

@@ -3,10 +3,18 @@
 
 #include <Base.h>
 
+typedef struct boot_module {
+    struct boot_module* next;
+    const CHAR8* path;
+    const CHAR8* tag;
+} boot_module_t;
+
 typedef struct boot_entry {
     const CHAR8* name;
     const CHAR8* path;
     const CHAR8* cmd;
+    UINTN modules_count;
+    boot_module_t* modules;
 } boot_entry_t;
 
 typedef struct boot_entries {

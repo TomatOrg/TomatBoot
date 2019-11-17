@@ -50,6 +50,11 @@
 #define TBOOT_MEMORY_TYPE_KERNEL        6
 
 /*
+ * This represent the module at the given index
+ */
+#define TBOOT_MEMORY_TYPE_MODULE_N(n)   ((n) + 10)
+
+/*
  * Entry in the memory map, the type is one of
  * the TBOOT_MEMORY_TYPE_*
  */
@@ -59,7 +64,39 @@ typedef struct tboot_mmap_entry {
     UINT64 len;
 } __attribute__((packed)) tboot_mmap_entry_t;
 
+/**
+ * Entry in the modules list, the base is where it was loaded
+ * and the len is the length in memory. the name is taken from
+ * the configuration file.
+ */
+typedef struct tboot_module {
+    UINT64 base;
+    UINT64 len;
+    CHAR8* name;
+} __attribute__((packed)) tboot_module_t;
+
+/**
+ * The main boot structure, contains all the info you would just need
+ */
 typedef struct tboot_info {
+
+    /**
+     * The features that the loader supports, if the bit is
+     * off then the data for that entry should be ignored,
+     * otherwise the data is valid
+     */
+    union {
+        struct {
+            UINT64 mmap : 1;
+            UINT64 framebuffer : 1;
+            UINT64 cmdline : 1;
+            UINT64 modules : 1;
+            UINT64 tsc_freq : 1;
+            UINT64 rsdp : 1;
+        };
+        UINT64 raw;
+    } flags;
+
     /**
      * The memory map, contains information about the memory
      */
@@ -69,12 +106,17 @@ typedef struct tboot_info {
     } __attribute__((packed)) mmap;
 
     /**
-     * The framebuffer, it is in BGRX format
+     * The framebuffer, it is in BGRA format
      */
     struct {
+        // the physical address
         UINT64 addr;
+        // the width in pixels
         UINT32 width;
+        // the height in pixels
         UINT32 height;
+        // pixels per scanline
+        UINT32 pitch;
     } __attribute__((packed)) framebuffer;
 
     /**
@@ -85,6 +127,14 @@ typedef struct tboot_info {
         UINT32 length;
         char* cmdline;
     } __attribute__((packed)) cmdline;
+
+    /**
+     * The boot modules, loaded according to the config file
+     */
+    struct {
+        UINT64 count;
+        tboot_module_t* entries;
+    } __attribute__((packed)) modules;
 
     /**
      * The frequency (ticks per second) of the TSC

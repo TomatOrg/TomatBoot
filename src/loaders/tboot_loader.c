@@ -8,10 +8,12 @@
 #include <elf64/elf64.h>
 #include <tboot/tboot.h>
 #include <uefi/Include/Protocol/GraphicsOutput.h>
+#include <uefi/Include/Guid/FileInfo.h>
 #include "tboot_loader.h"
 
 #define CUSTOM_TYPE_BOOT_INFO   (0x80000000 + 0)
 #define CUSTOM_TYPE_KERNEL      (0x80000000 + 1)
+#define CUSTOM_TYPE_MODULE_N(n) (0x80000000 + 2 + (n))
 
 typedef struct acpi_table_entry {
     EFI_GUID* guid;
@@ -99,6 +101,40 @@ static tboot_entry_function load_elf_file(const CHAR8* path) {
     return (tboot_entry_function)ehdr.e_entry;
 }
 
+static void load_file(const CHAR8* path, int index, UINT64* out_base, UINT64* out_len) {
+    // convert to unicode so we can open it
+    CHAR16* unicode = NULL;
+    UINTN len = AsciiStrLen(path) + 1;
+    ASSERT_EFI_ERROR(gBS->AllocatePool(EfiBootServicesData, len * 2 + 2, (VOID**)&unicode));
+    AsciiStrnToUnicodeStrS(path, len, unicode, len + 1, &len);
+
+    // open the file
+    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* filesystem = NULL;
+    ASSERT_EFI_ERROR(gBS->LocateProtocol(&gEfiSimpleFileSystemProtocolGuid, NULL, (VOID**)&filesystem));
+
+    EFI_FILE_PROTOCOL* root = NULL;
+    ASSERT_EFI_ERROR(filesystem->OpenVolume(filesystem, &root));
+
+    EFI_FILE_PROTOCOL* file = NULL;
+    ASSERT_EFI_ERROR(root->Open(root, &file, unicode, EFI_FILE_MODE_READ, 0));
+    ASSERT_EFI_ERROR(gBS->FreePool(unicode));
+
+    // get the file size
+    UINTN file_info_size = SIZE_OF_EFI_FILE_INFO + len * 2 + 2;
+    EFI_FILE_INFO* file_info = NULL;
+    ASSERT_EFI_ERROR(gBS->AllocatePool(EfiBootServicesData, file_info_size, (void*)&file_info));
+    file_info->Size = file_info_size;
+    ASSERT_EFI_ERROR(file->GetInfo(file, &gEfiFileInfoGuid, &file_info_size, file_info));
+    *out_len = file_info->FileSize;
+    ASSERT_EFI_ERROR(gBS->FreePool(file_info));
+
+    // allocate the buffer
+    ASSERT_EFI_ERROR(gBS->AllocatePages(AllocateAnyPages, CUSTOM_TYPE_MODULE_N(index), *out_len, out_base));
+
+    // read it
+    ASSERT_EFI_ERROR(file->Read(file, out_len, (void*)*out_base));
+}
+
 void load_tboot_binary(boot_entry_t* entry) {
     // clear everything, this is going to be a simple log of how we loaded the stuff
     ASSERT_EFI_ERROR(gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_LIGHTGRAY, EFI_BLACK)));
@@ -120,19 +156,46 @@ void load_tboot_binary(boot_entry_t* entry) {
 
     // prepare the boot info
     tboot_info_t* info = NULL;
-    ASSERT_EFI_ERROR(gBS->AllocatePages(
-            AllocateAnyPages,
-            CUSTOM_TYPE_BOOT_INFO,
-            EFI_SIZE_TO_PAGES(AsciiStrLen(entry->cmd) + 1 + sizeof(tboot_info_t)), (EFI_PHYSICAL_ADDRESS*)&info));
-    SetMem(info, AsciiStrLen(entry->cmd) + 1 + sizeof(tboot_info_t), 0);
+    ASSERT_EFI_ERROR(gBS->AllocatePool(CUSTOM_TYPE_BOOT_INFO, sizeof(tboot_info_t), (void*)&info));
+    SetMem(info, sizeof(tboot_info_t), 0);
 
     // set the cmd
-    info->cmdline.length = (UINT32) AsciiStrLen(entry->cmd);
-    info->cmdline.cmdline = (CHAR8*)((UINTN)info + info->cmdline.length);
-    CopyMem(info->cmdline.cmdline, entry->cmd, info->cmdline.length);
+    info->flags.cmdline = 1;
+    info->cmdline.length = AsciiStrLen(entry->cmd);
+    ASSERT_EFI_ERROR(gBS->AllocatePool(CUSTOM_TYPE_BOOT_INFO, info->cmdline.length, (void*)&info->cmdline.cmdline));
+    AsciiStrCpy(info->cmdline.cmdline, entry->cmd);
     DebugPrint(0, "Command line: %a\n", info->cmdline.cmdline);
 
+    // load the boot modules
+    info->flags.modules = 1;
+    info->modules.count = entry->modules_count;
+    if(info->modules.count != 0) {
+        ASSERT_EFI_ERROR(gBS->AllocatePool(CUSTOM_TYPE_BOOT_INFO, sizeof(tboot_module_t) * info->modules.count, (void*)&info->modules.entries));
+
+        int index = 0;
+        boot_module_t* module = entry->modules;
+        while(module != NULL) {
+
+            // load the file
+            load_file(module->path, index, &info->modules.entries[index].base, &info->modules.entries[index].len);
+
+            // prepare the name
+            ASSERT_EFI_ERROR(gBS->AllocatePool(CUSTOM_TYPE_BOOT_INFO, AsciiStrLen(module->tag), (void*)&info->modules.entries[index].name));
+            AsciiStrCpy(info->modules.entries[index].name, module->tag);
+
+            tboot_module_t* mod = &info->modules.entries[index];
+            DebugPrint(0, "Module `%a`: %p, %d bytes\n", mod->name, mod->base, mod->len);
+
+            // next entry
+            index++;
+            module = module->next;
+        }
+    }else {
+        info->modules.entries = NULL;
+    }
+
     // calculate the tsc freq
+    info->flags.tsc_freq = 1; // TODO: check the cpu supports the tsc first
     uint64_t tsc_freq = AsmReadTsc();
     gBS->Stall(1000);
     info->tsc_freq = (AsmReadTsc() - tsc_freq) * 1000;
@@ -158,6 +221,9 @@ void load_tboot_binary(boot_entry_t* entry) {
                     ASSERT_EFI_ERROR(gBS->AllocatePages(AllocateAnyPages, CUSTOM_TYPE_BOOT_INFO, EFI_SIZE_TO_PAGES(e->size), (EFI_PHYSICAL_ADDRESS*)&table));
                     CopyMem(table, config_table.VendorTable, e->size);
                     index = j;
+
+                    // we have a table
+                    info->flags.rsdp = 1;
                 }
             }
         }
@@ -166,12 +232,16 @@ void load_tboot_binary(boot_entry_t* entry) {
     info->rsdp = (UINT64)table;
 
     // set the graphics mode
+    info->flags.framebuffer = 1;
     info->framebuffer.width = gop->Mode->Info->HorizontalResolution;
     info->framebuffer.height = gop->Mode->Info->VerticalResolution;
+    info->framebuffer.pitch = gop->Mode->Info->PixelsPerScanLine;
     info->framebuffer.addr = gop->Mode->FrameBufferBase;
     DebugPrint(0, "Framebuffer addr: %p\n", info->framebuffer.addr);
     DebugPrint(0, "Framebuffer width: %d\n", info->framebuffer.width);
     DebugPrint(0, "Framebuffer height: %d\n", info->framebuffer.height);
+    DebugPrint(0, "Framebuffer pitch: %d\n", info->framebuffer.pitch);
+
 
     // allocate memory for the efi mmap
     UINTN mapSize = 0;
@@ -184,10 +254,6 @@ void load_tboot_binary(boot_entry_t* entry) {
     ASSERT_EFI_ERROR(gBS->AllocatePages(AllocateAnyPages, CUSTOM_TYPE_BOOT_INFO, EFI_SIZE_TO_PAGES(mapSize), (EFI_PHYSICAL_ADDRESS*)&descs));
     ASSERT_EFI_ERROR(gBS->GetMemoryMap(&mapSize, descs, &mapKey, &descSize, &descVersion));
     info->mmap.entries = (tboot_mmap_entry_t*)descs;
-    DebugPrint(0, "Memory map size: %d\n", mapSize);
-    DebugPrint(0, "Memory map key: %d\n", mapKey);
-    DebugPrint(0, "Memory desc size: %d\n", descSize);
-    DebugPrint(0, "Memory desc version: %d\n", descVersion);
 
     // after this we exit the boot services
     DebugPrint(0, "Bai Bai\n");
@@ -200,6 +266,7 @@ void load_tboot_binary(boot_entry_t* entry) {
     DisableInterrupts();
 
     // transform the memory map to be in the correct format
+    info->flags.mmap = 1;
     index = 0;
     EFI_MEMORY_DESCRIPTOR* desc = descs;
     for(int i = 0; i < mapSize / descSize; i++) {
@@ -242,7 +309,15 @@ void load_tboot_binary(boot_entry_t* entry) {
             case EfiRuntimeServicesData:
             case EfiPalCode:
             default:
-                type = TBOOT_MEMORY_TYPE_RESERVED;
+                // special case, the boot modules
+                if(desc->Type >= CUSTOM_TYPE_MODULE_N(0)) {
+                    type = TBOOT_MEMORY_TYPE_MODULE_N(desc->Type - CUSTOM_TYPE_MODULE_N(0));
+
+                // otherwise consider reserved
+                }else {
+                    type = TBOOT_MEMORY_TYPE_RESERVED;
+                }
+
                 break;
         }
 
