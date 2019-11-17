@@ -343,7 +343,7 @@ void load_tboot_binary(boot_entry_t* entry) {
 
     // clear WP (can cause GPD when trying to
     // update the page table)
-    IA32_CR0 cr0 = { AsmReadCr0() };
+    IA32_CR0 cr0 = { .UintN = AsmReadCr0() };
     cr0.Bits.WP = 0;
     AsmWriteCr0(cr0.UintN);
 
