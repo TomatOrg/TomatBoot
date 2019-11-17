@@ -339,6 +339,17 @@ void load_tboot_binary(boot_entry_t* entry) {
         desc = (EFI_MEMORY_DESCRIPTOR*)((UINTN)desc + descSize);
     }
 
+    // set a nicer environment
+
+    // clear WP (can cause GPD when trying to
+    // update the page table)
+    IA32_CR0 cr0 = { AsmReadCr0() };
+    cr0.Bits.WP = 0;
+    AsmWriteCr0(cr0.UintN);
+
+    // Disable interrupts, just in case
+    DisableInterrupts();
+
     // and call the kernel
     DebugPrint(0, "calling kernel\n");
     kmain(TBOOT_MAGIC, info);
