@@ -222,7 +222,7 @@ DebugAssert (
       mDebugST->ConOut->OutputString (mDebugST->ConOut, Buffer);
     }
 
-    CpuBreakpoint ();
+    CpuDeadLoop();
   }
 }
 

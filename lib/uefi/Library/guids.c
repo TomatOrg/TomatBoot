@@ -36,6 +36,12 @@ EFI_GUID gEfiSasDevicePathGuid = EFI_SAS_DEVICE_PATH_GUID;
 #include <Guid/WinCertificate.h>
 EFI_GUID gEfiCertTypeRsa2048Sha256Guid = EFI_CERT_TYPE_RSA2048_SHA256_GUID;
 
+#include <Protocol/Cpu.h>
+EFI_GUID gEfiCpuArchProtocolGuid = EFI_CPU_ARCH_PROTOCOL_GUID;
+
+#include <Protocol/DebugSupport.h>
+EFI_GUID gEfiDebugSupportProtocolGuid = EFI_DEBUG_SUPPORT_PROTOCOL_GUID;
+
 #include <Protocol/DevicePath.h>
 EFI_GUID gEfiVirtualDiskGuid = EFI_VIRTUAL_DISK_GUID;
 EFI_GUID gEfiVirtualCdGuid = EFI_VIRTUAL_CD_GUID;
