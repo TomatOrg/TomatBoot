@@ -154,8 +154,23 @@ static void setup_exception_handlers() {
     if(!cpuArch) return;
     DebugPrint(0, "Cpu arch found, setting exception handlers\n");
 
+    /*
+     * The bios might set some handlers by itself, but we are going to cross our fingers that
+     * these are not too important and try to remove theirs and install ours, but we are not
+     * gonna assert just so we won't cause any problem with booting since this is just a debugging
+     * feature anyways
+     *
+     * we are not going to try and unregister the NMI and Machine Check exceptions because these
+     * are stuff that might be actually needed by the bios to act correctly.
+     *
+     * just cross fingers they don't use page faults or something alike :shrug:
+     */
     for(int i = 0; i < ARRAY_SIZE(EXCEPTIONS); i++) {
-        ASSERT_EFI_ERROR(cpuArch->RegisterInterruptHandler(cpuArch, EXCEPTIONS[i], interrupt_handler));
+        if(EXCEPTIONS[i] != EXCEPT_IA32_NMI && EXCEPTIONS[i] != EXCEPT_IA32_MACHINE_CHECK) {
+            cpuArch->RegisterInterruptHandler(cpuArch, EXCEPTIONS[i], NULL);
+        }
+
+        cpuArch->RegisterInterruptHandler(cpuArch, EXCEPTIONS[i], interrupt_handler);
     }
 }
 
