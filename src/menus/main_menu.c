@@ -34,6 +34,10 @@ static CHAR8 tomato_image[] = {
     0, 0, 0, 0, R, R, R, R, R, R, 0, 0, 0, 0,
 };
 
+static const char* UEFI_VERSIONS[] = {
+
+};
+
 static void draw() {
     clear_screen(EFI_TEXT_ATTR(EFI_LIGHTGRAY, EFI_BLACK));
 
@@ -64,28 +68,43 @@ static void draw() {
     write_at(0, 4, "Current time: %d/%d/%d %d:%d", time.Day, time.Month, time.Year, time.Hour, time.Minute);
     write_at(0, 5, "Graphics mode: %dx%d", info->HorizontalResolution, info->VerticalResolution);
     write_at(0, 6, "Current OS: %a (%a)", entry->name, entry->path);
+    write_at(0, 7, "UEFI Version: %d.%d", (gST->Hdr.Revision >> 16u) & 0xFFFFu, gST->Hdr.Revision & 0xFFFFu);
 
     // options for what we can do
     // TODO: Change colors for the button
-    write_at(0, 8, "Press B for BOOTMENU");
-    write_at(0, 9, "Press S for SETUP");
-    write_at(0, 10, "Press ESC for SHUTDOWN");
+    write_at(0, 9, "Press B for BOOTMENU");
+    write_at(0, 10, "Press S for SETUP");
+    write_at(0, 11, "Press ESC for SHUTDOWN");
 
-    // display the boot device path
+    /**
+     * display the boot device path
+     *
+     * it seems that some UEFI implementations (Thinkpad x220) do not
+     * support this protocol, so we will not assert on it but just
+     * display a warning instead :shrug:
+     */
+    EFI_STATUS status;
     EFI_DEVICE_PATH_PROTOCOL* device_path = NULL;
-    ASSERT_EFI_ERROR(gBS->OpenProtocol(
+    if(!EFI_ERROR(status = gBS->OpenProtocol(
             gImageHandle,
             &gEfiLoadedImageDevicePathProtocolGuid,
             (VOID**)&device_path,
             gImageHandle,
             NULL,
-            EFI_OPEN_PROTOCOL_GET_PROTOCOL));
+            EFI_OPEN_PROTOCOL_GET_PROTOCOL))) {
 
-    EFI_DEVICE_PATH_TO_TEXT_PROTOCOL* devpath_to_text = NULL;
-    ASSERT_EFI_ERROR(gBS->LocateProtocol(&gEfiDevicePathToTextProtocolGuid, NULL, (VOID**)&devpath_to_text));
-    CHAR16* devpath = devpath_to_text->ConvertDevicePathToText(device_path, TRUE, TRUE);
-    write_at(0, 17, "%s", devpath);
-    // TODO: How do I free the devpath?
+        EFI_DEVICE_PATH_TO_TEXT_PROTOCOL* devpath_to_text = NULL;
+        if(!EFI_ERROR(status = gBS->LocateProtocol(&gEfiDevicePathToTextProtocolGuid, NULL, (VOID**)&devpath_to_text))) {
+            CHAR16* devpath = devpath_to_text->ConvertDevicePathToText(device_path, TRUE, TRUE);
+            write_at(0, 17, "%s", devpath);
+            // TODO: How do I free the devpath?
+        }else {
+            write_at(0, 17, "Could not get EFI_DEVICE_PATH_TO_TEXT_PROTOCOL (Status=%r)", status);
+        }
+    }else {
+        write_at(0, 17, "Could not get EFI_LOADED_IMAGE_DEVICE_PATH_PROTOCOL (Status=%r)", status);
+    }
+
 
     // draw the logo
     draw_image(30 + ((width - 30) / 2) - 14, 1, tomato_image, 14, 13);

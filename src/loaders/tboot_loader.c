@@ -64,7 +64,6 @@ static tboot_entry_function load_elf_file(const CHAR8* path) {
     ASSERT(ehdr.e_machine == EM_X86_64);
 
     // load the program sections
-    // TODO: Use special type for the kernel so it can find itself
     ASSERT(ehdr.e_phnum != 0);
     Elf64_Phdr phdr;
     for(int i = 0; i < ehdr.e_phoff; i++) {
