@@ -17,7 +17,6 @@ you won't have to mix UEFI and your kernel code.
 * Boot menu
 	* change width and height
 	* change default entry and delay 
-	* modify the command line at boot
 * Support for static ELF64 kernels
 	* the kernel entry must be sysv abi
 * Passing boot information to the kernel
@@ -27,7 +26,11 @@ you won't have to mix UEFI and your kernel code.
 	* Memory Map (to be changed)
 	* TSC frequency (ticks per second)
 	* Boot modules (additional files to load)
-	* Boot Device Path (?) (not implemented yet)
+
+### Future plans
+* allow for modifying the command line on the fly
+* support loading to another efi module
+* pass boot device path
 
 ## Boot Protocol
 ### TomatBoot
