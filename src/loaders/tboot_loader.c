@@ -241,19 +241,20 @@ void load_tboot_binary(boot_entry_t* entry) {
     DebugPrint(0, "Framebuffer pitch: %d\n", info->framebuffer.pitch);
 
 
-    // allocate memory for the efi mmap
+    // This is taken from:
+    // https://github.com/tianocore/edk2/blob/master/OvmfPkg/Library/LoadLinuxLib/Linux.c#L243
+    EFI_STATUS status;
     UINTN mapKey = 0;
+    UINTN mapSize = sizeof(EFI_MEMORY_DESCRIPTOR);
     UINTN descSize = 0;
     UINT32 descVersion = 0;
-    UINTN mapSize = 0;
-
-    // we expect it to give a buffer too small error
-    EFI_STATUS status;
-    if(EFI_ERROR(status = gBS->GetMemoryMap(&mapSize, NULL, NULL, &descSize, NULL)) && status != EFI_BUFFER_TOO_SMALL) ASSERT_EFI_ERROR(status);
-    mapSize += 64 * descSize;
+    EFI_MEMORY_DESCRIPTOR tmpMemoryMap;
     EFI_MEMORY_DESCRIPTOR* descs = NULL;
+    if(EFI_ERROR(status = gBS->GetMemoryMap(&mapSize, &tmpMemoryMap, &mapKey, &descSize, &descVersion)) && status != EFI_BUFFER_TOO_SMALL) ASSERT_EFI_ERROR(status);
     ASSERT_EFI_ERROR(gBS->AllocatePages(AllocateAnyPages, CUSTOM_TYPE_BOOT_INFO, EFI_SIZE_TO_PAGES(mapSize), (EFI_PHYSICAL_ADDRESS*)&descs));
     ASSERT_EFI_ERROR(gBS->GetMemoryMap(&mapSize, descs, &mapKey, &descSize, &descVersion));
+
+
     info->mmap.entries = (tboot_mmap_entry_t*)descs;
 
     // will set the mode now just so we can
