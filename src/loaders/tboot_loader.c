@@ -253,8 +253,6 @@ void load_tboot_binary(boot_entry_t* entry) {
     if(EFI_ERROR(status = gBS->GetMemoryMap(&mapSize, &tmpMemoryMap, &mapKey, &descSize, &descVersion)) && status != EFI_BUFFER_TOO_SMALL) ASSERT_EFI_ERROR(status);
     ASSERT_EFI_ERROR(gBS->AllocatePages(AllocateAnyPages, CUSTOM_TYPE_BOOT_INFO, EFI_SIZE_TO_PAGES(mapSize), (EFI_PHYSICAL_ADDRESS*)&descs));
     ASSERT_EFI_ERROR(gBS->GetMemoryMap(&mapSize, descs, &mapKey, &descSize, &descVersion));
-
-
     info->mmap.entries = (tboot_mmap_entry_t*)descs;
 
     // will set the mode now just so we can
