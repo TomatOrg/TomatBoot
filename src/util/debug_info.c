@@ -3,6 +3,7 @@
 #include <Protocol/SimpleFileSystem.h>
 #include <Library/DebugLib.h>
 #include <Library/PrintLib.h>
+#include <Protocol/GraphicsOutput.h>
 
 #include "debug_info.h"
 
@@ -34,6 +35,13 @@ static const char* MEMORY_TYPE_NAMES[] = {
     "EfiPalCode",
 };
 
+static const char* PIXEL_FORMAT[] = {
+    "PixelRedGreenBlueReserved8BitPerColor",
+    "PixelBlueGreenRedReserved8BitPerColor",
+    "PixelBitMask",
+    "PixelBltOnly",
+};
+
 void save_debug_info() {
     EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* filesystem = NULL;
     ASSERT_EFI_ERROR(gBS->LocateProtocol(&gEfiSimpleFileSystemProtocolGuid, NULL, (VOID**)&filesystem));
@@ -51,6 +59,16 @@ void save_debug_info() {
     fprintf(file, "\tSystem Table: %p\n", gST);
     fprintf(file, "\tRuntime Services: %p\n", gRT);
     fprintf(file, "\tBoot Services: %p\n", gBS);
+
+    EFI_GRAPHICS_OUTPUT_PROTOCOL* gop = NULL;
+    ASSERT_EFI_ERROR(gBS->LocateProtocol(&gEfiGraphicsOutputProtocolGuid, NULL, (VOID**)&gop));
+    fprintf(file, "\tGOP: %p\n", gop);
+    fprintf(file, "\t\tFramebuffer base: %p\n", gop->Mode->FrameBufferBase);
+    fprintf(file, "\t\tFramebuffer Size: %d\n", gop->Mode->FrameBufferSize);
+    fprintf(file, "\t\tHorizontal Resolution: %d\n", gop->Mode->Info->HorizontalResolution);
+    fprintf(file, "\t\tVertical Resolution: %d\n", gop->Mode->Info->VerticalResolution);
+    fprintf(file, "\t\tPixels per scanline: %d\n", gop->Mode->Info->PixelsPerScanLine);
+    fprintf(file, "\t\tPixel format: %a\n", PIXEL_FORMAT[gop->Mode->Info->PixelFormat]);
 
     UINTN mapSize = 0;
     UINTN mapKey = 0;
