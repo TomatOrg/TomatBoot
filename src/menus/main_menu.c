@@ -7,6 +7,7 @@
 #include <Protocol/GraphicsOutput.h>
 #include <config.h>
 #include <loaders/tboot_loader.h>
+#include <util/debug_info.h>
 
 #include "main_menu.h"
 
@@ -74,7 +75,8 @@ static void draw() {
     // TODO: Change colors for the button
     write_at(0, 9, "Press B for BOOTMENU");
     write_at(0, 10, "Press S for SETUP");
-    write_at(0, 11, "Press ESC for SHUTDOWN");
+    write_at(0, 11, "Press D save DEBUG INFO");
+    write_at(0, 12, "Press ESC for SHUTDOWN");
 
     /**
      * display the boot device path
@@ -104,7 +106,6 @@ static void draw() {
     }else {
         write_at(0, 17, "Could not get EFI_LOADED_IMAGE_DEVICE_PATH_PROTOCOL (Status=%r)", status);
     }
-
 
     // draw the logo
     draw_image(30 + ((width - 30) / 2) - 14, 1, tomato_image, 14, 13);
@@ -154,6 +155,8 @@ menu_t enter_main_menu(BOOLEAN first) {
                 return MENU_BOOT_MENU;
             } else if(key.UnicodeChar == L's' || key.UnicodeChar == L'S') {
                 return MENU_SETUP;
+            } else if(key.UnicodeChar == L'd' || key.UnicodeChar == L'D') {
+                save_debug_info();
             } else if(key.ScanCode == SCAN_ESC) {
                 return MENU_SHUTDOWN;
             }
