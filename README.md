@@ -17,15 +17,18 @@ you won't have to mix UEFI and your kernel code.
 * Boot menu
 	* change width and height
 	* change default entry and delay 
-* Support for static ELF64 kernels
-	* the kernel entry must be sysv abi
-* Passing boot information to the kernel
-	* Command line
-	* Framebuffer
-	* ACPI table 
-	* Memory Map (to be changed)
-	* TSC frequency (ticks per second)
-	* Boot modules (additional files to load)
+* Support for linux boot (WIP)
+    * Can bootup TinyCore but it has problem with the initrd
+* Custom boot protocol
+    * Support for static ELF64 kernels
+        * the kernel entry must be sysv abi
+    * Passing boot information to the kernel
+        * Command line
+        * Framebuffer
+        * ACPI table 
+        * Memory Map (to be changed)
+        * TSC frequency (ticks per second)
+        * Boot modules (additional files to load)
 
 ### Future plans
 * allow for modifying the command line on the fly
@@ -33,11 +36,18 @@ you won't have to mix UEFI and your kernel code.
 * pass boot device path
 
 ## Boot Protocol
-### TomatBoot
+### TomatBoot (`TBOOT`)
 Currently this is the only supported boot protocol, the protocol is very simple, give a 64bit elf binary, we load it 
 as a static binary, and call it with two parameters, one being a magic, and the other being the boot info struct.
 
 For the header file with more definitions you can [click here](lib/tboot/tboot.h). 
+
+### Linux Boot (`LINUX`)
+With linux boot you can give TomatBoot a `vmlinuz` and `initrd` images and it will load it according to the linux 
+boot protocol. 
+
+* Currently to load the initrd just have any module, it will take the first one (will be changed to look at 
+the module tag).
 
 ## How to
 
@@ -67,7 +77,7 @@ Example file structure inside the UEFI partition:
 ```
 
 Other than the binary, you will also need to provide a configuration file. For an example you can see the 
-[example config](config/corepure64.cfg). The config file needs to be placed at the root of the efi partition 
+[example config](config/linux.cfg). The config file needs to be placed at the root of the efi partition 
 with the name `tomatboot.cfg`
 
 ### Config format
@@ -75,6 +85,7 @@ The configuration format is straight forward, it is a list of entries where each
 ```
 :<name>
 PATH=<path to elf executeable>
+PROTOCOL={TBOOT,LINUX}
 CMDLINE=<optional command line options>
 MODULE=<tag 1>,<path 1>
 MODULE=<tag 2>,<path 2>

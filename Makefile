@@ -79,30 +79,22 @@ NASMFLAGS += $(INCLUDE_DIRS:%=-i %/)
 #########################
 
 # Shortcut
-corepure64: bin/corepure64.img
+linux: bin/image.img
 
 # Create the boot image
-bin/corepure64.img: tools/corepure64 \
-                    tools/image-builder.py \
-                    bin/BOOTX64.EFI
+bin/image.img: tools/linux \
+                tools/image-builder.py \
+                bin/BOOTX64.EFI
 	mkdir -p ./bin/image/EFI/BOOT/
 	cp ./bin/BOOTX64.EFI ./bin/image/EFI/BOOT/
-	cp ./config/corepure64.cfg ./bin/image/tomatboot.cfg
-	cp ./tools/corepure64/* ./bin/image
-	cd bin && ../tools/image-builder.py ../config/corepure64-image.yaml
+	cp ./config/linux.cfg ./bin/image/tomatboot.cfg
+	cp ./tools/linux/* ./bin/image
+	cd bin && ../tools/image-builder.py ../config/linux-image.yaml
 
 # Download the corepure64 files
-tools/corepure64:
-	mkdir -p ./tools/corepure64
-	cd tools/corepure64 \
-	wget http://tinycorelinux.net/10.x/x86_64/release/distribution_files/vmlinuz64 \
-	wget http://tinycorelinux.net/10.x/x86_64/release/distribution_files/rootfs.gz
-
-# Build the image
-bin/image.img:
-	mkdir -p ./bin/image/EFI/BOOT/
-	cp ./bin/BOOTX64.EFI ./bin/image/EFI/BOOT/
-	cp ./config/test-tomatboot.cfg ./bin/image/tomatboot.cfg
+tools/linux:
+	echo "Please put a vmlinuz and initrd files in the ./tools/linux folder to create a linux bootable image"
+	false
 
 # Download the tool
 # TODO: Checksum
