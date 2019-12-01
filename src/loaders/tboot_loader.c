@@ -79,13 +79,11 @@ static tboot_entry_function load_elf_file(const CHAR8* path) {
                 // allocate the pages
                 EFI_PHYSICAL_ADDRESS addr = phdr.p_paddr;
                 ASSERT_EFI_ERROR(gBS->AllocatePages(AllocateAddress, CUSTOM_TYPE_KERNEL, EFI_SIZE_TO_PAGES(phdr.p_memsz), &addr));
+                ZeroMem((void*)addr, phdr.p_memsz);
 
                 // read the data
                 ASSERT_EFI_ERROR(file->SetPosition(file, phdr.p_offset));
                 read_bytes(file, phdr.p_filesz, (VOID*)addr);
-
-                // zero out the rest
-                SetMem((VOID*)(addr + phdr.p_filesz), phdr.p_memsz - phdr.p_filesz, 0);
             } break;
 
             default:
@@ -114,6 +112,7 @@ void load_tboot_binary(boot_entry_t* entry) {
     // set graphics mode right away
     EFI_GRAPHICS_OUTPUT_PROTOCOL* gop = NULL;
     ASSERT_EFI_ERROR(gBS->LocateProtocol(&gEfiGraphicsOutputProtocolGuid, NULL, (VOID**)&gop));
+    ASSERT_EFI_ERROR(gop->SetMode(gop, (UINT32) config.gfx_mode));
 
     // read the elf file
     DebugPrint(0, "Loading: %a - %a\n", entry->name, entry->path);
@@ -221,10 +220,6 @@ void load_tboot_binary(boot_entry_t* entry) {
     ASSERT_EFI_ERROR(gBS->AllocatePages(AllocateAnyPages, CUSTOM_TYPE_BOOT_INFO, EFI_SIZE_TO_PAGES(mapSize), (EFI_PHYSICAL_ADDRESS*)&descs));
     ASSERT_EFI_ERROR(gBS->GetMemoryMap(&mapSize, descs, &mapKey, &descSize, &descVersion));
     info->mmap.entries = (tboot_mmap_entry_t*)descs;
-
-    // will set the mode now just so we can
-    // have a nice high res thing till then
-    ASSERT_EFI_ERROR(gop->SetMode(gop, (UINT32) config.gfx_mode));
 
     // after this we exit the boot services
     DebugPrint(0, "Bai Bai\n");
