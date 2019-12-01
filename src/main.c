@@ -185,6 +185,8 @@ EFI_STATUS EFIAPI EfiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *System
     gRT = gST->RuntimeServices;
     gBS = gST->BootServices;
 
+    ASSERT_EFI_ERROR(gBS->SetWatchdogTimer(0, 0, 0, NULL));
+
     // setup all of the libraries
     DebugLibConstructor(ImageHandle, SystemTable);
     setup_exception_handlers();
