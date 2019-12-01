@@ -9,6 +9,7 @@
 #include <tboot/tboot.h>
 #include <uefi/Include/Protocol/GraphicsOutput.h>
 #include <uefi/Include/Guid/FileInfo.h>
+#include <util/file_utils.h>
 #include "tboot_loader.h"
 
 #define CUSTOM_TYPE_BOOT_INFO   (0x80000000 + 0)
@@ -100,40 +101,6 @@ static tboot_entry_function load_elf_file(const CHAR8* path) {
     return (tboot_entry_function)ehdr.e_entry;
 }
 
-static void load_file(const CHAR8* path, int index, UINT64* out_base, UINT64* out_len) {
-    // convert to unicode so we can open it
-    CHAR16* unicode = NULL;
-    UINTN len = AsciiStrLen(path) + 1;
-    ASSERT_EFI_ERROR(gBS->AllocatePool(EfiBootServicesData, len * 2 + 2, (VOID**)&unicode));
-    AsciiStrnToUnicodeStrS(path, len, unicode, len + 1, &len);
-
-    // open the file
-    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* filesystem = NULL;
-    ASSERT_EFI_ERROR(gBS->LocateProtocol(&gEfiSimpleFileSystemProtocolGuid, NULL, (VOID**)&filesystem));
-
-    EFI_FILE_PROTOCOL* root = NULL;
-    ASSERT_EFI_ERROR(filesystem->OpenVolume(filesystem, &root));
-
-    EFI_FILE_PROTOCOL* file = NULL;
-    ASSERT_EFI_ERROR(root->Open(root, &file, unicode, EFI_FILE_MODE_READ, 0));
-    ASSERT_EFI_ERROR(gBS->FreePool(unicode));
-
-    // get the file size
-    UINTN file_info_size = SIZE_OF_EFI_FILE_INFO + len * 2 + 2;
-    EFI_FILE_INFO* file_info = NULL;
-    ASSERT_EFI_ERROR(gBS->AllocatePool(EfiBootServicesData, file_info_size, (void*)&file_info));
-    file_info->Size = file_info_size;
-    ASSERT_EFI_ERROR(file->GetInfo(file, &gEfiFileInfoGuid, &file_info_size, file_info));
-    *out_len = file_info->FileSize;
-    ASSERT_EFI_ERROR(gBS->FreePool(file_info));
-
-    // allocate the buffer
-    ASSERT_EFI_ERROR(gBS->AllocatePages(AllocateAnyPages, CUSTOM_TYPE_MODULE_N(index), *out_len, out_base));
-
-    // read it
-    ASSERT_EFI_ERROR(file->Read(file, out_len, (void*)*out_base));
-}
-
 void load_tboot_binary(boot_entry_t* entry) {
     // clear everything, this is going to be a simple log of how we loaded the stuff
     ASSERT_EFI_ERROR(gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_LIGHTGRAY, EFI_BLACK)));
@@ -175,7 +142,7 @@ void load_tboot_binary(boot_entry_t* entry) {
         while(module != NULL) {
 
             // load the file
-            load_file(module->path, index, &info->modules.entries[index].base, &info->modules.entries[index].len);
+            load_file(module->path, CUSTOM_TYPE_MODULE_N(index), &info->modules.entries[index].base, &info->modules.entries[index].len);
 
             // prepare the name
             ASSERT_EFI_ERROR(gBS->AllocatePool(CUSTOM_TYPE_BOOT_INFO, AsciiStrLen(module->tag), (void*)&info->modules.entries[index].name));

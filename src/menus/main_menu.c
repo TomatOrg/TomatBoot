@@ -1,13 +1,13 @@
 #include <Uefi.h>
 #include <Library/DebugLib.h>
 #include <Protocol/LoadedImage.h>
+#include <Protocol/GraphicsOutput.h>
 #include <Protocol/DevicePathToText.h>
 
 #include <util/draw_utils.h>
-#include <Protocol/GraphicsOutput.h>
-#include <config.h>
-#include <loaders/tboot_loader.h>
 #include <util/debug_info.h>
+#include <loaders/loader.h>
+#include <config.h>
 
 #include "main_menu.h"
 
@@ -33,10 +33,6 @@ static CHAR8 tomato_image[] = {
     0, 0, R, R, R, R, R, R, R, R, R, R, 0, 0,
     0, 0, 0, R, R, R, R, R, R, R, R, 0, 0, 0,
     0, 0, 0, 0, R, R, R, R, R, R, 0, 0, 0, 0,
-};
-
-static const char* UEFI_VERSIONS[] = {
-
 };
 
 static void draw() {
@@ -167,7 +163,7 @@ menu_t enter_main_menu(BOOLEAN first) {
             ASSERT_EFI_ERROR(gBS->CloseEvent(events[1]));
 
             // call the loader
-            load_tboot_binary(&boot_entries.entries[config.default_os]);
+            load_binary(&boot_entries.entries[config.default_os]);
         }
     } while(TRUE);
 }

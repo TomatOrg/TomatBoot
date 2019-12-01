@@ -2,8 +2,9 @@
 #include <Library/DebugLib.h>
 
 #include <util/draw_utils.h>
+#include <loaders/loader.h>
 #include <config.h>
-#include <loaders/tboot_loader.h>
+
 #include "boot_menu.h"
 
 static void draw() {
@@ -18,6 +19,11 @@ static void draw() {
 
     fill_box(0, (int) (height - 2), (int) width, 1, EFI_TEXT_ATTR(EFI_BLACK, EFI_LIGHTGRAY));
 }
+
+static const char* loader_names[] = {
+    [BOOT_LINUX] = "Linux Boot",
+    [BOOT_TBOOT] = "TomatBoot"
+};
 
 menu_t enter_boot_menu() {
     UINTN width = 0;
@@ -42,7 +48,7 @@ menu_t enter_boot_menu() {
             }
 
             // write the option
-            write_at(6, 2 + i, "%a (%a)", entry->name, entry->path);
+            write_at(6, 2 + i, "%a (%a) - %a", entry->name, entry->path, loader_names[entry->protocol]);
         }
 
         // draw the shutdown option
@@ -82,7 +88,7 @@ menu_t enter_boot_menu() {
 
             // choose an os to start
             }else {
-                load_tboot_binary(&boot_entries.entries[selected]);
+                load_binary(&boot_entries.entries[selected]);
             }
         }
     }

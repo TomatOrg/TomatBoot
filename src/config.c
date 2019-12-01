@@ -6,6 +6,8 @@
 
 #include "config.h"
 
+#define CHECK_OPTION(x) (AsciiStrnCmp(line,  #x "=", sizeof(#x)) == 0)
+
 boot_entries_t boot_entries;
 
 CHAR8* read_line(EFI_FILE_PROTOCOL* file) {
@@ -18,6 +20,7 @@ CHAR8* read_line(EFI_FILE_PROTOCOL* file) {
         // read 1 byte
         UINTN one = 1;
         ASSERT_EFI_ERROR(file->Read(file, &one, &path[length]));
+        path[length] = AsciiCharToUpper(path[length]);
 
         // got to new line or eof
         if(one == 0 || path[length] == '\n') {
@@ -83,6 +86,7 @@ void get_boot_entries(boot_entries_t* entries) {
         if(line[0] == ':') {
             // got new entry (this is the name)
             index++;
+            entries->entries[index].protocol = BOOT_TBOOT;
             entries->entries[index].name = line + 1;
             entries->entries[index].path = NULL;
             entries->entries[index].cmd = NULL;
@@ -94,20 +98,20 @@ void get_boot_entries(boot_entries_t* entries) {
             ASSERT(index != -1);
 
             // path of the bootable (only one)
-            if(AsciiStrnCmp(line, "PATH=", 5) == 0) {
-                entries->entries[index].path = line + 5;
+            if(CHECK_OPTION(PATH)) {
+                entries->entries[index].path = line + sizeof("PATH");
 
             // command line arguments (only one)
-            }else if(AsciiStrnCmp(line, "CMDLINE=", 8) == 0) {
-                entries->entries[index].cmd = line + 8;
+            }else if(CHECK_OPTION(CMDLINE)) {
+                entries->entries[index].cmd = line + sizeof("CMDLINE");
 
             // module path (can have multiple)
-            }else if(AsciiStrnCmp(line, "MODULE=", 7) == 0) {
-                line += 7;
+            }else if(CHECK_OPTION(MODULE)) {
+                line += sizeof("MODULE");
 
                 // get the end of the name
-                CHAR8* path = line;
-                while(*path != 0 && *path != ',') {
+                CHAR8 *path = line;
+                while (*path != 0 && *path != ',') {
                     path++;
                 }
 
@@ -118,11 +122,11 @@ void get_boot_entries(boot_entries_t* entries) {
                 *path++ = 0;
 
                 // allocate the entry
-                if(last_module == NULL) {
-                    ASSERT_EFI_ERROR(gBS->AllocatePool(EfiBootServicesData, sizeof(boot_module_t), (void*)&last_module));
+                if (last_module == NULL) {
+                    ASSERT_EFI_ERROR(gBS->AllocatePool(EfiBootServicesData, sizeof(boot_module_t), (void *) &last_module));
                     entries->entries[index].modules = last_module;
-                }else {
-                    ASSERT_EFI_ERROR(gBS->AllocatePool(EfiBootServicesData, sizeof(boot_module_t), (void*)&last_module->next));
+                } else {
+                    ASSERT_EFI_ERROR(gBS->AllocatePool(EfiBootServicesData, sizeof(boot_module_t), (void *) &last_module->next));
                     last_module = last_module->next;
                 }
 
@@ -132,7 +136,21 @@ void get_boot_entries(boot_entries_t* entries) {
                 last_module->next = NULL;
                 entries->entries[index].modules_count++;
 
-            // if nothing just free the line
+                // if nothing just free the line
+            } else if(CHECK_OPTION(PROTOCOL)) {
+                char* protocol = line + sizeof("PROTOCOL");
+
+                // check the options
+                if(AsciiStrCmp(protocol, "LINUX") == 0) {
+                   entries->entries[index].protocol = BOOT_LINUX;
+                }else if(AsciiStrCmp(protocol, "TBOOT") == 0) {
+                   entries->entries[index].protocol = BOOT_TBOOT;
+                }else {
+                    DebugPrint(0, "Unknown protocol `%a` for option `%a`\n", protocol,entries->entries[index].name);
+                    ASSERT(FALSE);
+                }
+
+                ASSERT_EFI_ERROR(gBS->FreePool(line));
             }else {
                 ASSERT_EFI_ERROR(gBS->FreePool(line));
             }

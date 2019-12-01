@@ -67,7 +67,7 @@ Example file structure inside the UEFI partition:
 ```
 
 Other than the binary, you will also need to provide a configuration file. For an example you can see the 
-[example config](config/test-tomatboot.cfg). The config file needs to be placed at the root of the efi partition 
+[example config](config/corepure64.cfg). The config file needs to be placed at the root of the efi partition 
 with the name `tomatboot.cfg`
 
 ### Config format

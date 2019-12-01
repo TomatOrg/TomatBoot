@@ -75,39 +75,42 @@ NASMFLAGS := \
 NASMFLAGS += $(INCLUDE_DIRS:%=-i %/)
 
 #########################
-# Make an image for testing
+# Make a corepure64 image
 #########################
 
-test: tools/OVMF.fd bin/image.img
-	qemu-system-x86_64 \
-		-drive if=pflash,format=raw,readonly,file=tools/OVMF.fd \
-		-drive file=bin/image.img,media=disk,format=raw \
-		-debugcon stdio \
-		-machine q35
+# Shortcut
+corepure64: bin/corepure64.img
+
+# Create the boot image
+bin/corepure64.img: tools/corepure64 \
+                    tools/image-builder.py \
+                    bin/BOOTX64.EFI
+	mkdir -p ./bin/image/EFI/BOOT/
+	cp ./bin/BOOTX64.EFI ./bin/image/EFI/BOOT/
+	cp ./config/corepure64.cfg ./bin/image/tomatboot.cfg
+	cp ./tools/corepure64/* ./bin/image
+	cd bin && ../tools/image-builder.py ../config/corepure64-image.yaml
+
+# Download the corepure64 files
+tools/corepure64:
+	mkdir -p ./tools/corepure64
+	cd tools/corepure64 \
+	wget http://tinycorelinux.net/10.x/x86_64/release/distribution_files/vmlinuz64 \
+	wget http://tinycorelinux.net/10.x/x86_64/release/distribution_files/rootfs.gz
 
 # Build the image
-bin/image.img: tools/image-builder.py \
-               ./bin/BOOTX64.EFI
+bin/image.img:
 	mkdir -p ./bin/image/EFI/BOOT/
 	cp ./bin/BOOTX64.EFI ./bin/image/EFI/BOOT/
 	cp ./config/test-tomatboot.cfg ./bin/image/tomatboot.cfg
-	cd bin && ../tools/image-builder.py ../config/test-image.yaml
 
 # Download the tool
 # TODO: Checksum
-# TODO: Download specific version
+# TODO: have this as submodule instead
 tools/image-builder.py:
 	mkdir -p tools
 	cd tools && wget https://raw.githubusercontent.com/TomatOrg/image-builder/master/image-builder.py
 	chmod +x tools/image-builder.py
-
-# Download the bios
-# TODO: Checksum
-tools/OVMF.fd:
-	mkdir -p tools
-	cd tools && wget http://downloads.sourceforge.net/project/edk2/OVMF/OVMF-X64-r15214.zip
-	cd tools && unzip OVMF-X64-r15214.zip OVMF.fd
-	rm tools/OVMF-X64-r15214.zip
 
 #########################
 # Cleaning

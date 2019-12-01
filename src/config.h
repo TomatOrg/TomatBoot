@@ -3,6 +3,11 @@
 
 #include <Base.h>
 
+typedef enum boot_protocol {
+    BOOT_LINUX,
+    BOOT_TBOOT
+} boot_protocol_t;
+
 typedef struct boot_module {
     struct boot_module* next;
     const CHAR8* path;
@@ -10,6 +15,7 @@ typedef struct boot_module {
 } boot_module_t;
 
 typedef struct boot_entry {
+    boot_protocol_t protocol;
     const CHAR8* name;
     const CHAR8* path;
     const CHAR8* cmd;
