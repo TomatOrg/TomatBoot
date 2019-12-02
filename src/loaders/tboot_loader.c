@@ -124,14 +124,20 @@ void load_tboot_binary(boot_entry_t* entry) {
     SetMem(info, sizeof(tboot_info_t), 0);
 
     // set the cmd
-    info->flags.cmdline = 1;
-    info->cmdline.length = AsciiStrLen(entry->cmd);
-    ASSERT_EFI_ERROR(gBS->AllocatePool(CUSTOM_TYPE_BOOT_INFO, info->cmdline.length, (void*)&info->cmdline.cmdline));
-    AsciiStrCpy(info->cmdline.cmdline, entry->cmd);
-    DebugPrint(0, "Command line: %a\n", info->cmdline.cmdline);
+    if(entry->cmd != NULL) {
+        info->flags.cmdline = 1;
+        info->cmdline.length = AsciiStrLen(entry->cmd);
+        ASSERT_EFI_ERROR(gBS->AllocatePool(CUSTOM_TYPE_BOOT_INFO, info->cmdline.length, (void*)&info->cmdline.cmdline));
+        AsciiStrCpy(info->cmdline.cmdline, entry->cmd);
+        DebugPrint(0, "Command line: %a\n", info->cmdline.cmdline);
+    }else {
+        info->flags.cmdline = 0;
+        info->cmdline.length = 0;
+        info->cmdline.cmdline = NULL;
+    }
 
     // load the boot modules
-    info->flags.modules = 1;
+    info->flags.modules = entry->modules_count != 0;
     info->modules.count = entry->modules_count;
     if(info->modules.count != 0) {
         ASSERT_EFI_ERROR(gBS->AllocatePool(CUSTOM_TYPE_BOOT_INFO, sizeof(tboot_module_t) * info->modules.count, (void*)&info->modules.entries));
