@@ -69,7 +69,6 @@ void get_boot_entries(boot_entries_t* entries) {
         ASSERT_EFI_ERROR(gBS->FreePool(line));
     }
 
-
     // allocate entries
     entries->count = entryCount;
     ASSERT_EFI_ERROR(gBS->AllocatePool(EfiBootServicesData, sizeof(boot_entry_t) * entryCount, (VOID**)&entries->entries));
@@ -156,6 +155,9 @@ void get_boot_entries(boot_entries_t* entries) {
             }
         }
     }
+
+    ASSERT_EFI_ERROR(file->Close(file));
+    ASSERT_EFI_ERROR(root->Close(root));
 }
 
 void load_boot_config(boot_config_t* config) {

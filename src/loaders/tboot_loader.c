@@ -211,13 +211,13 @@ void load_tboot_binary(boot_entry_t* entry) {
     // https://github.com/tianocore/edk2/blob/master/OvmfPkg/Library/LoadLinuxLib/Linux.c#L243
     EFI_STATUS status;
     UINTN mapKey = 0;
-    UINTN mapSize = sizeof(EFI_MEMORY_DESCRIPTOR);
+    UINTN mapSize = 0;
     UINTN descSize = 0;
     UINT32 descVersion = 0;
-    EFI_MEMORY_DESCRIPTOR tmpMemoryMap;
     EFI_MEMORY_DESCRIPTOR* descs = NULL;
-    if(EFI_ERROR(status = gBS->GetMemoryMap(&mapSize, &tmpMemoryMap, &mapKey, &descSize, &descVersion)) && status != EFI_BUFFER_TOO_SMALL) ASSERT_EFI_ERROR(status);
-    ASSERT_EFI_ERROR(gBS->AllocatePages(AllocateAnyPages, CUSTOM_TYPE_BOOT_INFO, EFI_SIZE_TO_PAGES(mapSize), (EFI_PHYSICAL_ADDRESS*)&descs));
+    if(EFI_ERROR(status = gBS->GetMemoryMap(&mapSize, NULL, &mapKey, &descSize, &descVersion)) && status != EFI_BUFFER_TOO_SMALL) ASSERT_EFI_ERROR(status);
+    ASSERT_EFI_ERROR(gBS->AllocatePool(CUSTOM_TYPE_BOOT_INFO, mapSize, (void**)&descs));
+    mapSize += EFI_PAGE_SIZE;
     ASSERT_EFI_ERROR(gBS->GetMemoryMap(&mapSize, descs, &mapKey, &descSize, &descVersion));
     info->mmap.entries = (tboot_mmap_entry_t*)descs;
 
@@ -226,6 +226,8 @@ void load_tboot_binary(boot_entry_t* entry) {
 
     // destroy all the libs we use and exit boot services
     ASSERT_EFI_ERROR(DebugLibDestructor(gImageHandle, gST));
+
+    // exit boot services
     gBS->ExitBootServices(gImageHandle, mapKey);
 
     // make sure interrupts are disabled
