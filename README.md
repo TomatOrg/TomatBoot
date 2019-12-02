@@ -15,17 +15,16 @@ you won't have to mix UEFI and your kernel code.
 ## Features
 
 * Boot menu
-	* change width and height
+	* change the framebuffer settings
 	* change default entry and delay 
-* Support for linux boot (WIP)
-    * Can bootup TinyCore but it has problem with the initrd
+* Support for linux boot
 * Custom boot protocol
     * Support for static ELF64 kernels
         * the kernel entry must be sysv abi
     * Passing boot information to the kernel
         * Command line
         * Framebuffer
-        * ACPI table 
+        * ACPI table
         * Memory Map (to be changed)
         * TSC frequency (ticks per second)
         * Boot modules (additional files to load)
@@ -37,8 +36,10 @@ you won't have to mix UEFI and your kernel code.
 
 ## Boot Protocol
 ### TomatBoot (`TBOOT`)
-Currently this is the only supported boot protocol, the protocol is very simple, give a 64bit elf binary, we load it 
-as a static binary, and call it with two parameters, one being a magic, and the other being the boot info struct.
+This is the main boot protocol, the protocol is designed to be very simple and is aimed at hobby osdev. 
+ 
+Give it a 64bit elf binary, we load it as a static binary, and call it with two parameters, one being a magic, 
+and the other being the boot info struct.
 
 For the header file with more definitions you can [click here](lib/tboot/tboot.h). 
 
@@ -46,8 +47,9 @@ For the header file with more definitions you can [click here](lib/tboot/tboot.h
 With linux boot you can give TomatBoot a `vmlinuz` and `initrd` images and it will load it according to the linux 
 boot protocol. 
 
-* Currently to load the initrd just have any module, it will take the first one (will be changed to look at 
-the module tag).
+Right now there is an example configuration for TinyCore64, simply put the `corepure64.gz` + `vmlinuz64` and it should
+load you into a console, of course it is a very minimal setup (unlike a normal live boot there is no actual filesystem
+which can contain all the programs... just the ramfs)
 
 ## How to
 
