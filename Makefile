@@ -1,5 +1,6 @@
 # Make sure we use the correct compilers
-CLANG ?= clang-8
+CLANG ?= clang
+FUSE_LD ?= lld-link
 
 #########################
 # By default just build
@@ -66,7 +67,7 @@ LDFLAGS := \
 	-nostdlib \
 	-Wl,-entry:EfiMain \
 	-Wl,-subsystem:efi_application \
-	-fuse-ld=lld-link
+	-fuse-ld=$(FUSE_LD)
 	
 NASMFLAGS := \
 	-g \
