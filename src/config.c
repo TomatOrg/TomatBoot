@@ -20,7 +20,7 @@ CHAR8* read_line(EFI_FILE_PROTOCOL* file) {
         // read 1 byte
         UINTN one = 1;
         ASSERT_EFI_ERROR(file->Read(file, &one, &path[length]));
-        path[length] = AsciiCharToUpper(path[length]);
+//        path[length] = AsciiCharToUpper(path[length]);
 
         // got to new line or eof
         if(one == 0 || path[length] == '\n') {

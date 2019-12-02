@@ -21,7 +21,7 @@ EFIAPI
 BasicKernelSetupCheck(
         IN VOID *KernelSetup
 ) {
-    return LoadLinuxCheckKernelSetup(KernelSetup, sizeof(struct boot_params));
+    return LoadLinuxCheckKernelSetup(KernelSetup, sizeof(struct _LINUX_BOOT_PARAMS));
 }
 
 
@@ -31,7 +31,7 @@ LoadLinuxCheckKernelSetup(
         IN VOID *KernelSetup,
         IN UINTN KernelSetupSize
 ) {
-    struct boot_params *Bp;
+    struct _LINUX_BOOT_PARAMS *Bp;
 
     if (KernelSetup == NULL) {
         return EFI_INVALID_PARAMETER;
@@ -41,10 +41,10 @@ LoadLinuxCheckKernelSetup(
         return EFI_UNSUPPORTED;
     }
 
-    Bp = (struct boot_params *) KernelSetup;
+    Bp = (struct _LINUX_BOOT_PARAMS *) KernelSetup;
 
     if ((Bp->hdr.signature != 0xAA55) || // Check boot sector signature
-        (Bp->hdr.header != SETUP_HDR) ||
+        (Bp->hdr.header != LINUX_SETUP_HDR) ||
         (Bp->hdr.version < 0x205) || // We only support relocatable kernels
         (!Bp->hdr.relocatable_kernel)
             ) {
@@ -61,13 +61,13 @@ LoadLinuxGetKernelSize(
         IN VOID *KernelSetup,
         IN UINTN KernelSize
 ) {
-    struct boot_params *Bp;
+    struct _LINUX_BOOT_PARAMS *Bp;
 
     if (EFI_ERROR (BasicKernelSetupCheck(KernelSetup))) {
         return 0;
     }
 
-    Bp = (struct boot_params *) KernelSetup;
+    Bp = (struct _LINUX_BOOT_PARAMS *) KernelSetup;
 
     if (Bp->hdr.version > 0x20a) {
         return Bp->hdr.init_size;
@@ -109,19 +109,19 @@ LoadLinuxInitializeKernelSetup(
 ) {
     EFI_STATUS Status;
     UINTN SetupEnd;
-    struct boot_params *Bp;
+    struct _LINUX_BOOT_PARAMS *Bp;
 
     Status = BasicKernelSetupCheck(KernelSetup);
     if (EFI_ERROR (Status)) {
         return Status;
     }
 
-    Bp = (struct boot_params *) KernelSetup;
+    Bp = (struct _LINUX_BOOT_PARAMS *) KernelSetup;
 
     SetupEnd = 0x202 + (Bp->hdr.jump & 0xff);
 
     //
-    // Clear all but the setup_header
+    // Clear all but the _LINUX_SETUP_HEADER
     //
     ZeroMem(KernelSetup, 0x1f1);
     ZeroMem(((UINT8 *) KernelSetup) + SetupEnd, 4096 - SetupEnd);
@@ -139,13 +139,13 @@ LoadLinuxAllocateKernelPages(
     EFI_STATUS Status;
     EFI_PHYSICAL_ADDRESS KernelAddress;
     UINT32 Loop;
-    struct boot_params *Bp;
+    struct _LINUX_BOOT_PARAMS *Bp;
 
     if (EFI_ERROR (BasicKernelSetupCheck(KernelSetup))) {
         return NULL;
     }
 
-    Bp = (struct boot_params *) KernelSetup;
+    Bp = (struct _LINUX_BOOT_PARAMS *) KernelSetup;
 
     for (Loop = 1; Loop < 512; Loop++) {
         KernelAddress = MultU64x32(
@@ -199,13 +199,13 @@ LoadLinuxAllocateInitrdPages(
     EFI_STATUS Status;
     EFI_PHYSICAL_ADDRESS Address;
 
-    struct boot_params *Bp;
+    struct _LINUX_BOOT_PARAMS *Bp;
 
     if (EFI_ERROR (BasicKernelSetupCheck(KernelSetup))) {
         return NULL;
     }
 
-    Bp = (struct boot_params *) KernelSetup;
+    Bp = (struct _LINUX_BOOT_PARAMS *) KernelSetup;
 
     Address = (EFI_PHYSICAL_ADDRESS) (UINTN) Bp->hdr.ramdisk_max;
     Status = gBS->AllocatePages(
@@ -225,7 +225,7 @@ LoadLinuxAllocateInitrdPages(
 STATIC
 VOID
 SetupLinuxMemmap(
-        IN OUT struct boot_params *Bp
+        IN OUT struct _LINUX_BOOT_PARAMS *Bp
 ) {
     EFI_STATUS Status;
     UINT8 TmpMemoryMap[1];
@@ -236,9 +236,9 @@ SetupLinuxMemmap(
     EFI_MEMORY_DESCRIPTOR *MemoryMap;
     EFI_MEMORY_DESCRIPTOR *MemoryMapPtr;
     UINTN Index;
-    struct efi_info *Efi;
-    struct e820_entry *LastE820;
-    struct e820_entry *E820;
+    struct _LINUX_EFI_INFO *Efi;
+    struct _LINUX_E820_ENTRY *LastE820;
+    struct _LINUX_E820_ENTRY *E820;
     UINTN E820EntryCount;
     EFI_PHYSICAL_ADDRESS LastEndAddr;
 
@@ -296,15 +296,15 @@ SetupLinuxMemmap(
             case EfiMemoryMappedIO:
             case EfiMemoryMappedIOPortSpace:
             case EfiPalCode:
-                E820Type = E820_RESERVED;
+                E820Type = LINUX_E820_RESERVED;
                 break;
 
             case EfiUnusableMemory:
-                E820Type = E820_UNUSABLE;
+                E820Type = LINUX_E820_UNUSABLE;
                 break;
 
             case EfiACPIReclaimMemory:
-                E820Type = E820_ACPI;
+                E820Type = LINUX_E820_ACPI;
                 break;
 
             case EfiLoaderCode:
@@ -312,11 +312,11 @@ SetupLinuxMemmap(
             case EfiBootServicesCode:
             case EfiBootServicesData:
             case EfiConventionalMemory:
-                E820Type = E820_RAM;
+                E820Type = LINUX_E820_RAM;
                 break;
 
             case EfiACPIMemoryNVS:
-                E820Type = E820_NVS;
+                E820Type = LINUX_E820_NVS;
                 break;
 
             default:
@@ -374,14 +374,14 @@ LoadLinuxSetCommandLine(
         IN CHAR8 *CommandLine
 ) {
     EFI_STATUS Status;
-    struct boot_params *Bp;
+    struct _LINUX_BOOT_PARAMS *Bp;
 
     Status = BasicKernelSetupCheck(KernelSetup);
     if (EFI_ERROR (Status)) {
         return Status;
     }
 
-    Bp = (struct boot_params *) KernelSetup;
+    Bp = (struct _LINUX_BOOT_PARAMS *) KernelSetup;
 
     Bp->hdr.cmd_line_ptr = (UINT32) (UINTN) CommandLine;
 
@@ -397,14 +397,14 @@ LoadLinuxSetInitrd(
         IN UINTN InitrdSize
 ) {
     EFI_STATUS Status;
-    struct boot_params *Bp;
+    struct _LINUX_BOOT_PARAMS *Bp;
 
     Status = BasicKernelSetupCheck(KernelSetup);
     if (EFI_ERROR (Status)) {
         return Status;
     }
 
-    Bp = (struct boot_params *) KernelSetup;
+    Bp = (struct _LINUX_BOOT_PARAMS *) KernelSetup;
 
     Bp->hdr.ramdisk_start = (UINT32) (UINTN) Initrd;
     Bp->hdr.ramdisk_len = (UINT32) InitrdSize;
@@ -443,7 +443,7 @@ FindBits(
 STATIC
 EFI_STATUS
 SetupGraphicsFromGop(
-        struct screen_info *Si,
+        struct _LINUX_SCREEN_INFO *Si,
         EFI_GRAPHICS_OUTPUT_PROTOCOL *Gop
 ) {
     EFI_GRAPHICS_OUTPUT_MODE_INFORMATION *Info;
@@ -532,7 +532,7 @@ SetupGraphicsFromGop(
 STATIC
 EFI_STATUS
 SetupGraphics(
-        IN OUT struct boot_params *Bp
+        IN OUT struct _LINUX_BOOT_PARAMS *Bp
 ) {
     EFI_STATUS Status;
     EFI_HANDLE *HandleBuffer;
@@ -577,7 +577,7 @@ SetupGraphics(
 STATIC
 EFI_STATUS
 SetupLinuxBootParams(
-        IN OUT struct boot_params *Bp
+        IN OUT struct _LINUX_BOOT_PARAMS *Bp
 ) {
     SetupGraphics(Bp);
 
@@ -594,14 +594,14 @@ LoadLinux(
         IN OUT VOID *KernelSetup
 ) {
     EFI_STATUS Status;
-    struct boot_params *Bp;
+    struct _LINUX_BOOT_PARAMS *Bp;
 
     Status = BasicKernelSetupCheck(KernelSetup);
     if (EFI_ERROR (Status)) {
         return Status;
     }
 
-    Bp = (struct boot_params *) KernelSetup;
+    Bp = (struct _LINUX_BOOT_PARAMS *) KernelSetup;
 
     if (Bp->hdr.version < 0x205 || !Bp->hdr.relocatable_kernel) {
         //

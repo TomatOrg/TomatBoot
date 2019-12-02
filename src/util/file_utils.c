@@ -4,6 +4,29 @@
 #include <Guid/FileInfo.h>
 #include "file_utils.h"
 
+EFI_FILE_PROTOCOL* open_file(const CHAR8* path) {
+    // convert to unicode so we can open it
+    CHAR16* unicode = NULL;
+    UINTN len = AsciiStrLen(path) + 1;
+    ASSERT_EFI_ERROR(gBS->AllocatePool(EfiBootServicesData, len * 2 + 2, (VOID**)&unicode));
+    AsciiStrnToUnicodeStrS(path, len, unicode, len + 1, &len);
+
+    // open the file
+    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* filesystem = NULL;
+    ASSERT_EFI_ERROR(gBS->LocateProtocol(&gEfiSimpleFileSystemProtocolGuid, NULL, (VOID**)&filesystem));
+
+    EFI_FILE_PROTOCOL* root = NULL;
+    ASSERT_EFI_ERROR(filesystem->OpenVolume(filesystem, &root));
+
+    EFI_FILE_PROTOCOL* file = NULL;
+    ASSERT_EFI_ERROR(root->Open(root, &file, unicode, EFI_FILE_MODE_READ, 0));
+    ASSERT_EFI_ERROR(gBS->FreePool(unicode));
+
+    ASSERT_EFI_ERROR(root->Close(root));
+
+    return file;
+}
+
 void load_file(const CHAR8* path, int memory_type, UINT64* out_base, UINT64* out_len) {
     // convert to unicode so we can open it
     CHAR16* unicode = NULL;

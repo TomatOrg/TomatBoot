@@ -3,7 +3,7 @@ size: 200M
 type: gpt
 partitions:
 - fs: fat32
-  size: 36M
+  size: 180M
   bootable: true
   content: 'image'
   label: boot

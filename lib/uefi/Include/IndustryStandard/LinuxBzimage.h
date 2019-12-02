@@ -1,23 +1,25 @@
 /** @file
   Copyright (c) 2011 - 2013, Intel Corporation. All rights reserved.<BR>
   SPDX-License-Identifier: BSD-2-Clause-Patent
+
+  Modified by Itay Almog
 **/
 
 #ifndef __LINUX_BZIMAGE_H__
 #define __LINUX_BZIMAGE_H__
 
-#define BOOTSIG			0x1FE
-#define SETUP_HDR		0x53726448	/* 0x53726448 == "HdrS" */
+#define LINUX_BOOTSIG	    0x1FE
+#define LINUX_SETUP_HDR		0x53726448	/* 0x53726448 == "HdrS" */
 
-#define E820_RAM		1
-#define E820_RESERVED	2
-#define E820_ACPI		3
-#define E820_NVS		4
-#define E820_UNUSABLE	5
+#define LINUX_E820_RAM		1
+#define LINUX_E820_RESERVED	2
+#define LINUX_E820_ACPI		3
+#define LINUX_E820_NVS		4
+#define LINUX_E820_UNUSABLE	5
 
 #pragma pack(1)
 
-struct setup_header {
+typedef struct _LINUX_SETUP_HEADER {
 	UINT8 setup_secs;	/* Sectors for setup code */
 	UINT16 root_flags;
 	UINT32 sys_size;
@@ -34,6 +36,11 @@ struct setup_header {
 	UINT16 kernel_ver;
 	UINT8 loader_id;
 	UINT8 load_flags;
+#define LINUX_LF_LOADED_HIGH       BIT0
+#define LINUX_LF_KASLR_FLAG        BIT1
+#define LINUX_LF_QUIET_FLAG        BIT5
+#define LINUX_LF_KEEP_SEGMENTS     BIT6
+#define LINUX_LF_CAN_USE_HEAP      BIT7
 	UINT16 movesize;
 	UINT32 code32_start;	/* Start of code loaded high */
 	UINT32 ramdisk_start;	/* Start of initial ramdisk */
@@ -48,6 +55,11 @@ struct setup_header {
 	UINT8 relocatable_kernel; /* Whether kernel is relocatable or not */
 	UINT8 min_alignment;
 	UINT16 xloadflags;
+#define LINUX_XLF_KERNEL_64                 BIT0
+#define LINUX_XLF_CAN_BE_LOADED_ABOVE_4GB   BIT1
+#define LINUX_XLF_HANDOVER_32               BIT2
+#define LINUX_XLF_HANDOVER_64               BIT3
+#define LINUX_XLF_KEXEC                     BIT4
 	UINT32 cmdline_size;
 	UINT32 hardware_subarch;
 	UINT64 hardware_subarch_data;
@@ -57,9 +69,9 @@ struct setup_header {
 	UINT64 pref_address;
 	UINT32 init_size;
 	UINT32 handover_offset;
-};
+} LINUX_SETUP_HEADER;
 
-struct efi_info {
+typedef struct _LINUX_EFI_INFO {
 	UINT32 efi_loader_signature;
 	UINT32 efi_systab;
 	UINT32 efi_memdesc_size;
@@ -68,15 +80,15 @@ struct efi_info {
 	UINT32 efi_memmap_size;
 	UINT32 efi_systab_hi;
 	UINT32 efi_memmap_hi;
-};
+} LINUX_EFI_INFO;
 
-struct e820_entry {
+typedef struct _LINUX_E820_ENTRY {
 	UINT64 addr;		/* start of memory segment */
 	UINT64 size;		/* size of memory segment */
 	UINT32 type;		/* type of memory segment */
-};
+} LINUX_E820_ENTRY;
 
-struct screen_info {
+typedef struct _LINUX_SCREEN_INFO {
     UINT8  orig_x;           /* 0x00 */
     UINT8  orig_y;           /* 0x01 */
     UINT16 ext_mem_k;        /* 0x02 */
@@ -113,10 +125,10 @@ struct screen_info {
     UINT16 vesa_attributes;  /* 0x34 */
     UINT32 capabilities;     /* 0x36 */
     UINT8  _reserved[6];     /* 0x3a */
-};
+} LINUX_SCREEN_INFO;
 
-struct boot_params {
-	struct screen_info screen_info;
+typedef struct _LINUX_BOOT_PARAMS {
+	LINUX_SCREEN_INFO screen_info;
 	UINT8 apm_bios_info[0x14];
 	UINT8 _pad2[4];
 	UINT64 tboot_addr;
@@ -128,29 +140,22 @@ struct boot_params {
 	UINT8 olpc_ofw_header[0x10];
 	UINT8 _pad4[128];
 	UINT8 edid_info[0x80];
-	struct efi_info efi_info;
+	LINUX_EFI_INFO efi_info;
 	UINT32 alt_mem_k;
 	UINT32 scratch;
 	UINT8 e820_entries;
 	UINT8 eddbuf_entries;
 	UINT8 edd_mbr_sig_buf_entries;
 	UINT8 _pad6[6];
-	struct setup_header hdr;
-	UINT8 _pad7[0x290-0x1f1-sizeof(struct setup_header)];
+	LINUX_SETUP_HEADER hdr;
+	UINT8 _pad7[0x290-0x1f1-sizeof(struct _LINUX_SETUP_HEADER)];
 	UINT32 edd_mbr_sig_buffer[16];
-	struct e820_entry e820_map[128];
+	LINUX_E820_ENTRY e820_map[128];
 	UINT8 _pad8[48];
 	UINT8 eddbuf[0x1ec];
 	UINT8 _pad9[276];
-};
-
-typedef struct {
-	UINT16 limit;
-	UINT64 *base;
-} dt_addr_t;
+} LINUX_BOOT_PARAMS;
 
 #pragma pack()
-
-extern EFI_STATUS setup_graphics(struct boot_params *buf);
 
 #endif /* __LINUX_BZIMAGE_H__ */
