@@ -136,15 +136,19 @@ menu_t enter_main_menu(BOOLEAN first) {
 
         // got a keypress
         if(which == 0) {
+            // get key
+            EFI_STATUS status = gST->ConIn->ReadKeyStroke(gST->ConIn, &key);
+            if(status == EFI_NOT_READY) {
+                continue;
+            }
+            ASSERT_EFI_ERROR(status);
+
             // cancel timer and destroy it
             if(count == 2) {
                 ASSERT_EFI_ERROR(gBS->SetTimer(events[1], TimerCancel, 0));
                 ASSERT_EFI_ERROR(gBS->CloseEvent(events[1]));
                 count = 1;
             }
-
-            // get key
-            ASSERT_EFI_ERROR(gST->ConIn->ReadKeyStroke(gST->ConIn, &key));
 
             // choose the menu or continue
             if(key.UnicodeChar == L'b' || key.UnicodeChar == L'B') {
