@@ -63,7 +63,11 @@ menu_t enter_boot_menu() {
         UINTN which = 0;
         EFI_INPUT_KEY key = {};
         ASSERT_EFI_ERROR(gBS->WaitForEvent(1, &gST->ConIn->WaitForKey, &which));
-        ASSERT_EFI_ERROR(gST->ConIn->ReadKeyStroke(gST->ConIn, &key));
+        EFI_STATUS status = gST->ConIn->ReadKeyStroke(gST->ConIn, &key);
+        if(status == EFI_NOT_READY) {
+            continue;
+        }
+        ASSERT_EFI_ERROR(status);
 
         // decrease value
         if(key.ScanCode == SCAN_DOWN) {
