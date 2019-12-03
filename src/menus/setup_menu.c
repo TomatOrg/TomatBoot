@@ -2,6 +2,7 @@
 #include <Library/BaseLib.h>
 #include <Library/DebugLib.h>
 #include <Protocol/GraphicsOutput.h>
+#include <debug/exception.h>
 
 #include <config.h>
 #include <util/draw_utils.h>
@@ -102,7 +103,6 @@ menu_t enter_setup_menu() {
         });
         write_at(controls_start, control_line++, "Boot Delay: %d", config.boot_delay);
 
-
         /*
          * Graphics Mode: changes the resolution and format of the graphics buffer
          */
@@ -137,6 +137,19 @@ menu_t enter_setup_menu() {
         });
         boot_entry_t* entry = &boot_entries.entries[config.default_os];
         write_at(controls_start, control_line++, "Default OS: %a (%a)", entry->name, entry->path);
+
+        #ifdef TBOOT_DEBUG
+        IF_SELECTED({
+            // check last button press
+            if(op == OP_INC) {
+                hook_idt();
+            }else if(op == OP_DEC) {
+                unhook_idt();
+            }
+        });
+        write_at(controls_start, control_line++, "Hook IDT", config.boot_delay);
+        #endif
+
 
         ////////////////////////////////////////////////////////////////////////
         // Input handling

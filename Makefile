@@ -15,6 +15,7 @@ default: all
 
 # Actual sources
 SRCS += $(shell find ./src/ -name '*.c')
+SRCS += $(shell find ./src/ -name '*.nasm')
 
 # All the headers, we use them as dependency
 HDRS += $(shell find ./src/ -name '*.h')
@@ -117,6 +118,9 @@ clean:
 #########################
 
 all: ./bin/BOOTX64.EFI
+debug: ./bin/BOOTX64.EFI
+
+debug: CFLAGS += -D TBOOT_DEBUG
 
 # specifically for the uefi lib
 # we need to generate that file, have it depend on the includes of UEFI
