@@ -12,10 +12,6 @@
 #include <util/file_utils.h>
 #include "tboot_loader.h"
 
-#define CUSTOM_TYPE_BOOT_INFO   (0x80000000 + 0)
-#define CUSTOM_TYPE_KERNEL      (0x80000000 + 1)
-#define CUSTOM_TYPE_MODULE_N(n) (0x80000000 + 2 + (n))
-
 typedef struct acpi_table_entry {
     EFI_GUID* guid;
     UINTN size;
@@ -78,7 +74,7 @@ static tboot_entry_function load_elf_file(const CHAR8* path) {
             case PT_LOAD: {
                 // allocate the pages
                 EFI_PHYSICAL_ADDRESS addr = phdr.p_paddr;
-                ASSERT_EFI_ERROR(gBS->AllocatePages(AllocateAddress, CUSTOM_TYPE_KERNEL, EFI_SIZE_TO_PAGES(phdr.p_memsz), &addr));
+                ASSERT_EFI_ERROR(gBS->AllocatePages(AllocateAddress, EfiReservedMemoryType, EFI_SIZE_TO_PAGES(phdr.p_memsz), &addr));
                 ZeroMem((void*)addr, phdr.p_memsz);
 
                 // read the data
@@ -120,14 +116,14 @@ void load_tboot_binary(boot_entry_t* entry) {
 
     // prepare the boot info
     tboot_info_t* info = NULL;
-    ASSERT_EFI_ERROR(gBS->AllocatePool(CUSTOM_TYPE_BOOT_INFO, sizeof(tboot_info_t), (void*)&info));
+    ASSERT_EFI_ERROR(gBS->AllocatePool(EfiReservedMemoryType, sizeof(tboot_info_t), (void*)&info));
     SetMem(info, sizeof(tboot_info_t), 0);
 
     // set the cmd
     if(entry->cmd != NULL) {
         info->flags.cmdline = 1;
         info->cmdline.length = AsciiStrLen(entry->cmd);
-        ASSERT_EFI_ERROR(gBS->AllocatePool(CUSTOM_TYPE_BOOT_INFO, info->cmdline.length, (void*)&info->cmdline.cmdline));
+        ASSERT_EFI_ERROR(gBS->AllocatePool(EfiReservedMemoryType, info->cmdline.length, (void*)&info->cmdline.cmdline));
         AsciiStrCpy(info->cmdline.cmdline, entry->cmd);
         DebugPrint(0, "Command line: %a\n", info->cmdline.cmdline);
     }else {
@@ -140,17 +136,17 @@ void load_tboot_binary(boot_entry_t* entry) {
     info->flags.modules = entry->modules_count != 0;
     info->modules.count = entry->modules_count;
     if(info->modules.count != 0) {
-        ASSERT_EFI_ERROR(gBS->AllocatePool(CUSTOM_TYPE_BOOT_INFO, sizeof(tboot_module_t) * info->modules.count, (void*)&info->modules.entries));
+        ASSERT_EFI_ERROR(gBS->AllocatePool(EfiReservedMemoryType, sizeof(tboot_module_t) * info->modules.count, (void*)&info->modules.entries));
 
         int index = 0;
         boot_module_t* module = entry->modules;
         while(module != NULL) {
 
             // load the file
-            load_file(module->path, CUSTOM_TYPE_MODULE_N(index), &info->modules.entries[index].base, &info->modules.entries[index].len);
+            load_file(module->path, EfiReservedMemoryType, &info->modules.entries[index].base, &info->modules.entries[index].len);
 
             // prepare the name
-            ASSERT_EFI_ERROR(gBS->AllocatePool(CUSTOM_TYPE_BOOT_INFO, AsciiStrLen(module->tag), (void*)&info->modules.entries[index].name));
+            ASSERT_EFI_ERROR(gBS->AllocatePool(EfiReservedMemoryType, AsciiStrLen(module->tag), (void*)&info->modules.entries[index].name));
             AsciiStrCpy(info->modules.entries[index].name, module->tag);
 
             tboot_module_t* mod = &info->modules.entries[index];
@@ -188,7 +184,7 @@ void load_tboot_binary(boot_entry_t* entry) {
                     }
 
                     // allocate and copy it
-                    ASSERT_EFI_ERROR(gBS->AllocatePages(AllocateAnyPages, CUSTOM_TYPE_BOOT_INFO, EFI_SIZE_TO_PAGES(e->size), (EFI_PHYSICAL_ADDRESS*)&table));
+                    ASSERT_EFI_ERROR(gBS->AllocatePages(AllocateAnyPages, EfiReservedMemoryType, EFI_SIZE_TO_PAGES(e->size), (EFI_PHYSICAL_ADDRESS*)&table));
                     CopyMem(table, config_table.VendorTable, e->size);
                     index = j;
 
@@ -222,7 +218,7 @@ void load_tboot_binary(boot_entry_t* entry) {
     UINT32 descVersion = 0;
     EFI_MEMORY_DESCRIPTOR* descs = NULL;
     if(EFI_ERROR(status = gBS->GetMemoryMap(&mapSize, NULL, &mapKey, &descSize, &descVersion)) && status != EFI_BUFFER_TOO_SMALL) ASSERT_EFI_ERROR(status);
-    ASSERT_EFI_ERROR(gBS->AllocatePool(CUSTOM_TYPE_BOOT_INFO, mapSize, (void**)&descs));
+    ASSERT_EFI_ERROR(gBS->AllocatePool(EfiReservedMemoryType, mapSize, (void**)&descs));
     mapSize += EFI_PAGE_SIZE;
     ASSERT_EFI_ERROR(gBS->GetMemoryMap(&mapSize, descs, &mapKey, &descSize, &descVersion));
     info->mmap.entries = (tboot_mmap_entry_t*)descs;
@@ -268,14 +264,6 @@ void load_tboot_binary(boot_entry_t* entry) {
                 type = TBOOT_MEMORY_TYPE_ACPI_NVS;
                 break;
 
-            case CUSTOM_TYPE_KERNEL:
-                type = TBOOT_MEMORY_TYPE_KERNEL;
-                break;
-
-            case CUSTOM_TYPE_BOOT_INFO:
-                type = TBOOT_MEMORY_TYPE_BOOT_INFO;
-                break;
-
             case EfiReservedMemoryType:
             case EfiMemoryMappedIO:
             case EfiMemoryMappedIOPortSpace:
@@ -283,15 +271,7 @@ void load_tboot_binary(boot_entry_t* entry) {
             case EfiRuntimeServicesData:
             case EfiPalCode:
             default:
-                // special case, the boot modules
-                if(desc->Type >= CUSTOM_TYPE_MODULE_N(0)) {
-                    type = TBOOT_MEMORY_TYPE_MODULE_N(desc->Type - CUSTOM_TYPE_MODULE_N(0));
-
-                // otherwise consider reserved
-                }else {
-                    type = TBOOT_MEMORY_TYPE_RESERVED;
-                }
-
+                type = TBOOT_MEMORY_TYPE_RESERVED;
                 break;
         }
 

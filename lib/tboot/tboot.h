@@ -37,24 +37,6 @@
 #define TBOOT_MEMORY_TYPE_ACPI_NVS      4
 
 /*
- * This region in memory contains boot info related data
- * it can be allocated once you are done with the boot
- * information
- */
-#define TBOOT_MEMORY_TYPE_BOOT_INFO     5
-
-/*
- * This region in memory contains the kernel itself,
- * you should treat it as reserved probably
- */
-#define TBOOT_MEMORY_TYPE_KERNEL        6
-
-/*
- * This represent the module at the given index
- */
-#define TBOOT_MEMORY_TYPE_MODULE_N(n)   ((n) + 10)
-
-/*
  * Entry in the memory map, the type is one of
  * the TBOOT_MEMORY_TYPE_*
  */
