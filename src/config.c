@@ -91,6 +91,7 @@ void get_boot_entries(boot_entries_t* entries) {
             entries->entries[index].cmd = NULL;
             entries->entries[index].modules = NULL;
             entries->entries[index].modules_count = 0;
+            last_module = NULL;
 
         }else {
             // this is just a parameter
