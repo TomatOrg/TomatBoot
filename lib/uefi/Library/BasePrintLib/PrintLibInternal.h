@@ -13,6 +13,7 @@
 #include <Library/PrintLib.h>
 #include <Library/BaseLib.h>
 #include <Library/DebugLib.h>
+#include <Library/PcdLib.h>
 
 
 //

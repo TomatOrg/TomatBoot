@@ -16,35 +16,35 @@
 /// BLUETOOTH_ADDRESS
 ///
 typedef struct {
-    ///
-    /// 48bit Bluetooth device address.
-    ///
-    UINT8      Address[6];
+  ///
+  /// 48bit Bluetooth device address.
+  ///
+  UINT8      Address[6];
 } BLUETOOTH_ADDRESS;
 
 ///
 /// BLUETOOTH_CLASS_OF_DEVICE. See Bluetooth specification for detail.
 ///
 typedef struct {
-    UINT8      FormatType:2;
-    UINT8      MinorDeviceClass: 6;
-    UINT16     MajorDeviceClass: 5;
-    UINT16     MajorServiceClass:11;
+  UINT8      FormatType:2;
+  UINT8      MinorDeviceClass: 6;
+  UINT16     MajorDeviceClass: 5;
+  UINT16     MajorServiceClass:11;
 } BLUETOOTH_CLASS_OF_DEVICE;
 
 ///
 /// BLUETOOTH_LE_ADDRESS
 ///
 typedef struct {
-    ///
-    /// 48-bit Bluetooth device address
-    ///
-    UINT8      Address[6];
-    ///
-    /// 0x00 - Public Device Address
-    /// 0x01 - Random Device Address
-    ///
-    UINT8      Type;
+  ///
+  /// 48-bit Bluetooth device address
+  ///
+  UINT8      Address[6];
+  ///
+  /// 0x00 - Public Device Address
+  /// 0x01 - Random Device Address
+  ///
+  UINT8      Type;
 } BLUETOOTH_LE_ADDRESS;
 
 #pragma pack()

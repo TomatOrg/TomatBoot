@@ -13,8 +13,6 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #ifndef __BASE_MEMORY_LIB__
 #define __BASE_MEMORY_LIB__
 
-#include <Uefi.h>
-
 /**
   Copies a source buffer to a destination buffer, and returns the destination buffer.
 

@@ -33,8 +33,8 @@ typedef struct _EFI_SIMPLE_TEXT_INPUT_PROTOCOL  SIMPLE_INPUT_INTERFACE;
 /// The keystroke information for the key that was pressed.
 ///
 typedef struct {
-    UINT16  ScanCode;
-    CHAR16  UnicodeChar;
+  UINT16  ScanCode;
+  CHAR16  UnicodeChar;
 } EFI_INPUT_KEY;
 
 //
@@ -84,9 +84,9 @@ typedef struct {
 typedef
 EFI_STATUS
 (EFIAPI *EFI_INPUT_RESET)(
-IN EFI_SIMPLE_TEXT_INPUT_PROTOCOL       *This,
-IN BOOLEAN                              ExtendedVerification
-);
+  IN EFI_SIMPLE_TEXT_INPUT_PROTOCOL       *This,
+  IN BOOLEAN                              ExtendedVerification
+  );
 
 /**
   Reads the next keystroke from the input device. The WaitForKey Event can
@@ -105,21 +105,21 @@ IN BOOLEAN                              ExtendedVerification
 typedef
 EFI_STATUS
 (EFIAPI *EFI_INPUT_READ_KEY)(
-IN EFI_SIMPLE_TEXT_INPUT_PROTOCOL       *This,
-OUT EFI_INPUT_KEY                       *Key
-);
+  IN EFI_SIMPLE_TEXT_INPUT_PROTOCOL       *This,
+  OUT EFI_INPUT_KEY                       *Key
+  );
 
 ///
 /// The EFI_SIMPLE_TEXT_INPUT_PROTOCOL is used on the ConsoleIn device.
 /// It is the minimum required protocol for ConsoleIn.
 ///
 struct _EFI_SIMPLE_TEXT_INPUT_PROTOCOL {
-    EFI_INPUT_RESET     Reset;
-    EFI_INPUT_READ_KEY  ReadKeyStroke;
-    ///
-    /// Event to use with WaitForEvent() to wait for a key to be available
-    ///
-    EFI_EVENT           WaitForKey;
+  EFI_INPUT_RESET     Reset;
+  EFI_INPUT_READ_KEY  ReadKeyStroke;
+  ///
+  /// Event to use with WaitForEvent() to wait for a key to be available
+  ///
+  EFI_EVENT           WaitForKey;
 };
 
 extern EFI_GUID gEfiSimpleTextInProtocolGuid;

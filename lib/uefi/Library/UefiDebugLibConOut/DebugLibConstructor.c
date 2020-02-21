@@ -9,9 +9,9 @@
 **/
 
 #include <Uefi.h>
-#include <Guid/EventGroup.h>
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
+#include <Guid/EventGroup.h>
 
 //
 // BOOLEAN value to indicate if it is at the post ExitBootServices pahse
@@ -58,7 +58,7 @@ ExitBootServicesCallback (
 **/
 EFI_STATUS
 EFIAPI
-DebugLibConstructor(
+DxeDebugLibConstructor(
   IN EFI_HANDLE                 ImageHandle,
   IN EFI_SYSTEM_TABLE           *SystemTable
   )
@@ -88,7 +88,7 @@ DebugLibConstructor(
 **/
 EFI_STATUS
 EFIAPI
-DebugLibDestructor(
+DxeDebugLibDestructor(
   IN EFI_HANDLE                 ImageHandle,
   IN EFI_SYSTEM_TABLE           *SystemTable
   )

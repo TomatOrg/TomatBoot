@@ -8,7 +8,6 @@
 **/
 
 #include "BaseLibInternals.h"
-#include <Library/BaseLib.h>
 
 /**
   Uses as a barrier to stop speculative execution.
@@ -23,5 +22,9 @@ SpeculationBarrier (
   VOID
   )
 {
-  AsmLfence ();
+  if (PcdGet8 (PcdSpeculationBarrierType) == 0x01) {
+    AsmLfence ();
+  } else if (PcdGet8 (PcdSpeculationBarrierType) == 0x02) {
+    AsmCpuid (0x01, NULL, NULL, NULL, NULL);
+  }
 }

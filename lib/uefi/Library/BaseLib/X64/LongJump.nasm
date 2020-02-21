@@ -29,26 +29,6 @@
 global InternalLongJump
 InternalLongJump:
 
-    mov     eax, 0
-    test    eax, eax
-    jz      CetDone
-    mov     rax, cr4
-    bt      eax, 23                      ; check if CET is enabled
-    jnc     CetDone
-
-    push    rdx                          ; save rdx
-
-    mov     rdx, [rcx + 0xF8]            ; rdx = target SSP
-    READSSP_RAX
-    sub     rdx, rax                     ; rdx = delta
-    mov     rax, rdx                     ; rax = delta
-
-    shr     rax, 3                       ; rax = delta/sizeof(UINT64)
-    INCSSP_RAX
-
-    pop     rdx                          ; restore rdx
-CetDone:
-
     mov     rbx, [rcx]
     mov     rsp, [rcx + 8]
     mov     rbp, [rcx + 0x10]

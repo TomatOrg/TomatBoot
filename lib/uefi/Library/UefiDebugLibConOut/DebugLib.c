@@ -10,9 +10,9 @@
 
 #include <Library/DebugLib.h>
 #include <Library/PrintLib.h>
+#include <Library/PcdLib.h>
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
-#include <Library/DebugPrintErrorLevelLib.h>
 
 //
 // Define the maximum debug and assert message length that this library supports
@@ -209,7 +209,7 @@ DebugAssert (
       Buffer,
       sizeof (Buffer),
       "ASSERT [%a] %a(%d): %a\n",
-      "Unknown",
+      "UFI",
       FileName,
       LineNumber,
       Description
@@ -222,7 +222,14 @@ DebugAssert (
       mDebugST->ConOut->OutputString (mDebugST->ConOut, Buffer);
     }
 
-    CpuDeadLoop();
+    //
+    // Generate a Breakpoint, DeadLoop, or NOP based on PCD settings
+    //
+    if ((PcdGet8(PcdDebugPropertyMask) & DEBUG_PROPERTY_ASSERT_BREAKPOINT_ENABLED) != 0) {
+      CpuBreakpoint ();
+    } else if ((PcdGet8(PcdDebugPropertyMask) & DEBUG_PROPERTY_ASSERT_DEADLOOP_ENABLED) != 0) {
+      CpuDeadLoop ();
+    }
   }
 }
 
@@ -257,7 +264,7 @@ DebugClearMemory (
   //
   // SetMem() checks for the the ASSERT() condition on Length and returns Buffer
   //
-  return SetMem (Buffer, Length, 0);
+  return SetMem (Buffer, Length, PcdGet8(PcdDebugClearMemoryValue));
 }
 
 
@@ -297,7 +304,7 @@ DebugPrintEnabled (
   VOID
   )
 {
-  return TRUE;
+  return (BOOLEAN) ((PcdGet8(PcdDebugPropertyMask) & DEBUG_PROPERTY_DEBUG_PRINT_ENABLED) != 0);
 }
 
 
@@ -317,7 +324,7 @@ DebugCodeEnabled (
   VOID
   )
 {
-  return TRUE;
+  return (BOOLEAN) ((PcdGet8(PcdDebugPropertyMask) & DEBUG_PROPERTY_DEBUG_CODE_ENABLED) != 0);
 }
 
 
@@ -337,7 +344,7 @@ DebugClearMemoryEnabled (
   VOID
   )
 {
-  return TRUE;
+  return (BOOLEAN) ((PcdGet8(PcdDebugPropertyMask) & DEBUG_PROPERTY_CLEAR_MEMORY_ENABLED) != 0);
 }
 
 /**
@@ -355,5 +362,5 @@ DebugPrintLevelEnabled (
   IN  CONST UINTN        ErrorLevel
   )
 {
-  return TRUE;
+  return (BOOLEAN) ((ErrorLevel & PcdGet32(PcdFixedDebugPrintErrorLevel)) != 0);
 }

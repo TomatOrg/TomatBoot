@@ -1,7 +1,9 @@
 /** @file
   Guid used to identify HII FormMap configuration method.
+
   Copyright (c) 2009 - 2018, Intel Corporation. All rights reserved.<BR>
   SPDX-License-Identifier: BSD-2-Clause-Patent
+
   @par Revision Reference:
   GUID defined in UEFI 2.2 spec.
 **/

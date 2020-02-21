@@ -16,8 +16,6 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #ifndef __DEBUG_LIB_H__
 #define __DEBUG_LIB_H__
 
-#include <Uefi.h>
-
 //
 // Declare bits for PcdDebugPropertyMask
 //
@@ -331,19 +329,15 @@ DebugPrintLevelEnabled (
   @param  Expression  Boolean expression.
 
 **/
-#if !defined(MDEPKG_NDEBUG)
-  #define ASSERT(Expression)        \
-    do {                            \
-      if (DebugAssertEnabled ()) {  \
-        if (!(Expression)) {        \
-          _ASSERT (Expression);     \
-          ANALYZER_UNREACHABLE ();  \
-        }                           \
-      }                             \
-    } while (FALSE)
-#else
-  #define ASSERT(Expression)
-#endif
+#define ASSERT(Expression)        \
+do {                            \
+  if (DebugAssertEnabled ()) {  \
+    if (!(Expression)) {        \
+      _ASSERT (Expression);     \
+      ANALYZER_UNREACHABLE ();  \
+    }                           \
+  }                             \
+} while (FALSE)
 
 /**
   Macro that calls DebugPrint().
@@ -380,19 +374,15 @@ DebugPrintLevelEnabled (
   @param  StatusParameter  EFI_STATUS value to evaluate.
 
 **/
-#if !defined(MDEPKG_NDEBUG)
-  #define ASSERT_EFI_ERROR(StatusParameter)                                              \
-    do {                                                                                 \
-      if (DebugAssertEnabled ()) {                                                       \
-        if (EFI_ERROR (StatusParameter)) {                                               \
-          DEBUG ((EFI_D_ERROR, "\nASSERT_EFI_ERROR (Status = %r)\n", StatusParameter));  \
-          _ASSERT (!EFI_ERROR (StatusParameter));                                        \
-        }                                                                                \
-      }                                                                                  \
-    } while (FALSE)
-#else
-  #define ASSERT_EFI_ERROR(StatusParameter)
-#endif
+#define ASSERT_EFI_ERROR(StatusParameter)                                              \
+do {                                                                                 \
+  if (DebugAssertEnabled ()) {                                                       \
+    if (EFI_ERROR (StatusParameter)) {                                               \
+      DEBUG ((EFI_D_ERROR, "\nASSERT_EFI_ERROR (Status = %r)\n", StatusParameter));  \
+      _ASSERT (!EFI_ERROR (StatusParameter));                                        \
+    }                                                                                \
+  }                                                                                  \
+} while (FALSE)
 
 /**
   Macro that calls DebugAssert() if a RETURN_STATUS evaluates to an error code.
@@ -571,19 +561,5 @@ DebugPrintLevelEnabled (
   #define CR(Record, TYPE, Field, TestSignature)                                              \
     BASE_CR (Record, TYPE, Field)
 #endif
-
-EFI_STATUS
-EFIAPI
-DebugLibConstructor(
-        IN EFI_HANDLE                 ImageHandle,
-        IN EFI_SYSTEM_TABLE           *SystemTable
-);
-
-EFI_STATUS
-EFIAPI
-DebugLibDestructor(
-        IN EFI_HANDLE                 ImageHandle,
-        IN EFI_SYSTEM_TABLE           *SystemTable
-);
 
 #endif

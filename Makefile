@@ -1,45 +1,86 @@
 # Make sure we use the correct compilers
-CLANG ?= clang
-FUSE_LD ?= lld-link
+CLANG ?= clang-9
+FUSE_LD ?= lld-link-9
 
-#########################
-# By default just build
-# the EFI
-#########################
-
-.PHONY: default all clean
 default: all
+
+.PHONY: all clean
 
 #########################
 # All the source files
+# TODO: support for Ia32
 #########################
 
-# Actual sources
-SRCS += $(shell find ./src/ -name '*.c')
+# Sources for the core
+SRCS += $(shell find src/ -name '*.c')
 
-# All the headers, we use them as dependency
-HDRS += $(shell find ./src/ -name '*.h')
+# Runtime support
+SRCS += $(shell find lib/runtime -name '*.c')
 
 # UEFI Lib
-SRCS += $(shell find ./lib/uefi/Library -name '*.c')
-SRCS += $(shell find ./lib/uefi/Library -name '*.nasm')
-HDRS += $(shell find ./lib/uefi/Include -name '*.h')
+SRCS += $(shell find lib/uefi/Library -name '*.c')
+SRCS += $(shell find lib/uefi/Library -name '*.nasm')
 
 # Make sure we build the guids c file if it does not exists
-SRCS += ./lib/uefi/Library/guids.c
+SRCS += lib/uefi/Library/guids.c
 
 # Get the objects and their dirs
 OBJS := $(SRCS:%=./build/%.o)
-OBJDIRS := $(dir $(OBJS))
+DEPS := $(OBJS:%.o=%.d)
+
+# The uefi headers, as dependency for the guids generation
+UEFI_HDRS := $(shell find lib/uefi/Include -name '*.h')
 
 #########################
 # Include directories
+# TODO: support for Ia32
 #########################
 
-INCLUDE_DIRS += ./lib/uefi/Include
-INCLUDE_DIRS += ./lib/uefi/Include/X64
-INCLUDE_DIRS += ./lib/
-INCLUDE_DIRS += ./src/
+INCLUDE_DIRS += lib/uefi/Include
+INCLUDE_DIRS += lib/uefi/Include/X64
+INCLUDE_DIRS += src/
+
+#########################
+# EDK2 flags
+#########################
+
+# These are taken from the default configurations
+# of the MdePkg of edk2
+
+# boolean options
+EDK2_OPTS_BOOL := PcdVerifyNodeInList=FALSE
+EDK2_OPTS_BOOL += PcdComponentNameDisable=FALSE
+EDK2_OPTS_BOOL += PcdDriverDiagnostics2Disable=FALSE
+EDK2_OPTS_BOOL += PcdComponentName2Disable=FALSE
+EDK2_OPTS_BOOL += PcdDriverDiagnosticsDisable=FALSE
+EDK2_OPTS_BOOL += PcdUgaConsumeSupport=TRUE
+
+# uint32 options
+EDK2_OPTS_UINT32 := PcdMaximumLinkedListLength=1000000
+EDK2_OPTS_UINT32 += PcdMaximumUnicodeStringLength=1000000
+EDK2_OPTS_UINT32 += PcdMaximumAsciiStringLength=1000000
+EDK2_OPTS_UINT32 += PcdSpinLockTimeout=10000000
+EDK2_OPTS_UINT32 += PcdFixedDebugPrintErrorLevel=0xFFFFFFFF
+EDK2_OPTS_UINT32 += PcdUefiLibMaxPrintBufferSize=320
+EDK2_OPTS_UINT32 += PcdMaximumDevicePathNodeCount=0
+
+EDK2_OPTS_UINT16 := PcdUefiFileHandleLibPrintBufferSize=1536
+
+EDK2_OPTS_UINT8 := PcdSpeculationBarrierType=0x1
+EDK2_OPTS_UINT8 += PcdDebugPropertyMask=DEBUG_PROPERTY_ASSERT_BREAKPOINT_ENABLED
+EDK2_OPTS_UINT8 += PcdDebugClearMemoryValue=0xAF
+
+# setup the actual full token
+EDK2_FLAGS := $(EDK2_OPTS_UINT32:%=-D_PCD_GET_MODE_32_%)
+EDK2_FLAGS += $(EDK2_OPTS_UINT16:%=-D_PCD_GET_MODE_16_%)
+EDK2_FLAGS += $(EDK2_OPTS_UINT8:%=-D_PCD_GET_MODE_8_%)
+EDK2_FLAGS += $(EDK2_OPTS_BOOL:%=-D_PCD_GET_MODE_BOOL_%)
+
+#########################
+# Lua flags
+#########################
+
+LUA_FLAGS := -Dl_signalT=int
 
 #########################
 # Flags
@@ -49,14 +90,15 @@ INCLUDE_DIRS += ./src/
 CFLAGS := \
 	-target x86_64-unknown-windows \
 	-ffreestanding \
-	-fno-stack-check \
-	-fno-stack-protector \
 	-fshort-wchar \
-	-mno-red-zone \
+	-nostdinc \
+	-nostdlib \
 	-std=c11 \
+	-Wall \
 	-Werror \
-	-Ofast \
-	-flto
+	-O3 \
+	-flto \
+	-g
 
 # Add all the includes
 CFLAGS += $(INCLUDE_DIRS:%=-I%)
@@ -68,42 +110,14 @@ LDFLAGS := \
 	-Wl,-entry:EfiMain \
 	-Wl,-subsystem:efi_application \
 	-fuse-ld=$(FUSE_LD)
-	
+
+# Assembler flags
 NASMFLAGS := \
 	-g \
 	-f win64
 
+# Add includes
 NASMFLAGS += $(INCLUDE_DIRS:%=-i %/)
-
-#########################
-# Make a corepure64 image
-#########################
-
-# Shortcut
-linux: bin/image.img
-
-# Create the boot image
-bin/image.img: tools/linux \
-                tools/image-builder.py \
-                bin/BOOTX64.EFI
-	mkdir -p ./bin/image/EFI/BOOT/
-	cp ./bin/BOOTX64.EFI ./bin/image/EFI/BOOT/
-	cp ./config/linux.cfg ./bin/image/tomatboot.cfg
-	cp ./tools/linux/* ./bin/image
-	cd bin && ../tools/image-builder.py ../config/linux-image.yaml
-
-# Download the corepure64 files
-tools/linux:
-	echo "Please put a vmlinuz and initrd files in the ./tools/linux folder to create a linux bootable image"
-	false
-
-# Download the tool
-# TODO: Checksum
-# TODO: have this as submodule instead
-tools/image-builder.py:
-	mkdir -p tools
-	cd tools && wget https://raw.githubusercontent.com/TomatOrg/image-builder/master/image-builder.py
-	chmod +x tools/image-builder.py
 
 #########################
 # Cleaning
@@ -111,32 +125,59 @@ tools/image-builder.py:
 
 # Clean
 clean:
-	rm -rf ./bin ./build
+	rm -rf ./bin ./build ./image
 
 #########################
 # Actual build process
 #########################
 
+# Include all deps
+-include $(DEPS)
+
 all: ./bin/BOOTX64.EFI
+
+# Link the main efi file
+./bin/BOOTX64.EFI: $(OBJS)
+	@mkdir -p $(@D)
+	$(CLANG) $(LDFLAGS) -o $@ $(OBJS)
 
 # specifically for the uefi lib
 # we need to generate that file, have it depend on the includes of UEFI
-./lib/uefi/Library/guids.c:
+./lib/uefi/Library/guids.c: $(UEFI_HDRS)
+	@mkdir -p $(@D)
 	cd ./lib/uefi/Library && python gen_guids.py
 
-# Build the main efi file
-./bin/BOOTX64.EFI: $(OBJDIRS) $(OBJS)
-	mkdir -p bin
-	$(CLANG) $(LDFLAGS) -o $@ $(OBJS)
+# specifically for the uefi lib as well
+# add the edk2 pcd flags
+./build/lib/uefi/%.c.o: lib/uefi/%.c
+	@mkdir -p $(@D)
+	$(CLANG) $(CFLAGS) $(EDK2_FLAGS) -c -o $@ $<
 
 # Build each of the c files
 ./build/%.c.o: %.c
-	$(CLANG) $(CFLAGS) -c -o $@ $<
+	@mkdir -p $(@D)
+	$(CLANG) $(CFLAGS) -MMD -c -o $@ $<
 
 # Build each of the c files
 ./build/%.nasm.o: %.nasm
+	@mkdir -p $(@D)
 	nasm $(NASMFLAGS) -o $@ $<
 
-# Create each of the dirs
-./build/%:
-	mkdir -p $@
+#########################
+# Test with qemu
+#########################
+
+tools/OVMF.fd:
+	rm -f OVMF-X64.zip
+	mkdir -p ./tools
+	wget -P ./tools https://efi.akeo.ie/OVMF/OVMF-X64.zip
+	cd tools && unzip OVMF-X64.zip
+	rm -f LICENSE BUILD_INFO OVMF-X64.zip README
+
+image: ./bin/BOOTX64.EFI ./config/example.cfg
+	mkdir -p ./image/EFI/BOOT/
+	cp ./bin/BOOTX64.EFI ./image/EFI/BOOT/BOOTX64.EFI
+	cp ./config/example.cfg ./image/tomatboot.cfg
+
+qemu: image
+	qemu-system-x86_64 -L tools -bios OVMF.fd -hdd fat:rw:image

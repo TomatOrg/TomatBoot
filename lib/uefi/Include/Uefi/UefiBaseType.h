@@ -64,17 +64,17 @@ typedef UINT64                    EFI_VIRTUAL_ADDRESS;
 ///  TimeZone:   -1440 to 1440 or 2047
 ///
 typedef struct {
-    UINT16  Year;
-    UINT8   Month;
-    UINT8   Day;
-    UINT8   Hour;
-    UINT8   Minute;
-    UINT8   Second;
-    UINT8   Pad1;
-    UINT32  Nanosecond;
-    INT16   TimeZone;
-    UINT8   Daylight;
-    UINT8   Pad2;
+  UINT16  Year;
+  UINT8   Month;
+  UINT8   Day;
+  UINT8   Hour;
+  UINT8   Minute;
+  UINT8   Second;
+  UINT8   Pad1;
+  UINT32  Nanosecond;
+  INT16   TimeZone;
+  UINT8   Daylight;
+  UINT8   Pad2;
 } EFI_TIME;
 
 
@@ -92,7 +92,7 @@ typedef IPv6_ADDRESS EFI_IPv6_ADDRESS;
 /// 32-byte buffer containing a network Media Access Control address.
 ///
 typedef struct {
-    UINT8 Addr[32];
+  UINT8 Addr[32];
 } EFI_MAC_ADDRESS;
 
 ///
@@ -100,9 +100,9 @@ typedef struct {
 /// An IPv4 or IPv6 internet protocol address.
 ///
 typedef union {
-    UINT32            Addr[4];
-    EFI_IPv4_ADDRESS  v4;
-    EFI_IPv6_ADDRESS  v6;
+  UINT32            Addr[4];
+  EFI_IPv4_ADDRESS  v4;
+  EFI_IPv6_ADDRESS  v6;
 } EFI_IP_ADDRESS;
 
 

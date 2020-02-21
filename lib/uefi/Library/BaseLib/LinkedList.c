@@ -30,7 +30,11 @@
 #if !defined (MDEPKG_NDEBUG)
   #define ASSERT_VERIFY_NODE_IN_VALID_LIST(FirstEntry, SecondEntry, InList)  \
     do {                                                                     \
+      if (FeaturePcdGet (PcdVerifyNodeInList)) {                             \
+        ASSERT (InList == IsNodeInList ((FirstEntry), (SecondEntry)));       \
+      } else {                                                               \
         ASSERT (InternalBaseLibIsListValid (FirstEntry));                    \
+      }                                                                      \
     } while (FALSE)
 #else
   #define ASSERT_VERIFY_NODE_IN_VALID_LIST(FirstEntry, SecondEntry, InList)
@@ -70,6 +74,25 @@ InternalBaseLibIsListValid (
   ASSERT (List != NULL);
   ASSERT (List->ForwardLink != NULL);
   ASSERT (List->BackLink != NULL);
+
+  if (PcdGet32 (PcdMaximumLinkedListLength) > 0) {
+    Count = 0;
+    Ptr   = List;
+
+    //
+    // Count the total number of nodes in List.
+    // Exit early if the number of nodes in List >= PcdMaximumLinkedListLength
+    //
+    do {
+      Ptr = Ptr->ForwardLink;
+      Count++;
+    } while ((Ptr != List) && (Count < PcdGet32 (PcdMaximumLinkedListLength)));
+
+    //
+    // return whether linked list is too long
+    //
+    return (BOOLEAN)(Count < PcdGet32 (PcdMaximumLinkedListLength));
+  }
 
   return TRUE;
 }
@@ -119,6 +142,16 @@ IsNodeInList (
   //
   do {
     Ptr = Ptr->ForwardLink;
+    if (PcdGet32 (PcdMaximumLinkedListLength) > 0) {
+      Count++;
+
+      //
+      // Return if the linked list is too long
+      //
+      if (Count == PcdGet32 (PcdMaximumLinkedListLength)) {
+        return (BOOLEAN)(Ptr == SecondEntry);
+      }
+    }
 
     if (Ptr == SecondEntry) {
       return TRUE;

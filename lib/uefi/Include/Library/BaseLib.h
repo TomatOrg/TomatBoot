@@ -11,8 +11,6 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #ifndef __BASE_LIB__
 #define __BASE_LIB__
 
-#include <Base.h>
-
 //
 // Definitions for architecture-specific types
 //
@@ -149,11 +147,11 @@ typedef struct {
 
 **/
 UINTN
-        EFIAPI
+EFIAPI
 StrnLenS (
-        IN CONST CHAR16              *String,
-IN UINTN                     MaxSize
-);
+  IN CONST CHAR16              *String,
+  IN UINTN                     MaxSize
+  );
 
 /**
   Returns the size of a Null-terminated Unicode string in bytes, including the
@@ -177,11 +175,11 @@ IN UINTN                     MaxSize
 
 **/
 UINTN
-        EFIAPI
+EFIAPI
 StrnSizeS (
-        IN CONST CHAR16              *String,
-IN UINTN                     MaxSize
-);
+  IN CONST CHAR16              *String,
+  IN UINTN                     MaxSize
+  );
 
 /**
   Copies the string pointed to by Source (including the terminating null char)
@@ -211,12 +209,12 @@ IN UINTN                     MaxSize
   @retval RETURN_ACCESS_DENIED     If Source and Destination overlap.
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 StrCpyS (
-        OUT CHAR16       *Destination,
-        IN  UINTN        DestMax,
-        IN  CONST CHAR16 *Source
-);
+  OUT CHAR16       *Destination,
+  IN  UINTN        DestMax,
+  IN  CONST CHAR16 *Source
+  );
 
 /**
   Copies not more than Length successive char from the string pointed to by
@@ -249,13 +247,13 @@ StrCpyS (
   @retval RETURN_ACCESS_DENIED     If Source and Destination overlap.
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 StrnCpyS (
-        OUT CHAR16       *Destination,
-        IN  UINTN        DestMax,
-        IN  CONST CHAR16 *Source,
-IN  UINTN        Length
-);
+  OUT CHAR16       *Destination,
+  IN  UINTN        DestMax,
+  IN  CONST CHAR16 *Source,
+  IN  UINTN        Length
+  );
 
 /**
   Appends a copy of the string pointed to by Source (including the terminating
@@ -288,12 +286,12 @@ IN  UINTN        Length
   @retval RETURN_ACCESS_DENIED     If Source and Destination overlap.
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 StrCatS (
-        IN OUT CHAR16       *Destination,
-IN     UINTN        DestMax,
-IN     CONST CHAR16 *Source
-);
+  IN OUT CHAR16       *Destination,
+  IN     UINTN        DestMax,
+  IN     CONST CHAR16 *Source
+  );
 
 /**
   Appends not more than Length successive char from the string pointed to by
@@ -329,13 +327,13 @@ IN     CONST CHAR16 *Source
   @retval RETURN_ACCESS_DENIED     If Source and Destination overlap.
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 StrnCatS (
-        IN OUT CHAR16       *Destination,
-IN     UINTN        DestMax,
-IN     CONST CHAR16 *Source,
-        IN     UINTN        Length
-);
+  IN OUT CHAR16       *Destination,
+  IN     UINTN        DestMax,
+  IN     CONST CHAR16 *Source,
+  IN     UINTN        Length
+  );
 
 /**
   Convert a Null-terminated Unicode decimal string to a value of type UINTN.
@@ -386,12 +384,12 @@ IN     CONST CHAR16 *Source,
 
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 StrDecimalToUintnS (
-        IN  CONST CHAR16             *String,
-OUT       CHAR16             **EndPointer,  OPTIONAL
-        OUT       UINTN              *Data
-);
+  IN  CONST CHAR16             *String,
+  OUT       CHAR16             **EndPointer,  OPTIONAL
+  OUT       UINTN              *Data
+  );
 
 /**
   Convert a Null-terminated Unicode decimal string to a value of type UINT64.
@@ -442,12 +440,12 @@ OUT       CHAR16             **EndPointer,  OPTIONAL
 
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 StrDecimalToUint64S (
-        IN  CONST CHAR16             *String,
-OUT       CHAR16             **EndPointer,  OPTIONAL
-        OUT       UINT64             *Data
-);
+  IN  CONST CHAR16             *String,
+  OUT       CHAR16             **EndPointer,  OPTIONAL
+  OUT       UINT64             *Data
+  );
 
 /**
   Convert a Null-terminated Unicode hexadecimal string to a value of type
@@ -503,12 +501,12 @@ OUT       CHAR16             **EndPointer,  OPTIONAL
 
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 StrHexToUintnS (
-        IN  CONST CHAR16             *String,
-OUT       CHAR16             **EndPointer,  OPTIONAL
-        OUT       UINTN              *Data
-);
+  IN  CONST CHAR16             *String,
+  OUT       CHAR16             **EndPointer,  OPTIONAL
+  OUT       UINTN              *Data
+  );
 
 /**
   Convert a Null-terminated Unicode hexadecimal string to a value of type
@@ -564,12 +562,12 @@ OUT       CHAR16             **EndPointer,  OPTIONAL
 
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 StrHexToUint64S (
-        IN  CONST CHAR16             *String,
-OUT       CHAR16             **EndPointer,  OPTIONAL
-        OUT       UINT64             *Data
-);
+  IN  CONST CHAR16             *String,
+  OUT       CHAR16             **EndPointer,  OPTIONAL
+  OUT       UINT64             *Data
+  );
 
 /**
   Returns the length of a Null-terminated Ascii string.
@@ -586,11 +584,11 @@ OUT       CHAR16             **EndPointer,  OPTIONAL
 
 **/
 UINTN
-        EFIAPI
+EFIAPI
 AsciiStrnLenS (
-        IN CONST CHAR8               *String,
-IN UINTN                     MaxSize
-);
+  IN CONST CHAR8               *String,
+  IN UINTN                     MaxSize
+  );
 
 /**
   Returns the size of a Null-terminated Ascii string in bytes, including the
@@ -612,11 +610,11 @@ IN UINTN                     MaxSize
 
 **/
 UINTN
-        EFIAPI
+EFIAPI
 AsciiStrnSizeS (
-        IN CONST CHAR8               *String,
-IN UINTN                     MaxSize
-);
+  IN CONST CHAR8               *String,
+  IN UINTN                     MaxSize
+  );
 
 /**
   Copies the string pointed to by Source (including the terminating null char)
@@ -644,12 +642,12 @@ IN UINTN                     MaxSize
   @retval RETURN_ACCESS_DENIED     If Source and Destination overlap.
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 AsciiStrCpyS (
-        OUT CHAR8        *Destination,
-        IN  UINTN        DestMax,
-        IN  CONST CHAR8  *Source
-);
+  OUT CHAR8        *Destination,
+  IN  UINTN        DestMax,
+  IN  CONST CHAR8  *Source
+  );
 
 /**
   Copies not more than Length successive char from the string pointed to by
@@ -680,13 +678,13 @@ AsciiStrCpyS (
   @retval RETURN_ACCESS_DENIED     If Source and Destination overlap.
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 AsciiStrnCpyS (
-        OUT CHAR8        *Destination,
-        IN  UINTN        DestMax,
-        IN  CONST CHAR8  *Source,
-IN  UINTN        Length
-);
+  OUT CHAR8        *Destination,
+  IN  UINTN        DestMax,
+  IN  CONST CHAR8  *Source,
+  IN  UINTN        Length
+  );
 
 /**
   Appends a copy of the string pointed to by Source (including the terminating
@@ -717,12 +715,12 @@ IN  UINTN        Length
   @retval RETURN_ACCESS_DENIED     If Source and Destination overlap.
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 AsciiStrCatS (
-        IN OUT CHAR8        *Destination,
-IN     UINTN        DestMax,
-IN     CONST CHAR8  *Source
-);
+  IN OUT CHAR8        *Destination,
+  IN     UINTN        DestMax,
+  IN     CONST CHAR8  *Source
+  );
 
 /**
   Appends not more than Length successive char from the string pointed to by
@@ -756,13 +754,13 @@ IN     CONST CHAR8  *Source
   @retval RETURN_ACCESS_DENIED     If Source and Destination overlap.
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 AsciiStrnCatS (
-        IN OUT CHAR8        *Destination,
-IN     UINTN        DestMax,
-IN     CONST CHAR8  *Source,
-        IN     UINTN        Length
-);
+  IN OUT CHAR8        *Destination,
+  IN     UINTN        DestMax,
+  IN     CONST CHAR8  *Source,
+  IN     UINTN        Length
+  );
 
 /**
   Convert a Null-terminated Ascii decimal string to a value of type UINTN.
@@ -812,12 +810,12 @@ IN     CONST CHAR8  *Source,
 
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 AsciiStrDecimalToUintnS (
-        IN  CONST CHAR8              *String,
-OUT       CHAR8              **EndPointer,  OPTIONAL
-        OUT       UINTN              *Data
-);
+  IN  CONST CHAR8              *String,
+  OUT       CHAR8              **EndPointer,  OPTIONAL
+  OUT       UINTN              *Data
+  );
 
 /**
   Convert a Null-terminated Ascii decimal string to a value of type UINT64.
@@ -867,12 +865,12 @@ OUT       CHAR8              **EndPointer,  OPTIONAL
 
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 AsciiStrDecimalToUint64S (
-        IN  CONST CHAR8              *String,
-OUT       CHAR8              **EndPointer,  OPTIONAL
-        OUT       UINT64             *Data
-);
+  IN  CONST CHAR8              *String,
+  OUT       CHAR8              **EndPointer,  OPTIONAL
+  OUT       UINT64             *Data
+  );
 
 /**
   Convert a Null-terminated Ascii hexadecimal string to a value of type UINTN.
@@ -926,12 +924,12 @@ OUT       CHAR8              **EndPointer,  OPTIONAL
 
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 AsciiStrHexToUintnS (
-        IN  CONST CHAR8              *String,
-OUT       CHAR8              **EndPointer,  OPTIONAL
-        OUT       UINTN              *Data
-);
+  IN  CONST CHAR8              *String,
+  OUT       CHAR8              **EndPointer,  OPTIONAL
+  OUT       UINTN              *Data
+  );
 
 /**
   Convert a Null-terminated Ascii hexadecimal string to a value of type UINT64.
@@ -985,12 +983,12 @@ OUT       CHAR8              **EndPointer,  OPTIONAL
 
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 AsciiStrHexToUint64S (
-        IN  CONST CHAR8              *String,
-OUT       CHAR8              **EndPointer,  OPTIONAL
-        OUT       UINT64             *Data
-);
+  IN  CONST CHAR8              *String,
+  OUT       CHAR8              **EndPointer,  OPTIONAL
+  OUT       UINT64             *Data
+  );
 
 
 #ifndef DISABLE_NEW_DEPRECATED_INTERFACES
@@ -1021,11 +1019,11 @@ OUT       CHAR8              **EndPointer,  OPTIONAL
 
 **/
 CHAR16 *
-        EFIAPI
+EFIAPI
 StrCpy (
-        OUT     CHAR16                    *Destination,
-        IN      CONST CHAR16              *Source
-);
+  OUT     CHAR16                    *Destination,
+  IN      CONST CHAR16              *Source
+  );
 
 
 /**
@@ -1061,12 +1059,12 @@ StrCpy (
 
 **/
 CHAR16 *
-        EFIAPI
+EFIAPI
 StrnCpy (
-        OUT     CHAR16                    *Destination,
-        IN      CONST CHAR16              *Source,
-IN      UINTN                     Length
-);
+  OUT     CHAR16                    *Destination,
+  IN      CONST CHAR16              *Source,
+  IN      UINTN                     Length
+  );
 #endif // !defined (DISABLE_NEW_DEPRECATED_INTERFACES)
 
 /**
@@ -1087,10 +1085,10 @@ IN      UINTN                     Length
 
 **/
 UINTN
-        EFIAPI
+EFIAPI
 StrLen (
-        IN      CONST CHAR16              *String
-);
+  IN      CONST CHAR16              *String
+  );
 
 
 /**
@@ -1112,10 +1110,10 @@ StrLen (
 
 **/
 UINTN
-        EFIAPI
+EFIAPI
 StrSize (
-        IN      CONST CHAR16              *String
-);
+  IN      CONST CHAR16              *String
+  );
 
 
 /**
@@ -1147,11 +1145,11 @@ StrSize (
 
 **/
 INTN
-        EFIAPI
+EFIAPI
 StrCmp (
-        IN      CONST CHAR16              *FirstString,
-IN      CONST CHAR16              *SecondString
-);
+  IN      CONST CHAR16              *FirstString,
+  IN      CONST CHAR16              *SecondString
+  );
 
 
 /**
@@ -1187,12 +1185,12 @@ IN      CONST CHAR16              *SecondString
 
 **/
 INTN
-        EFIAPI
+EFIAPI
 StrnCmp (
-        IN      CONST CHAR16              *FirstString,
-IN      CONST CHAR16              *SecondString,
-        IN      UINTN                     Length
-);
+  IN      CONST CHAR16              *FirstString,
+  IN      CONST CHAR16              *SecondString,
+  IN      UINTN                     Length
+  );
 
 
 #ifndef DISABLE_NEW_DEPRECATED_INTERFACES
@@ -1232,11 +1230,11 @@ IN      CONST CHAR16              *SecondString,
 
 **/
 CHAR16 *
-        EFIAPI
+EFIAPI
 StrCat (
-        IN OUT  CHAR16                    *Destination,
-IN      CONST CHAR16              *Source
-);
+  IN OUT  CHAR16                    *Destination,
+  IN      CONST CHAR16              *Source
+  );
 
 
 /**
@@ -1280,12 +1278,12 @@ IN      CONST CHAR16              *Source
 
 **/
 CHAR16 *
-        EFIAPI
+EFIAPI
 StrnCat (
-        IN OUT  CHAR16                    *Destination,
-IN      CONST CHAR16              *Source,
-        IN      UINTN                     Length
-);
+  IN OUT  CHAR16                    *Destination,
+  IN      CONST CHAR16              *Source,
+  IN      UINTN                     Length
+  );
 #endif // !defined (DISABLE_NEW_DEPRECATED_INTERFACES)
 
 /**
@@ -1314,11 +1312,11 @@ IN      CONST CHAR16              *Source,
 
 **/
 CHAR16 *
-        EFIAPI
+EFIAPI
 StrStr (
-        IN      CONST CHAR16              *String,
-IN      CONST CHAR16              *SearchString
-);
+  IN      CONST CHAR16              *String,
+  IN      CONST CHAR16              *SearchString
+  );
 
 /**
   Convert a Null-terminated Unicode decimal string to a value of
@@ -1355,10 +1353,10 @@ IN      CONST CHAR16              *SearchString
 
 **/
 UINTN
-        EFIAPI
+EFIAPI
 StrDecimalToUintn (
-        IN      CONST CHAR16              *String
-);
+  IN      CONST CHAR16              *String
+  );
 
 /**
   Convert a Null-terminated Unicode decimal string to a value of
@@ -1395,10 +1393,10 @@ StrDecimalToUintn (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 StrDecimalToUint64 (
-        IN      CONST CHAR16              *String
-);
+  IN      CONST CHAR16              *String
+  );
 
 
 /**
@@ -1437,10 +1435,10 @@ StrDecimalToUint64 (
 
 **/
 UINTN
-        EFIAPI
+EFIAPI
 StrHexToUintn (
-        IN      CONST CHAR16              *String
-);
+  IN      CONST CHAR16              *String
+  );
 
 
 /**
@@ -1479,10 +1477,10 @@ StrHexToUintn (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 StrHexToUint64 (
-        IN      CONST CHAR16             *String
-);
+  IN      CONST CHAR16             *String
+  );
 
 /**
   Convert a Null-terminated Unicode string to IPv6 address and prefix length.
@@ -1543,13 +1541,13 @@ StrHexToUint64 (
 
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 StrToIpv6Address (
-        IN  CONST CHAR16       *String,
-OUT CHAR16             **EndPointer, OPTIONAL
-        OUT IPv6_ADDRESS       *Address,
-        OUT UINT8              *PrefixLength OPTIONAL
-);
+  IN  CONST CHAR16       *String,
+  OUT CHAR16             **EndPointer, OPTIONAL
+  OUT IPv6_ADDRESS       *Address,
+  OUT UINT8              *PrefixLength OPTIONAL
+  );
 
 /**
   Convert a Null-terminated Unicode string to IPv4 address and prefix length.
@@ -1601,13 +1599,13 @@ OUT CHAR16             **EndPointer, OPTIONAL
 
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 StrToIpv4Address (
-        IN  CONST CHAR16       *String,
-OUT CHAR16             **EndPointer, OPTIONAL
-        OUT IPv4_ADDRESS       *Address,
-        OUT UINT8              *PrefixLength OPTIONAL
-);
+  IN  CONST CHAR16       *String,
+  OUT CHAR16             **EndPointer, OPTIONAL
+  OUT IPv4_ADDRESS       *Address,
+  OUT UINT8              *PrefixLength OPTIONAL
+  );
 
 #define GUID_STRING_LENGTH  36
 
@@ -1656,11 +1654,11 @@ OUT CHAR16             **EndPointer, OPTIONAL
 
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 StrToGuid (
-        IN  CONST CHAR16       *String,
-OUT GUID               *Guid
-);
+  IN  CONST CHAR16       *String,
+  OUT GUID               *Guid
+  );
 
 /**
   Convert a Null-terminated Unicode hexadecimal string to a byte array.
@@ -1707,13 +1705,13 @@ OUT GUID               *Guid
   @retval RETURN_BUFFER_TOO_SMALL  If MaxBufferSize is less than (Length / 2).
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 StrHexToBytes (
-        IN  CONST CHAR16       *String,
-IN  UINTN              Length,
-OUT UINT8              *Buffer,
-IN  UINTN              MaxBufferSize
-);
+  IN  CONST CHAR16       *String,
+  IN  UINTN              Length,
+  OUT UINT8              *Buffer,
+  IN  UINTN              MaxBufferSize
+  );
 
 #ifndef DISABLE_NEW_DEPRECATED_INTERFACES
 
@@ -1753,11 +1751,11 @@ IN  UINTN              MaxBufferSize
 
 **/
 CHAR8 *
-        EFIAPI
+EFIAPI
 UnicodeStrToAsciiStr (
-        IN      CONST CHAR16              *Source,
-OUT     CHAR8                     *Destination
-);
+  IN      CONST CHAR16              *Source,
+  OUT     CHAR8                     *Destination
+  );
 
 #endif // !defined (DISABLE_NEW_DEPRECATED_INTERFACES)
 
@@ -1803,12 +1801,12 @@ OUT     CHAR8                     *Destination
 
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 UnicodeStrToAsciiStrS (
-        IN      CONST CHAR16              *Source,
-OUT     CHAR8                     *Destination,
-IN      UINTN                     DestMax
-);
+  IN      CONST CHAR16              *Source,
+  OUT     CHAR8                     *Destination,
+  IN      UINTN                     DestMax
+  );
 
 /**
   Convert not more than Length successive characters from a Null-terminated
@@ -1855,14 +1853,14 @@ IN      UINTN                     DestMax
 
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 UnicodeStrnToAsciiStrS (
-        IN      CONST CHAR16              *Source,
-IN      UINTN                     Length,
-OUT     CHAR8                     *Destination,
-IN      UINTN                     DestMax,
-OUT     UINTN                     *DestinationLength
-);
+  IN      CONST CHAR16              *Source,
+  IN      UINTN                     Length,
+  OUT     CHAR8                     *Destination,
+  IN      UINTN                     DestMax,
+  OUT     UINTN                     *DestinationLength
+  );
 
 #ifndef DISABLE_NEW_DEPRECATED_INTERFACES
 
@@ -1890,11 +1888,11 @@ OUT     UINTN                     *DestinationLength
 
 **/
 CHAR8 *
-        EFIAPI
+EFIAPI
 AsciiStrCpy (
-        OUT     CHAR8                     *Destination,
-        IN      CONST CHAR8               *Source
-);
+  OUT     CHAR8                     *Destination,
+  IN      CONST CHAR8               *Source
+  );
 
 
 /**
@@ -1927,12 +1925,12 @@ AsciiStrCpy (
 
 **/
 CHAR8 *
-        EFIAPI
+EFIAPI
 AsciiStrnCpy (
-        OUT     CHAR8                     *Destination,
-        IN      CONST CHAR8               *Source,
-IN      UINTN                     Length
-);
+  OUT     CHAR8                     *Destination,
+  IN      CONST CHAR8               *Source,
+  IN      UINTN                     Length
+  );
 #endif // !defined (DISABLE_NEW_DEPRECATED_INTERFACES)
 
 /**
@@ -1953,10 +1951,10 @@ IN      UINTN                     Length
 
 **/
 UINTN
-        EFIAPI
+EFIAPI
 AsciiStrLen (
-        IN      CONST CHAR8               *String
-);
+  IN      CONST CHAR8               *String
+  );
 
 
 /**
@@ -1977,10 +1975,10 @@ AsciiStrLen (
 
 **/
 UINTN
-        EFIAPI
+EFIAPI
 AsciiStrSize (
-        IN      CONST CHAR8               *String
-);
+  IN      CONST CHAR8               *String
+  );
 
 
 /**
@@ -2010,11 +2008,11 @@ AsciiStrSize (
 
 **/
 INTN
-        EFIAPI
+EFIAPI
 AsciiStrCmp (
-        IN      CONST CHAR8               *FirstString,
-IN      CONST CHAR8               *SecondString
-);
+  IN      CONST CHAR8               *FirstString,
+  IN      CONST CHAR8               *SecondString
+  );
 
 
 /**
@@ -2047,11 +2045,11 @@ IN      CONST CHAR8               *SecondString
 
 **/
 INTN
-        EFIAPI
+EFIAPI
 AsciiStriCmp (
-        IN      CONST CHAR8               *FirstString,
-IN      CONST CHAR8               *SecondString
-);
+  IN      CONST CHAR8               *FirstString,
+  IN      CONST CHAR8               *SecondString
+  );
 
 
 /**
@@ -2085,12 +2083,12 @@ IN      CONST CHAR8               *SecondString
 
 **/
 INTN
-        EFIAPI
+EFIAPI
 AsciiStrnCmp (
-        IN      CONST CHAR8               *FirstString,
-IN      CONST CHAR8               *SecondString,
-        IN      UINTN                     Length
-);
+  IN      CONST CHAR8               *FirstString,
+  IN      CONST CHAR8               *SecondString,
+  IN      UINTN                     Length
+  );
 
 
 #ifndef DISABLE_NEW_DEPRECATED_INTERFACES
@@ -2125,11 +2123,11 @@ IN      CONST CHAR8               *SecondString,
 
 **/
 CHAR8 *
-        EFIAPI
+EFIAPI
 AsciiStrCat (
-        IN OUT CHAR8    *Destination,
-IN CONST CHAR8  *Source
-);
+  IN OUT CHAR8    *Destination,
+  IN CONST CHAR8  *Source
+  );
 
 
 /**
@@ -2171,12 +2169,12 @@ IN CONST CHAR8  *Source
 
 **/
 CHAR8 *
-        EFIAPI
+EFIAPI
 AsciiStrnCat (
-        IN OUT  CHAR8                     *Destination,
-IN      CONST CHAR8               *Source,
-        IN      UINTN                     Length
-);
+  IN OUT  CHAR8                     *Destination,
+  IN      CONST CHAR8               *Source,
+  IN      UINTN                     Length
+  );
 #endif // !defined (DISABLE_NEW_DEPRECATED_INTERFACES)
 
 /**
@@ -2204,11 +2202,11 @@ IN      CONST CHAR8               *Source,
 
 **/
 CHAR8 *
-        EFIAPI
+EFIAPI
 AsciiStrStr (
-        IN      CONST CHAR8               *String,
-IN      CONST CHAR8               *SearchString
-);
+  IN      CONST CHAR8               *String,
+  IN      CONST CHAR8               *SearchString
+  );
 
 
 /**
@@ -2242,10 +2240,10 @@ IN      CONST CHAR8               *SearchString
 
 **/
 UINTN
-        EFIAPI
+EFIAPI
 AsciiStrDecimalToUintn (
-        IN      CONST CHAR8               *String
-);
+  IN      CONST CHAR8               *String
+  );
 
 
 /**
@@ -2279,10 +2277,10 @@ AsciiStrDecimalToUintn (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 AsciiStrDecimalToUint64 (
-        IN      CONST CHAR8               *String
-);
+  IN      CONST CHAR8               *String
+  );
 
 
 /**
@@ -2320,10 +2318,10 @@ AsciiStrDecimalToUint64 (
 
 **/
 UINTN
-        EFIAPI
+EFIAPI
 AsciiStrHexToUintn (
-        IN      CONST CHAR8               *String
-);
+  IN      CONST CHAR8               *String
+  );
 
 
 /**
@@ -2361,10 +2359,10 @@ AsciiStrHexToUintn (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 AsciiStrHexToUint64 (
-        IN      CONST CHAR8                *String
-);
+  IN      CONST CHAR8                *String
+  );
 
 /**
   Convert a Null-terminated ASCII string to IPv6 address and prefix length.
@@ -2419,13 +2417,13 @@ AsciiStrHexToUint64 (
 
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 AsciiStrToIpv6Address (
-        IN  CONST CHAR8        *String,
-OUT CHAR8              **EndPointer, OPTIONAL
-        OUT IPv6_ADDRESS       *Address,
-        OUT UINT8              *PrefixLength OPTIONAL
-);
+  IN  CONST CHAR8        *String,
+  OUT CHAR8              **EndPointer, OPTIONAL
+  OUT IPv6_ADDRESS       *Address,
+  OUT UINT8              *PrefixLength OPTIONAL
+  );
 
 /**
   Convert a Null-terminated ASCII string to IPv4 address and prefix length.
@@ -2471,13 +2469,13 @@ OUT CHAR8              **EndPointer, OPTIONAL
 
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 AsciiStrToIpv4Address (
-        IN  CONST CHAR8        *String,
-OUT CHAR8              **EndPointer, OPTIONAL
-        OUT IPv4_ADDRESS       *Address,
-        OUT UINT8              *PrefixLength OPTIONAL
-);
+  IN  CONST CHAR8        *String,
+  OUT CHAR8              **EndPointer, OPTIONAL
+  OUT IPv4_ADDRESS       *Address,
+  OUT UINT8              *PrefixLength OPTIONAL
+  );
 
 /**
   Convert a Null-terminated ASCII GUID string to a value of type
@@ -2523,11 +2521,11 @@ OUT CHAR8              **EndPointer, OPTIONAL
 
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 AsciiStrToGuid (
-        IN  CONST CHAR8        *String,
-OUT GUID               *Guid
-);
+  IN  CONST CHAR8        *String,
+  OUT GUID               *Guid
+  );
 
 /**
   Convert a Null-terminated ASCII hexadecimal string to a byte array.
@@ -2572,13 +2570,13 @@ OUT GUID               *Guid
   @retval RETURN_BUFFER_TOO_SMALL  If MaxBufferSize is less than (Length / 2).
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 AsciiStrHexToBytes (
-        IN  CONST CHAR8        *String,
-IN  UINTN              Length,
-OUT UINT8              *Buffer,
-IN  UINTN              MaxBufferSize
-);
+  IN  CONST CHAR8        *String,
+  IN  UINTN              Length,
+  OUT UINT8              *Buffer,
+  IN  UINTN              MaxBufferSize
+  );
 
 #ifndef DISABLE_NEW_DEPRECATED_INTERFACES
 
@@ -2612,11 +2610,11 @@ IN  UINTN              MaxBufferSize
 
 **/
 CHAR16 *
-        EFIAPI
+EFIAPI
 AsciiStrToUnicodeStr (
-        IN      CONST CHAR8               *Source,
-OUT     CHAR16                    *Destination
-);
+  IN      CONST CHAR8               *Source,
+  OUT     CHAR16                    *Destination
+  );
 
 #endif // !defined (DISABLE_NEW_DEPRECATED_INTERFACES)
 
@@ -2658,12 +2656,12 @@ OUT     CHAR16                    *Destination
 
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 AsciiStrToUnicodeStrS (
-        IN      CONST CHAR8               *Source,
-OUT     CHAR16                    *Destination,
-IN      UINTN                     DestMax
-);
+  IN      CONST CHAR8               *Source,
+  OUT     CHAR16                    *Destination,
+  IN      UINTN                     DestMax
+  );
 
 /**
   Convert not more than Length successive characters from a Null-terminated
@@ -2709,14 +2707,14 @@ IN      UINTN                     DestMax
 
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 AsciiStrnToUnicodeStrS (
-        IN      CONST CHAR8               *Source,
-IN      UINTN                     Length,
-OUT     CHAR16                    *Destination,
-IN      UINTN                     DestMax,
-OUT     UINTN                     *DestinationLength
-);
+  IN      CONST CHAR8               *Source,
+  IN      UINTN                     Length,
+  OUT     CHAR16                    *Destination,
+  IN      UINTN                     DestMax,
+  OUT     UINTN                     *DestinationLength
+  );
 
 /**
   Convert a Unicode character to upper case only if
@@ -2734,10 +2732,10 @@ OUT     UINTN                     *DestinationLength
 
 **/
 CHAR16
-        EFIAPI
+EFIAPI
 CharToUpper (
-        IN      CHAR16                    Char
-);
+  IN      CHAR16                    Char
+  );
 
 /**
   Converts a lowercase Ascii character to upper one.
@@ -2753,10 +2751,10 @@ CharToUpper (
 
 **/
 CHAR8
-        EFIAPI
+EFIAPI
 AsciiCharToUpper (
-        IN      CHAR8                     Chr
-);
+  IN      CHAR8                     Chr
+  );
 
 /**
   Convert binary data to a Base64 encoded ascii string based on RFC4648.
@@ -2778,13 +2776,13 @@ AsciiCharToUpper (
 
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 Base64Encode (
-        IN  CONST UINT8  *Source,
-IN        UINTN   SourceLength,
-OUT       CHAR8  *Destination  OPTIONAL,
-        IN OUT    UINTN  *DestinationSize
-);
+  IN  CONST UINT8  *Source,
+  IN        UINTN   SourceLength,
+  OUT       CHAR8  *Destination  OPTIONAL,
+  IN OUT    UINTN  *DestinationSize
+  );
 
 /**
   Decode Base64 ASCII encoded data to 8-bit binary representation, based on
@@ -2869,13 +2867,13 @@ OUT       CHAR8  *Destination  OPTIONAL,
                                     Source.
 **/
 RETURN_STATUS
-        EFIAPI
+EFIAPI
 Base64Decode (
-        IN     CONST CHAR8 *Source          OPTIONAL,
-        IN     UINTN       SourceSize,
-        OUT    UINT8       *Destination     OPTIONAL,
-IN OUT UINTN       *DestinationSize
-);
+  IN     CONST CHAR8 *Source          OPTIONAL,
+  IN     UINTN       SourceSize,
+  OUT    UINT8       *Destination     OPTIONAL,
+  IN OUT UINTN       *DestinationSize
+  );
 
 /**
   Converts an 8-bit value to an 8-bit BCD value.
@@ -2891,10 +2889,10 @@ IN OUT UINTN       *DestinationSize
 
 **/
 UINT8
-        EFIAPI
+EFIAPI
 DecimalToBcd8 (
-        IN      UINT8                     Value
-);
+  IN      UINT8                     Value
+  );
 
 
 /**
@@ -2912,10 +2910,10 @@ DecimalToBcd8 (
 
 **/
 UINT8
-        EFIAPI
+EFIAPI
 BcdToDecimal8 (
-        IN      UINT8                     Value
-);
+  IN      UINT8                     Value
+  );
 
 //
 //  File Path Manipulation Functions
@@ -2930,10 +2928,10 @@ BcdToDecimal8 (
   @retval TRUE      A directory or file was removed.
 **/
 BOOLEAN
-        EFIAPI
+EFIAPI
 PathRemoveLastItem(
-        IN OUT CHAR16 *Path
-);
+  IN OUT CHAR16 *Path
+  );
 
 /**
   Function to clean up paths.
@@ -2949,10 +2947,10 @@ PathRemoveLastItem(
   @return       Returns Path, otherwise returns NULL to indicate that an error has occurred.
 **/
 CHAR16*
-        EFIAPI
+EFIAPI
 PathCleanUpDirectories(
-        IN CHAR16 *Path
-);
+  IN CHAR16 *Path
+  );
 
 //
 // Linked List Functions and Macros
@@ -2995,11 +2993,11 @@ PathCleanUpDirectories(
 
 **/
 BOOLEAN
-        EFIAPI
+EFIAPI
 IsNodeInList (
-        IN      CONST LIST_ENTRY      *FirstEntry,
-IN      CONST LIST_ENTRY      *SecondEntry
-);
+  IN      CONST LIST_ENTRY      *FirstEntry,
+  IN      CONST LIST_ENTRY      *SecondEntry
+  );
 
 
 /**
@@ -3019,10 +3017,10 @@ IN      CONST LIST_ENTRY      *SecondEntry
 
 **/
 LIST_ENTRY *
-        EFIAPI
+EFIAPI
 InitializeListHead (
-        IN OUT  LIST_ENTRY                *ListHead
-);
+  IN OUT  LIST_ENTRY                *ListHead
+  );
 
 
 /**
@@ -3048,11 +3046,11 @@ InitializeListHead (
 
 **/
 LIST_ENTRY *
-        EFIAPI
+EFIAPI
 InsertHeadList (
-        IN OUT  LIST_ENTRY                *ListHead,
-IN OUT  LIST_ENTRY                *Entry
-);
+  IN OUT  LIST_ENTRY                *ListHead,
+  IN OUT  LIST_ENTRY                *Entry
+  );
 
 
 /**
@@ -3078,11 +3076,11 @@ IN OUT  LIST_ENTRY                *Entry
 
 **/
 LIST_ENTRY *
-        EFIAPI
+EFIAPI
 InsertTailList (
-        IN OUT  LIST_ENTRY                *ListHead,
-IN OUT  LIST_ENTRY                *Entry
-);
+  IN OUT  LIST_ENTRY                *ListHead,
+  IN OUT  LIST_ENTRY                *Entry
+  );
 
 
 /**
@@ -3106,10 +3104,10 @@ IN OUT  LIST_ENTRY                *Entry
 
 **/
 LIST_ENTRY *
-        EFIAPI
+EFIAPI
 GetFirstNode (
-        IN      CONST LIST_ENTRY          *List
-);
+  IN      CONST LIST_ENTRY          *List
+  );
 
 
 /**
@@ -3134,11 +3132,11 @@ GetFirstNode (
 
 **/
 LIST_ENTRY *
-        EFIAPI
+EFIAPI
 GetNextNode (
-        IN      CONST LIST_ENTRY          *List,
-IN      CONST LIST_ENTRY          *Node
-);
+  IN      CONST LIST_ENTRY          *List,
+  IN      CONST LIST_ENTRY          *Node
+  );
 
 
 /**
@@ -3163,11 +3161,11 @@ IN      CONST LIST_ENTRY          *Node
 
 **/
 LIST_ENTRY *
-        EFIAPI
+EFIAPI
 GetPreviousNode (
-        IN      CONST LIST_ENTRY          *List,
-IN      CONST LIST_ENTRY          *Node
-);
+  IN      CONST LIST_ENTRY          *List,
+  IN      CONST LIST_ENTRY          *Node
+  );
 
 
 /**
@@ -3190,10 +3188,10 @@ IN      CONST LIST_ENTRY          *Node
 
 **/
 BOOLEAN
-        EFIAPI
+EFIAPI
 IsListEmpty (
-        IN      CONST LIST_ENTRY          *ListHead
-);
+  IN      CONST LIST_ENTRY          *ListHead
+  );
 
 
 /**
@@ -3223,11 +3221,11 @@ IsListEmpty (
 
 **/
 BOOLEAN
-        EFIAPI
+EFIAPI
 IsNull (
-        IN      CONST LIST_ENTRY          *List,
-IN      CONST LIST_ENTRY          *Node
-);
+  IN      CONST LIST_ENTRY          *List,
+  IN      CONST LIST_ENTRY          *Node
+  );
 
 
 /**
@@ -3254,11 +3252,11 @@ IN      CONST LIST_ENTRY          *Node
 
 **/
 BOOLEAN
-        EFIAPI
+EFIAPI
 IsNodeAtEnd (
-        IN      CONST LIST_ENTRY          *List,
-IN      CONST LIST_ENTRY          *Node
-);
+  IN      CONST LIST_ENTRY          *List,
+  IN      CONST LIST_ENTRY          *Node
+  );
 
 
 /**
@@ -3288,11 +3286,11 @@ IN      CONST LIST_ENTRY          *Node
 
 **/
 LIST_ENTRY *
-        EFIAPI
+EFIAPI
 SwapListEntries (
-        IN OUT  LIST_ENTRY                *FirstEntry,
-IN OUT  LIST_ENTRY                *SecondEntry
-);
+  IN OUT  LIST_ENTRY                *FirstEntry,
+  IN OUT  LIST_ENTRY                *SecondEntry
+  );
 
 
 /**
@@ -3317,10 +3315,10 @@ IN OUT  LIST_ENTRY                *SecondEntry
 
 **/
 LIST_ENTRY *
-        EFIAPI
+EFIAPI
 RemoveEntryList (
-        IN      CONST LIST_ENTRY          *Entry
-);
+  IN      CONST LIST_ENTRY          *Entry
+  );
 
 //
 // Math Services
@@ -3342,11 +3340,11 @@ RemoveEntryList (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 LShiftU64 (
-        IN      UINT64                    Operand,
-        IN      UINTN                     Count
-);
+  IN      UINT64                    Operand,
+  IN      UINTN                     Count
+  );
 
 
 /**
@@ -3365,11 +3363,11 @@ LShiftU64 (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 RShiftU64 (
-        IN      UINT64                    Operand,
-        IN      UINTN                     Count
-);
+  IN      UINT64                    Operand,
+  IN      UINTN                     Count
+  );
 
 
 /**
@@ -3388,11 +3386,11 @@ RShiftU64 (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 ARShiftU64 (
-        IN      UINT64                    Operand,
-        IN      UINTN                     Count
-);
+  IN      UINT64                    Operand,
+  IN      UINTN                     Count
+  );
 
 
 /**
@@ -3412,11 +3410,11 @@ ARShiftU64 (
 
 **/
 UINT32
-        EFIAPI
+EFIAPI
 LRotU32 (
-        IN      UINT32                    Operand,
-        IN      UINTN                     Count
-);
+  IN      UINT32                    Operand,
+  IN      UINTN                     Count
+  );
 
 
 /**
@@ -3436,11 +3434,11 @@ LRotU32 (
 
 **/
 UINT32
-        EFIAPI
+EFIAPI
 RRotU32 (
-        IN      UINT32                    Operand,
-        IN      UINTN                     Count
-);
+  IN      UINT32                    Operand,
+  IN      UINTN                     Count
+  );
 
 
 /**
@@ -3460,11 +3458,11 @@ RRotU32 (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 LRotU64 (
-        IN      UINT64                    Operand,
-        IN      UINTN                     Count
-);
+  IN      UINT64                    Operand,
+  IN      UINTN                     Count
+  );
 
 
 /**
@@ -3484,11 +3482,11 @@ LRotU64 (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 RRotU64 (
-        IN      UINT64                    Operand,
-        IN      UINTN                     Count
-);
+  IN      UINT64                    Operand,
+  IN      UINTN                     Count
+  );
 
 
 /**
@@ -3505,10 +3503,10 @@ RRotU64 (
 
 **/
 INTN
-        EFIAPI
+EFIAPI
 LowBitSet32 (
-        IN      UINT32                    Operand
-);
+  IN      UINT32                    Operand
+  );
 
 
 /**
@@ -3526,10 +3524,10 @@ LowBitSet32 (
 
 **/
 INTN
-        EFIAPI
+EFIAPI
 LowBitSet64 (
-        IN      UINT64                    Operand
-);
+  IN      UINT64                    Operand
+  );
 
 
 /**
@@ -3547,10 +3545,10 @@ LowBitSet64 (
 
 **/
 INTN
-        EFIAPI
+EFIAPI
 HighBitSet32 (
-        IN      UINT32                    Operand
-);
+  IN      UINT32                    Operand
+  );
 
 
 /**
@@ -3568,10 +3566,10 @@ HighBitSet32 (
 
 **/
 INTN
-        EFIAPI
+EFIAPI
 HighBitSet64 (
-        IN      UINT64                    Operand
-);
+  IN      UINT64                    Operand
+  );
 
 
 /**
@@ -3588,10 +3586,10 @@ HighBitSet64 (
 
 **/
 UINT32
-        EFIAPI
+EFIAPI
 GetPowerOfTwo32 (
-        IN      UINT32                    Operand
-);
+  IN      UINT32                    Operand
+  );
 
 
 /**
@@ -3608,10 +3606,10 @@ GetPowerOfTwo32 (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 GetPowerOfTwo64 (
-        IN      UINT64                    Operand
-);
+  IN      UINT64                    Operand
+  );
 
 
 /**
@@ -3627,10 +3625,10 @@ GetPowerOfTwo64 (
 
 **/
 UINT16
-        EFIAPI
+EFIAPI
 SwapBytes16 (
-        IN      UINT16                    Value
-);
+  IN      UINT16                    Value
+  );
 
 
 /**
@@ -3646,10 +3644,10 @@ SwapBytes16 (
 
 **/
 UINT32
-        EFIAPI
+EFIAPI
 SwapBytes32 (
-        IN      UINT32                    Value
-);
+  IN      UINT32                    Value
+  );
 
 
 /**
@@ -3665,10 +3663,10 @@ SwapBytes32 (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 SwapBytes64 (
-        IN      UINT64                    Value
-);
+  IN      UINT64                    Value
+  );
 
 
 /**
@@ -3686,11 +3684,11 @@ SwapBytes64 (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 MultU64x32 (
-        IN      UINT64                    Multiplicand,
-        IN      UINT32                    Multiplier
-);
+  IN      UINT64                    Multiplicand,
+  IN      UINT32                    Multiplier
+  );
 
 
 /**
@@ -3708,11 +3706,11 @@ MultU64x32 (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 MultU64x64 (
-        IN      UINT64                    Multiplicand,
-        IN      UINT64                    Multiplier
-);
+  IN      UINT64                    Multiplicand,
+  IN      UINT64                    Multiplier
+  );
 
 
 /**
@@ -3730,11 +3728,11 @@ MultU64x64 (
 
 **/
 INT64
-        EFIAPI
+EFIAPI
 MultS64x64 (
-        IN      INT64                     Multiplicand,
-        IN      INT64                     Multiplier
-);
+  IN      INT64                     Multiplicand,
+  IN      INT64                     Multiplier
+  );
 
 
 /**
@@ -3754,11 +3752,11 @@ MultS64x64 (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 DivU64x32 (
-        IN      UINT64                    Dividend,
-        IN      UINT32                    Divisor
-);
+  IN      UINT64                    Dividend,
+  IN      UINT32                    Divisor
+  );
 
 
 /**
@@ -3778,11 +3776,11 @@ DivU64x32 (
 
 **/
 UINT32
-        EFIAPI
+EFIAPI
 ModU64x32 (
-        IN      UINT64                    Dividend,
-        IN      UINT32                    Divisor
-);
+  IN      UINT64                    Dividend,
+  IN      UINT32                    Divisor
+  );
 
 
 /**
@@ -3805,12 +3803,12 @@ ModU64x32 (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 DivU64x32Remainder (
-        IN      UINT64                    Dividend,
-        IN      UINT32                    Divisor,
-        OUT     UINT32                    *Remainder  OPTIONAL
-);
+  IN      UINT64                    Dividend,
+  IN      UINT32                    Divisor,
+  OUT     UINT32                    *Remainder  OPTIONAL
+  );
 
 
 /**
@@ -3833,12 +3831,12 @@ DivU64x32Remainder (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 DivU64x64Remainder (
-        IN      UINT64                    Dividend,
-        IN      UINT64                    Divisor,
-        OUT     UINT64                    *Remainder  OPTIONAL
-);
+  IN      UINT64                    Dividend,
+  IN      UINT64                    Divisor,
+  OUT     UINT64                    *Remainder  OPTIONAL
+  );
 
 
 /**
@@ -3865,12 +3863,12 @@ DivU64x64Remainder (
 
 **/
 INT64
-        EFIAPI
+EFIAPI
 DivS64x64Remainder (
-        IN      INT64                     Dividend,
-        IN      INT64                     Divisor,
-        OUT     INT64                     *Remainder  OPTIONAL
-);
+  IN      INT64                     Dividend,
+  IN      INT64                     Divisor,
+  OUT     INT64                     *Remainder  OPTIONAL
+  );
 
 
 /**
@@ -3887,10 +3885,10 @@ DivS64x64Remainder (
 
 **/
 UINT16
-        EFIAPI
+EFIAPI
 ReadUnaligned16 (
-        IN CONST UINT16              *Buffer
-);
+  IN CONST UINT16              *Buffer
+  );
 
 
 /**
@@ -3909,11 +3907,11 @@ ReadUnaligned16 (
 
 **/
 UINT16
-        EFIAPI
+EFIAPI
 WriteUnaligned16 (
-        OUT UINT16                    *Buffer,
-        IN  UINT16                    Value
-);
+  OUT UINT16                    *Buffer,
+  IN  UINT16                    Value
+  );
 
 
 /**
@@ -3930,10 +3928,10 @@ WriteUnaligned16 (
 
 **/
 UINT32
-        EFIAPI
+EFIAPI
 ReadUnaligned24 (
-        IN CONST UINT32              *Buffer
-);
+  IN CONST UINT32              *Buffer
+  );
 
 
 /**
@@ -3952,11 +3950,11 @@ ReadUnaligned24 (
 
 **/
 UINT32
-        EFIAPI
+EFIAPI
 WriteUnaligned24 (
-        OUT UINT32                    *Buffer,
-        IN  UINT32                    Value
-);
+  OUT UINT32                    *Buffer,
+  IN  UINT32                    Value
+  );
 
 
 /**
@@ -3973,10 +3971,10 @@ WriteUnaligned24 (
 
 **/
 UINT32
-        EFIAPI
+EFIAPI
 ReadUnaligned32 (
-        IN CONST UINT32              *Buffer
-);
+  IN CONST UINT32              *Buffer
+  );
 
 
 /**
@@ -3995,11 +3993,11 @@ ReadUnaligned32 (
 
 **/
 UINT32
-        EFIAPI
+EFIAPI
 WriteUnaligned32 (
-        OUT UINT32                    *Buffer,
-        IN  UINT32                    Value
-);
+  OUT UINT32                    *Buffer,
+  IN  UINT32                    Value
+  );
 
 
 /**
@@ -4016,10 +4014,10 @@ WriteUnaligned32 (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 ReadUnaligned64 (
-        IN CONST UINT64              *Buffer
-);
+  IN CONST UINT64              *Buffer
+  );
 
 
 /**
@@ -4038,11 +4036,11 @@ ReadUnaligned64 (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 WriteUnaligned64 (
-        OUT UINT64                    *Buffer,
-        IN  UINT64                    Value
-);
+  OUT UINT64                    *Buffer,
+  IN  UINT64                    Value
+  );
 
 
 //
@@ -4069,12 +4067,12 @@ WriteUnaligned64 (
 
 **/
 UINT8
-        EFIAPI
+EFIAPI
 BitFieldRead8 (
-        IN      UINT8                     Operand,
-        IN      UINTN                     StartBit,
-        IN      UINTN                     EndBit
-);
+  IN      UINT8                     Operand,
+  IN      UINTN                     StartBit,
+  IN      UINTN                     EndBit
+  );
 
 
 /**
@@ -4101,13 +4099,13 @@ BitFieldRead8 (
 
 **/
 UINT8
-        EFIAPI
+EFIAPI
 BitFieldWrite8 (
-        IN      UINT8                     Operand,
-        IN      UINTN                     StartBit,
-        IN      UINTN                     EndBit,
-        IN      UINT8                     Value
-);
+  IN      UINT8                     Operand,
+  IN      UINTN                     StartBit,
+  IN      UINTN                     EndBit,
+  IN      UINT8                     Value
+  );
 
 
 /**
@@ -4135,13 +4133,13 @@ BitFieldWrite8 (
 
 **/
 UINT8
-        EFIAPI
+EFIAPI
 BitFieldOr8 (
-        IN      UINT8                     Operand,
-        IN      UINTN                     StartBit,
-        IN      UINTN                     EndBit,
-        IN      UINT8                     OrData
-);
+  IN      UINT8                     Operand,
+  IN      UINTN                     StartBit,
+  IN      UINTN                     EndBit,
+  IN      UINT8                     OrData
+  );
 
 
 /**
@@ -4169,13 +4167,13 @@ BitFieldOr8 (
 
 **/
 UINT8
-        EFIAPI
+EFIAPI
 BitFieldAnd8 (
-        IN      UINT8                     Operand,
-        IN      UINTN                     StartBit,
-        IN      UINTN                     EndBit,
-        IN      UINT8                     AndData
-);
+  IN      UINT8                     Operand,
+  IN      UINTN                     StartBit,
+  IN      UINTN                     EndBit,
+  IN      UINT8                     AndData
+  );
 
 
 /**
@@ -4206,14 +4204,14 @@ BitFieldAnd8 (
 
 **/
 UINT8
-        EFIAPI
+EFIAPI
 BitFieldAndThenOr8 (
-        IN      UINT8                     Operand,
-        IN      UINTN                     StartBit,
-        IN      UINTN                     EndBit,
-        IN      UINT8                     AndData,
-        IN      UINT8                     OrData
-);
+  IN      UINT8                     Operand,
+  IN      UINTN                     StartBit,
+  IN      UINTN                     EndBit,
+  IN      UINT8                     AndData,
+  IN      UINT8                     OrData
+  );
 
 
 /**
@@ -4236,12 +4234,12 @@ BitFieldAndThenOr8 (
 
 **/
 UINT16
-        EFIAPI
+EFIAPI
 BitFieldRead16 (
-        IN      UINT16                    Operand,
-        IN      UINTN                     StartBit,
-        IN      UINTN                     EndBit
-);
+  IN      UINT16                    Operand,
+  IN      UINTN                     StartBit,
+  IN      UINTN                     EndBit
+  );
 
 
 /**
@@ -4268,13 +4266,13 @@ BitFieldRead16 (
 
 **/
 UINT16
-        EFIAPI
+EFIAPI
 BitFieldWrite16 (
-        IN      UINT16                    Operand,
-        IN      UINTN                     StartBit,
-        IN      UINTN                     EndBit,
-        IN      UINT16                    Value
-);
+  IN      UINT16                    Operand,
+  IN      UINTN                     StartBit,
+  IN      UINTN                     EndBit,
+  IN      UINT16                    Value
+  );
 
 
 /**
@@ -4302,13 +4300,13 @@ BitFieldWrite16 (
 
 **/
 UINT16
-        EFIAPI
+EFIAPI
 BitFieldOr16 (
-        IN      UINT16                    Operand,
-        IN      UINTN                     StartBit,
-        IN      UINTN                     EndBit,
-        IN      UINT16                    OrData
-);
+  IN      UINT16                    Operand,
+  IN      UINTN                     StartBit,
+  IN      UINTN                     EndBit,
+  IN      UINT16                    OrData
+  );
 
 
 /**
@@ -4336,13 +4334,13 @@ BitFieldOr16 (
 
 **/
 UINT16
-        EFIAPI
+EFIAPI
 BitFieldAnd16 (
-        IN      UINT16                    Operand,
-        IN      UINTN                     StartBit,
-        IN      UINTN                     EndBit,
-        IN      UINT16                    AndData
-);
+  IN      UINT16                    Operand,
+  IN      UINTN                     StartBit,
+  IN      UINTN                     EndBit,
+  IN      UINT16                    AndData
+  );
 
 
 /**
@@ -4373,14 +4371,14 @@ BitFieldAnd16 (
 
 **/
 UINT16
-        EFIAPI
+EFIAPI
 BitFieldAndThenOr16 (
-        IN      UINT16                    Operand,
-        IN      UINTN                     StartBit,
-        IN      UINTN                     EndBit,
-        IN      UINT16                    AndData,
-        IN      UINT16                    OrData
-);
+  IN      UINT16                    Operand,
+  IN      UINTN                     StartBit,
+  IN      UINTN                     EndBit,
+  IN      UINT16                    AndData,
+  IN      UINT16                    OrData
+  );
 
 
 /**
@@ -4403,12 +4401,12 @@ BitFieldAndThenOr16 (
 
 **/
 UINT32
-        EFIAPI
+EFIAPI
 BitFieldRead32 (
-        IN      UINT32                    Operand,
-        IN      UINTN                     StartBit,
-        IN      UINTN                     EndBit
-);
+  IN      UINT32                    Operand,
+  IN      UINTN                     StartBit,
+  IN      UINTN                     EndBit
+  );
 
 
 /**
@@ -4435,13 +4433,13 @@ BitFieldRead32 (
 
 **/
 UINT32
-        EFIAPI
+EFIAPI
 BitFieldWrite32 (
-        IN      UINT32                    Operand,
-        IN      UINTN                     StartBit,
-        IN      UINTN                     EndBit,
-        IN      UINT32                    Value
-);
+  IN      UINT32                    Operand,
+  IN      UINTN                     StartBit,
+  IN      UINTN                     EndBit,
+  IN      UINT32                    Value
+  );
 
 
 /**
@@ -4469,13 +4467,13 @@ BitFieldWrite32 (
 
 **/
 UINT32
-        EFIAPI
+EFIAPI
 BitFieldOr32 (
-        IN      UINT32                    Operand,
-        IN      UINTN                     StartBit,
-        IN      UINTN                     EndBit,
-        IN      UINT32                    OrData
-);
+  IN      UINT32                    Operand,
+  IN      UINTN                     StartBit,
+  IN      UINTN                     EndBit,
+  IN      UINT32                    OrData
+  );
 
 
 /**
@@ -4503,13 +4501,13 @@ BitFieldOr32 (
 
 **/
 UINT32
-        EFIAPI
+EFIAPI
 BitFieldAnd32 (
-        IN      UINT32                    Operand,
-        IN      UINTN                     StartBit,
-        IN      UINTN                     EndBit,
-        IN      UINT32                    AndData
-);
+  IN      UINT32                    Operand,
+  IN      UINTN                     StartBit,
+  IN      UINTN                     EndBit,
+  IN      UINT32                    AndData
+  );
 
 
 /**
@@ -4540,14 +4538,14 @@ BitFieldAnd32 (
 
 **/
 UINT32
-        EFIAPI
+EFIAPI
 BitFieldAndThenOr32 (
-        IN      UINT32                    Operand,
-        IN      UINTN                     StartBit,
-        IN      UINTN                     EndBit,
-        IN      UINT32                    AndData,
-        IN      UINT32                    OrData
-);
+  IN      UINT32                    Operand,
+  IN      UINTN                     StartBit,
+  IN      UINTN                     EndBit,
+  IN      UINT32                    AndData,
+  IN      UINT32                    OrData
+  );
 
 
 /**
@@ -4570,12 +4568,12 @@ BitFieldAndThenOr32 (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 BitFieldRead64 (
-        IN      UINT64                    Operand,
-        IN      UINTN                     StartBit,
-        IN      UINTN                     EndBit
-);
+  IN      UINT64                    Operand,
+  IN      UINTN                     StartBit,
+  IN      UINTN                     EndBit
+  );
 
 
 /**
@@ -4602,13 +4600,13 @@ BitFieldRead64 (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 BitFieldWrite64 (
-        IN      UINT64                    Operand,
-        IN      UINTN                     StartBit,
-        IN      UINTN                     EndBit,
-        IN      UINT64                    Value
-);
+  IN      UINT64                    Operand,
+  IN      UINTN                     StartBit,
+  IN      UINTN                     EndBit,
+  IN      UINT64                    Value
+  );
 
 
 /**
@@ -4636,13 +4634,13 @@ BitFieldWrite64 (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 BitFieldOr64 (
-        IN      UINT64                    Operand,
-        IN      UINTN                     StartBit,
-        IN      UINTN                     EndBit,
-        IN      UINT64                    OrData
-);
+  IN      UINT64                    Operand,
+  IN      UINTN                     StartBit,
+  IN      UINTN                     EndBit,
+  IN      UINT64                    OrData
+  );
 
 
 /**
@@ -4670,13 +4668,13 @@ BitFieldOr64 (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 BitFieldAnd64 (
-        IN      UINT64                    Operand,
-        IN      UINTN                     StartBit,
-        IN      UINTN                     EndBit,
-        IN      UINT64                    AndData
-);
+  IN      UINT64                    Operand,
+  IN      UINTN                     StartBit,
+  IN      UINTN                     EndBit,
+  IN      UINT64                    AndData
+  );
 
 
 /**
@@ -4707,14 +4705,14 @@ BitFieldAnd64 (
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 BitFieldAndThenOr64 (
-        IN      UINT64                    Operand,
-        IN      UINTN                     StartBit,
-        IN      UINTN                     EndBit,
-        IN      UINT64                    AndData,
-        IN      UINT64                    OrData
-);
+  IN      UINT64                    Operand,
+  IN      UINTN                     StartBit,
+  IN      UINTN                     EndBit,
+  IN      UINT64                    AndData,
+  IN      UINT64                    OrData
+  );
 
 /**
   Reads a bit field from a 32-bit value, counts and returns
@@ -4737,12 +4735,12 @@ BitFieldAndThenOr64 (
 
 **/
 UINT8
-        EFIAPI
+EFIAPI
 BitFieldCountOnes32 (
-        IN       UINT32                   Operand,
-        IN       UINTN                    StartBit,
-        IN       UINTN                    EndBit
-);
+  IN       UINT32                   Operand,
+  IN       UINTN                    StartBit,
+  IN       UINTN                    EndBit
+  );
 
 /**
    Reads a bit field from a 64-bit value, counts and returns
@@ -4765,12 +4763,12 @@ BitFieldCountOnes32 (
 
 **/
 UINT8
-        EFIAPI
+EFIAPI
 BitFieldCountOnes64 (
-        IN       UINT64                   Operand,
-        IN       UINTN                    StartBit,
-        IN       UINTN                    EndBit
-);
+  IN       UINT64                   Operand,
+  IN       UINTN                    StartBit,
+  IN       UINTN                    EndBit
+  );
 
 //
 // Base Library Checksum Functions
@@ -4795,11 +4793,11 @@ BitFieldCountOnes64 (
 
 **/
 UINT8
-        EFIAPI
+EFIAPI
 CalculateSum8 (
-        IN      CONST UINT8              *Buffer,
-IN      UINTN                     Length
-);
+  IN      CONST UINT8              *Buffer,
+  IN      UINTN                     Length
+  );
 
 
 /**
@@ -4821,11 +4819,11 @@ IN      UINTN                     Length
 
 **/
 UINT8
-        EFIAPI
+EFIAPI
 CalculateCheckSum8 (
-        IN      CONST UINT8              *Buffer,
-IN      UINTN                     Length
-);
+  IN      CONST UINT8              *Buffer,
+  IN      UINTN                     Length
+  );
 
 
 /**
@@ -4848,11 +4846,11 @@ IN      UINTN                     Length
 
 **/
 UINT16
-        EFIAPI
+EFIAPI
 CalculateSum16 (
-        IN      CONST UINT16             *Buffer,
-IN      UINTN                     Length
-);
+  IN      CONST UINT16             *Buffer,
+  IN      UINTN                     Length
+  );
 
 
 /**
@@ -4876,11 +4874,11 @@ IN      UINTN                     Length
 
 **/
 UINT16
-        EFIAPI
+EFIAPI
 CalculateCheckSum16 (
-        IN      CONST UINT16             *Buffer,
-IN      UINTN                     Length
-);
+  IN      CONST UINT16             *Buffer,
+  IN      UINTN                     Length
+  );
 
 
 /**
@@ -4903,11 +4901,11 @@ IN      UINTN                     Length
 
 **/
 UINT32
-        EFIAPI
+EFIAPI
 CalculateSum32 (
-        IN      CONST UINT32             *Buffer,
-IN      UINTN                     Length
-);
+  IN      CONST UINT32             *Buffer,
+  IN      UINTN                     Length
+  );
 
 
 /**
@@ -4931,11 +4929,11 @@ IN      UINTN                     Length
 
 **/
 UINT32
-        EFIAPI
+EFIAPI
 CalculateCheckSum32 (
-        IN      CONST UINT32             *Buffer,
-IN      UINTN                     Length
-);
+  IN      CONST UINT32             *Buffer,
+  IN      UINTN                     Length
+  );
 
 
 /**
@@ -4958,11 +4956,11 @@ IN      UINTN                     Length
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 CalculateSum64 (
-        IN      CONST UINT64             *Buffer,
-IN      UINTN                     Length
-);
+  IN      CONST UINT64             *Buffer,
+  IN      UINTN                     Length
+  );
 
 
 /**
@@ -4986,11 +4984,11 @@ IN      UINTN                     Length
 
 **/
 UINT64
-        EFIAPI
+EFIAPI
 CalculateCheckSum64 (
-        IN      CONST UINT64             *Buffer,
-IN      UINTN                     Length
-);
+  IN      CONST UINT64             *Buffer,
+  IN      UINTN                     Length
+  );
 
 /**
   Computes and returns a 32-bit CRC for a data buffer.
@@ -5006,11 +5004,11 @@ IN      UINTN                     Length
 
 **/
 UINT32
-        EFIAPI
+EFIAPI
 CalculateCrc32(
-        IN  VOID                         *Buffer,
-        IN  UINTN                        Length
-);
+  IN  VOID                         *Buffer,
+  IN  UINTN                        Length
+  );
 
 //
 // Base Library CPU Functions
@@ -5026,9 +5024,9 @@ CalculateCrc32(
 typedef
 VOID
 (EFIAPI *SWITCH_STACK_ENTRY_POINT)(
-IN      VOID                      *Context1,  OPTIONAL
-        IN      VOID                      *Context2   OPTIONAL
-);
+  IN      VOID                      *Context1,  OPTIONAL
+  IN      VOID                      *Context2   OPTIONAL
+  );
 
 
 /**
@@ -5039,10 +5037,10 @@ IN      VOID                      *Context1,  OPTIONAL
 
 **/
 VOID
-        EFIAPI
+EFIAPI
 MemoryFence (
-        VOID
-);
+  VOID
+  );
 
 
 /**
@@ -5067,11 +5065,11 @@ MemoryFence (
 
 **/
 RETURNS_TWICE
-        UINTN
+UINTN
 EFIAPI
 SetJump (
-        OUT     BASE_LIBRARY_JUMP_BUFFER  *JumpBuffer
-);
+  OUT     BASE_LIBRARY_JUMP_BUFFER  *JumpBuffer
+  );
 
 
 /**
@@ -5091,11 +5089,11 @@ SetJump (
 
 **/
 VOID
-        EFIAPI
+EFIAPI
 LongJump (
-        IN      BASE_LIBRARY_JUMP_BUFFER  *JumpBuffer,
-        IN      UINTN                     Value
-);
+  IN      BASE_LIBRARY_JUMP_BUFFER  *JumpBuffer,
+  IN      UINTN                     Value
+  );
 
 
 /**
@@ -5103,10 +5101,10 @@ LongJump (
 
 **/
 VOID
-        EFIAPI
+EFIAPI
 EnableInterrupts (
-        VOID
-);
+  VOID
+  );
 
 
 /**
@@ -5114,10 +5112,10 @@ EnableInterrupts (
 
 **/
 VOID
-        EFIAPI
+EFIAPI
 DisableInterrupts (
-        VOID
-);
+  VOID
+  );
 
 
 /**
@@ -5129,10 +5127,10 @@ DisableInterrupts (
 
 **/
 BOOLEAN
-        EFIAPI
+EFIAPI
 SaveAndDisableInterrupts (
-        VOID
-);
+  VOID
+  );
 
 
 /**
@@ -5141,10 +5139,10 @@ SaveAndDisableInterrupts (
 
 **/
 VOID
-        EFIAPI
+EFIAPI
 EnableDisableInterrupts (
-        VOID
-);
+  VOID
+  );
 
 
 /**
@@ -5158,10 +5156,10 @@ EnableDisableInterrupts (
 
 **/
 BOOLEAN
-        EFIAPI
+EFIAPI
 GetInterruptState (
-        VOID
-);
+  VOID
+  );
 
 
 /**
@@ -5179,10 +5177,10 @@ GetInterruptState (
 
 **/
 BOOLEAN
-        EFIAPI
+EFIAPI
 SetInterruptState (
-        IN      BOOLEAN                   InterruptState
-);
+  IN      BOOLEAN                   InterruptState
+  );
 
 
 /**
@@ -5193,10 +5191,10 @@ SetInterruptState (
 
 **/
 VOID
-        EFIAPI
+EFIAPI
 CpuPause (
-        VOID
-);
+  VOID
+  );
 
 
 /**
@@ -5229,14 +5227,14 @@ CpuPause (
 
 **/
 VOID
-        EFIAPI
+EFIAPI
 SwitchStack (
-        IN      SWITCH_STACK_ENTRY_POINT  EntryPoint,
-        IN      VOID                      *Context1,  OPTIONAL
-IN      VOID                      *Context2,  OPTIONAL
-        IN      VOID                      *NewStack,
-...
-);
+  IN      SWITCH_STACK_ENTRY_POINT  EntryPoint,
+  IN      VOID                      *Context1,  OPTIONAL
+  IN      VOID                      *Context2,  OPTIONAL
+  IN      VOID                      *NewStack,
+  ...
+  );
 
 
 /**
@@ -5247,10 +5245,10 @@ IN      VOID                      *Context2,  OPTIONAL
 
 **/
 VOID
-        EFIAPI
+EFIAPI
 CpuBreakpoint (
-        VOID
-);
+  VOID
+  );
 
 
 /**
@@ -5263,10 +5261,10 @@ CpuBreakpoint (
 
 **/
 VOID
-        EFIAPI
+EFIAPI
 CpuDeadLoop (
-        VOID
-);
+  VOID
+  );
 
 
 /**
@@ -5277,10 +5275,10 @@ CpuDeadLoop (
 
 **/
 VOID
-        EFIAPI
+EFIAPI
 SpeculationBarrier (
-        VOID
-);
+  VOID
+  );
 
 
 #if defined (MDE_CPU_IA32) || defined (MDE_CPU_X64)

@@ -165,9 +165,9 @@ typedef EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL   SIMPLE_TEXT_OUTPUT_INTERFACE;
 typedef
 EFI_STATUS
 (EFIAPI *EFI_TEXT_RESET)(
-IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-IN BOOLEAN                                ExtendedVerification
-);
+  IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
+  IN BOOLEAN                                ExtendedVerification
+  );
 
 /**
   Write a string to the output device.
@@ -190,9 +190,9 @@ IN BOOLEAN                                ExtendedVerification
 typedef
 EFI_STATUS
 (EFIAPI *EFI_TEXT_STRING)(
-IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-IN CHAR16                                 *String
-);
+  IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
+  IN CHAR16                                 *String
+  );
 
 /**
   Verifies that all characters in a string can be output to the
@@ -211,9 +211,9 @@ IN CHAR16                                 *String
 typedef
 EFI_STATUS
 (EFIAPI *EFI_TEXT_TEST_STRING)(
-IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-IN CHAR16                                 *String
-);
+  IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
+  IN CHAR16                                 *String
+  );
 
 /**
   Returns information for an available text mode that the output device(s)
@@ -234,11 +234,11 @@ IN CHAR16                                 *String
 typedef
 EFI_STATUS
 (EFIAPI *EFI_TEXT_QUERY_MODE)(
-IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-IN UINTN                                  ModeNumber,
-OUT UINTN                                 *Columns,
-OUT UINTN                                 *Rows
-);
+  IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
+  IN UINTN                                  ModeNumber,
+  OUT UINTN                                 *Columns,
+  OUT UINTN                                 *Rows
+  );
 
 /**
   Sets the output device(s) to a specified mode.
@@ -254,9 +254,9 @@ OUT UINTN                                 *Rows
 typedef
 EFI_STATUS
 (EFIAPI *EFI_TEXT_SET_MODE)(
-IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-IN UINTN                                  ModeNumber
-);
+  IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
+  IN UINTN                                  ModeNumber
+  );
 
 /**
   Sets the background and foreground colors for the OutputString () and
@@ -275,9 +275,9 @@ IN UINTN                                  ModeNumber
 typedef
 EFI_STATUS
 (EFIAPI *EFI_TEXT_SET_ATTRIBUTE)(
-IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-IN UINTN                                  Attribute
-);
+  IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
+  IN UINTN                                  Attribute
+  );
 
 /**
   Clears the output device(s) display to the currently selected background
@@ -293,8 +293,8 @@ IN UINTN                                  Attribute
 typedef
 EFI_STATUS
 (EFIAPI *EFI_TEXT_CLEAR_SCREEN)(
-IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL   *This
-);
+  IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL   *This
+  );
 
 /**
   Sets the current coordinates of the cursor position
@@ -316,10 +316,10 @@ IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL   *This
 typedef
 EFI_STATUS
 (EFIAPI *EFI_TEXT_SET_CURSOR_POSITION)(
-IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-IN UINTN                                  Column,
-IN UINTN                                  Row
-);
+  IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
+  IN UINTN                                  Column,
+  IN UINTN                                  Row
+  );
 
 /**
   Makes the cursor visible or invisible
@@ -338,44 +338,44 @@ IN UINTN                                  Row
 typedef
 EFI_STATUS
 (EFIAPI *EFI_TEXT_ENABLE_CURSOR)(
-IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
-IN BOOLEAN                                Visible
-);
+  IN EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL        *This,
+  IN BOOLEAN                                Visible
+  );
 
 /**
   @par Data Structure Description:
   Mode Structure pointed to by Simple Text Out protocol.
 **/
 typedef struct {
-    ///
-    /// The number of modes supported by QueryMode () and SetMode ().
-    ///
-    INT32   MaxMode;
+  ///
+  /// The number of modes supported by QueryMode () and SetMode ().
+  ///
+  INT32   MaxMode;
 
-    //
-    // current settings
-    //
+  //
+  // current settings
+  //
 
-    ///
-    /// The text mode of the output device(s).
-    ///
-    INT32   Mode;
-    ///
-    /// The current character output attribute.
-    ///
-    INT32   Attribute;
-    ///
-    /// The cursor's column.
-    ///
-    INT32   CursorColumn;
-    ///
-    /// The cursor's row.
-    ///
-    INT32   CursorRow;
-    ///
-    /// The cursor is currently visbile or not.
-    ///
-    BOOLEAN CursorVisible;
+  ///
+  /// The text mode of the output device(s).
+  ///
+  INT32   Mode;
+  ///
+  /// The current character output attribute.
+  ///
+  INT32   Attribute;
+  ///
+  /// The cursor's column.
+  ///
+  INT32   CursorColumn;
+  ///
+  /// The cursor's row.
+  ///
+  INT32   CursorRow;
+  ///
+  /// The cursor is currently visbile or not.
+  ///
+  BOOLEAN CursorVisible;
 } EFI_SIMPLE_TEXT_OUTPUT_MODE;
 
 ///
@@ -385,23 +385,23 @@ typedef struct {
 /// devices is at least 80 x 25 characters.
 ///
 struct _EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL {
-    EFI_TEXT_RESET                Reset;
+  EFI_TEXT_RESET                Reset;
 
-    EFI_TEXT_STRING               OutputString;
-    EFI_TEXT_TEST_STRING          TestString;
+  EFI_TEXT_STRING               OutputString;
+  EFI_TEXT_TEST_STRING          TestString;
 
-    EFI_TEXT_QUERY_MODE           QueryMode;
-    EFI_TEXT_SET_MODE             SetMode;
-    EFI_TEXT_SET_ATTRIBUTE        SetAttribute;
+  EFI_TEXT_QUERY_MODE           QueryMode;
+  EFI_TEXT_SET_MODE             SetMode;
+  EFI_TEXT_SET_ATTRIBUTE        SetAttribute;
 
-    EFI_TEXT_CLEAR_SCREEN         ClearScreen;
-    EFI_TEXT_SET_CURSOR_POSITION  SetCursorPosition;
-    EFI_TEXT_ENABLE_CURSOR        EnableCursor;
+  EFI_TEXT_CLEAR_SCREEN         ClearScreen;
+  EFI_TEXT_SET_CURSOR_POSITION  SetCursorPosition;
+  EFI_TEXT_ENABLE_CURSOR        EnableCursor;
 
-    ///
-    /// Pointer to SIMPLE_TEXT_OUTPUT_MODE data.
-    ///
-    EFI_SIMPLE_TEXT_OUTPUT_MODE   *Mode;
+  ///
+  /// Pointer to SIMPLE_TEXT_OUTPUT_MODE data.
+  ///
+  EFI_SIMPLE_TEXT_OUTPUT_MODE   *Mode;
 };
 
 extern EFI_GUID gEfiSimpleTextOutProtocolGuid;

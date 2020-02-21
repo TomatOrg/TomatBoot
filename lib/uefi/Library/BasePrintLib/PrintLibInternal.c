@@ -14,8 +14,8 @@
 //
 // Safe print checks
 //
-#define RSIZE_MAX             MAX_UINT32
-#define ASCII_RSIZE_MAX       MAX_UINT32
+#define RSIZE_MAX             (PcdGet32 (PcdMaximumUnicodeStringLength))
+#define ASCII_RSIZE_MAX       (PcdGet32 (PcdMaximumAsciiStringLength))
 
 #define SAFE_PRINT_CONSTRAINT_CHECK(Expression, RetVal)  \
   do { \

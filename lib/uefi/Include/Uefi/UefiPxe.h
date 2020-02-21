@@ -709,21 +709,21 @@ typedef UINT16      PXE_MEDIA_PROTOCOL;
 #define PXE_IFTYPE_FIBRE_CHANNEL  0x12
 
 typedef struct s_pxe_hw_undi {
-    PXE_UINT32  Signature;      ///< PXE_ROMID_SIGNATURE.
-    PXE_UINT8   Len;            ///< sizeof(PXE_HW_UNDI).
-    PXE_UINT8   Fudge;          ///< makes 8-bit cksum equal zero.
-    PXE_UINT8   Rev;            ///< PXE_ROMID_REV.
-    PXE_UINT8   IFcnt;          ///< physical connector count lower byte.
-    PXE_UINT8   MajorVer;       ///< PXE_ROMID_MAJORVER.
-    PXE_UINT8   MinorVer;       ///< PXE_ROMID_MINORVER.
-    PXE_UINT8   IFcntExt;       ///< physical connector count upper byte.
-    PXE_UINT8   reserved;       ///< zero, not used.
-    PXE_UINT32  Implementation; ///< implementation flags.
-    ///< reserved             ///< vendor use.
-    ///< UINT32 Status;       ///< status port.
-    ///< UINT32 Command;      ///< command port.
-    ///< UINT64 CDBaddr;      ///< CDB address port.
-    ///<
+  PXE_UINT32  Signature;      ///< PXE_ROMID_SIGNATURE.
+  PXE_UINT8   Len;            ///< sizeof(PXE_HW_UNDI).
+  PXE_UINT8   Fudge;          ///< makes 8-bit cksum equal zero.
+  PXE_UINT8   Rev;            ///< PXE_ROMID_REV.
+  PXE_UINT8   IFcnt;          ///< physical connector count lower byte.
+  PXE_UINT8   MajorVer;       ///< PXE_ROMID_MAJORVER.
+  PXE_UINT8   MinorVer;       ///< PXE_ROMID_MINORVER.
+  PXE_UINT8   IFcntExt;       ///< physical connector count upper byte.
+  PXE_UINT8   reserved;       ///< zero, not used.
+  PXE_UINT32  Implementation; ///< implementation flags.
+  ///< reserved             ///< vendor use.
+  ///< UINT32 Status;       ///< status port.
+  ///< UINT32 Command;      ///< command port.
+  ///< UINT64 CDBaddr;      ///< CDB address port.
+  ///<
 } PXE_HW_UNDI;
 
 ///
@@ -806,25 +806,25 @@ typedef struct s_pxe_hw_undi {
 #define PXE_HWCMD_CLEAR_CMD_COMPLETE_INT  0x00000001
 
 typedef struct s_pxe_sw_undi {
-    PXE_UINT32  Signature;      ///< PXE_ROMID_SIGNATURE.
-    PXE_UINT8   Len;            ///< sizeof(PXE_SW_UNDI).
-    PXE_UINT8   Fudge;          ///< makes 8-bit cksum zero.
-    PXE_UINT8   Rev;            ///< PXE_ROMID_REV.
-    PXE_UINT8   IFcnt;          ///< physical connector count lower byte.
-    PXE_UINT8   MajorVer;       ///< PXE_ROMID_MAJORVER.
-    PXE_UINT8   MinorVer;       ///< PXE_ROMID_MINORVER.
-    PXE_UINT8   IFcntExt;       ///< physical connector count upper byte.
-    PXE_UINT8   reserved1;      ///< zero, not used.
-    PXE_UINT32  Implementation; ///< Implementation flags.
-    PXE_UINT64  EntryPoint;     ///< API entry point.
-    PXE_UINT8   reserved2[3];   ///< zero, not used.
-    PXE_UINT8   BusCnt;         ///< number of bustypes supported.
-    PXE_UINT32  BusType[1];     ///< list of supported bustypes.
+  PXE_UINT32  Signature;      ///< PXE_ROMID_SIGNATURE.
+  PXE_UINT8   Len;            ///< sizeof(PXE_SW_UNDI).
+  PXE_UINT8   Fudge;          ///< makes 8-bit cksum zero.
+  PXE_UINT8   Rev;            ///< PXE_ROMID_REV.
+  PXE_UINT8   IFcnt;          ///< physical connector count lower byte.
+  PXE_UINT8   MajorVer;       ///< PXE_ROMID_MAJORVER.
+  PXE_UINT8   MinorVer;       ///< PXE_ROMID_MINORVER.
+  PXE_UINT8   IFcntExt;       ///< physical connector count upper byte.
+  PXE_UINT8   reserved1;      ///< zero, not used.
+  PXE_UINT32  Implementation; ///< Implementation flags.
+  PXE_UINT64  EntryPoint;     ///< API entry point.
+  PXE_UINT8   reserved2[3];   ///< zero, not used.
+  PXE_UINT8   BusCnt;         ///< number of bustypes supported.
+  PXE_UINT32  BusType[1];     ///< list of supported bustypes.
 } PXE_SW_UNDI;
 
 typedef union u_pxe_undi {
-    PXE_HW_UNDI hw;
-    PXE_SW_UNDI sw;
+  PXE_HW_UNDI hw;
+  PXE_SW_UNDI sw;
 } PXE_UNDI;
 
 ///
@@ -872,45 +872,45 @@ typedef union u_pxe_undi {
 #define PXE_ROMID_IMP_CMD_COMPLETE_INT_SUPPORTED          0x00000001
 
 typedef struct s_pxe_cdb {
-    PXE_OPCODE    OpCode;
-    PXE_OPFLAGS   OpFlags;
-    PXE_UINT16    CPBsize;
-    PXE_UINT16    DBsize;
-    PXE_UINT64    CPBaddr;
-    PXE_UINT64    DBaddr;
-    PXE_STATCODE  StatCode;
-    PXE_STATFLAGS StatFlags;
-    PXE_UINT16    IFnum;
-    PXE_CONTROL   Control;
+  PXE_OPCODE    OpCode;
+  PXE_OPFLAGS   OpFlags;
+  PXE_UINT16    CPBsize;
+  PXE_UINT16    DBsize;
+  PXE_UINT64    CPBaddr;
+  PXE_UINT64    DBaddr;
+  PXE_STATCODE  StatCode;
+  PXE_STATFLAGS StatFlags;
+  PXE_UINT16    IFnum;
+  PXE_CONTROL   Control;
 } PXE_CDB;
 
 typedef union u_pxe_ip_addr {
-    PXE_IPV6  IPv6;
-    PXE_IPV4  IPv4;
+  PXE_IPV6  IPv6;
+  PXE_IPV4  IPv4;
 } PXE_IP_ADDR;
 
 typedef union pxe_device {
+  ///
+  /// PCI and PC Card NICs are both identified using bus, device
+  /// and function numbers.  For PC Card, this may require PC
+  /// Card services to be loaded in the BIOS or preboot
+  /// environment.
+  ///
+  struct {
     ///
-    /// PCI and PC Card NICs are both identified using bus, device
-    /// and function numbers.  For PC Card, this may require PC
-    /// Card services to be loaded in the BIOS or preboot
-    /// environment.
+    /// See S/W UNDI ROMID structure definition for PCI and
+    /// PCC BusType definitions.
     ///
-    struct {
-        ///
-        /// See S/W UNDI ROMID structure definition for PCI and
-        /// PCC BusType definitions.
-        ///
-        PXE_UINT32  BusType;
+    PXE_UINT32  BusType;
 
-        ///
-        /// Bus, device & function numbers that locate this device.
-        ///
-        PXE_UINT16  Bus;
-        PXE_UINT8   Device;
-        PXE_UINT8   Function;
-    }
-            PCI, PCC;
+    ///
+    /// Bus, device & function numbers that locate this device.
+    ///
+    PXE_UINT16  Bus;
+    PXE_UINT8   Device;
+    PXE_UINT8   Function;
+  }
+  PCI, PCC;
 
 } PXE_DEVICE;
 
@@ -923,161 +923,161 @@ typedef union pxe_device {
 #define MAX_MCAST_ADDRESS_CNT 8
 
 typedef struct s_pxe_cpb_start_30 {
-    ///
-    /// PXE_VOID Delay(UINTN microseconds);
-    ///
-    /// UNDI will never request a delay smaller than 10 microseconds
-    /// and will always request delays in increments of 10 microseconds.
-    /// The Delay() CallBack routine must delay between n and n + 10
-    /// microseconds before returning control to the UNDI.
-    ///
-    /// This field cannot be set to zero.
-    ///
-    UINT64  Delay;
+  ///
+  /// PXE_VOID Delay(UINTN microseconds);
+  ///
+  /// UNDI will never request a delay smaller than 10 microseconds
+  /// and will always request delays in increments of 10 microseconds.
+  /// The Delay() CallBack routine must delay between n and n + 10
+  /// microseconds before returning control to the UNDI.
+  ///
+  /// This field cannot be set to zero.
+  ///
+  UINT64  Delay;
 
-    ///
-    /// PXE_VOID Block(UINT32 enable);
-    ///
-    /// UNDI may need to block multi-threaded/multi-processor access to
-    /// critical code sections when programming or accessing the network
-    /// device.  To this end, a blocking service is needed by the UNDI.
-    /// When UNDI needs a block, it will call Block() passing a non-zero
-    /// value.  When UNDI no longer needs a block, it will call Block()
-    /// with a zero value.  When called, if the Block() is already enabled,
-    /// do not return control to the UNDI until the previous Block() is
-    /// disabled.
-    ///
-    /// This field cannot be set to zero.
-    ///
-    UINT64  Block;
+  ///
+  /// PXE_VOID Block(UINT32 enable);
+  ///
+  /// UNDI may need to block multi-threaded/multi-processor access to
+  /// critical code sections when programming or accessing the network
+  /// device.  To this end, a blocking service is needed by the UNDI.
+  /// When UNDI needs a block, it will call Block() passing a non-zero
+  /// value.  When UNDI no longer needs a block, it will call Block()
+  /// with a zero value.  When called, if the Block() is already enabled,
+  /// do not return control to the UNDI until the previous Block() is
+  /// disabled.
+  ///
+  /// This field cannot be set to zero.
+  ///
+  UINT64  Block;
 
-    ///
-    /// PXE_VOID Virt2Phys(UINT64 virtual, UINT64 physical_ptr);
-    ///
-    /// UNDI will pass the virtual address of a buffer and the virtual
-    /// address of a 64-bit physical buffer.  Convert the virtual address
-    /// to a physical address and write the result to the physical address
-    /// buffer.  If virtual and physical addresses are the same, just
-    /// copy the virtual address to the physical address buffer.
-    ///
-    /// This field can be set to zero if virtual and physical addresses
-    /// are equal.
-    ///
-    UINT64  Virt2Phys;
-    ///
-    /// PXE_VOID Mem_IO(UINT8 read_write, UINT8 len, UINT64 port,
-    ///              UINT64 buf_addr);
-    ///
-    /// UNDI will read or write the device io space using this call back
-    /// function. It passes the number of bytes as the len parameter and it
-    /// will be either 1,2,4 or 8.
-    ///
-    /// This field can not be set to zero.
-    ///
-    UINT64  Mem_IO;
+  ///
+  /// PXE_VOID Virt2Phys(UINT64 virtual, UINT64 physical_ptr);
+  ///
+  /// UNDI will pass the virtual address of a buffer and the virtual
+  /// address of a 64-bit physical buffer.  Convert the virtual address
+  /// to a physical address and write the result to the physical address
+  /// buffer.  If virtual and physical addresses are the same, just
+  /// copy the virtual address to the physical address buffer.
+  ///
+  /// This field can be set to zero if virtual and physical addresses
+  /// are equal.
+  ///
+  UINT64  Virt2Phys;
+  ///
+  /// PXE_VOID Mem_IO(UINT8 read_write, UINT8 len, UINT64 port,
+  ///              UINT64 buf_addr);
+  ///
+  /// UNDI will read or write the device io space using this call back
+  /// function. It passes the number of bytes as the len parameter and it
+  /// will be either 1,2,4 or 8.
+  ///
+  /// This field can not be set to zero.
+  ///
+  UINT64  Mem_IO;
 } PXE_CPB_START_30;
 
 typedef struct s_pxe_cpb_start_31 {
-    ///
-    /// PXE_VOID Delay(UINT64 UnqId, UINTN microseconds);
-    ///
-    /// UNDI will never request a delay smaller than 10 microseconds
-    /// and will always request delays in increments of 10 microseconds.
-    /// The Delay() CallBack routine must delay between n and n + 10
-    /// microseconds before returning control to the UNDI.
-    ///
-    /// This field cannot be set to zero.
-    ///
-    UINT64  Delay;
+  ///
+  /// PXE_VOID Delay(UINT64 UnqId, UINTN microseconds);
+  ///
+  /// UNDI will never request a delay smaller than 10 microseconds
+  /// and will always request delays in increments of 10 microseconds.
+  /// The Delay() CallBack routine must delay between n and n + 10
+  /// microseconds before returning control to the UNDI.
+  ///
+  /// This field cannot be set to zero.
+  ///
+  UINT64  Delay;
 
-    ///
-    /// PXE_VOID Block(UINT64 unq_id, UINT32 enable);
-    ///
-    /// UNDI may need to block multi-threaded/multi-processor access to
-    /// critical code sections when programming or accessing the network
-    /// device.  To this end, a blocking service is needed by the UNDI.
-    /// When UNDI needs a block, it will call Block() passing a non-zero
-    /// value.  When UNDI no longer needs a block, it will call Block()
-    /// with a zero value.  When called, if the Block() is already enabled,
-    /// do not return control to the UNDI until the previous Block() is
-    /// disabled.
-    ///
-    /// This field cannot be set to zero.
-    ///
-    UINT64  Block;
+  ///
+  /// PXE_VOID Block(UINT64 unq_id, UINT32 enable);
+  ///
+  /// UNDI may need to block multi-threaded/multi-processor access to
+  /// critical code sections when programming or accessing the network
+  /// device.  To this end, a blocking service is needed by the UNDI.
+  /// When UNDI needs a block, it will call Block() passing a non-zero
+  /// value.  When UNDI no longer needs a block, it will call Block()
+  /// with a zero value.  When called, if the Block() is already enabled,
+  /// do not return control to the UNDI until the previous Block() is
+  /// disabled.
+  ///
+  /// This field cannot be set to zero.
+  ///
+  UINT64  Block;
 
-    ///
-    /// PXE_VOID Virt2Phys(UINT64 UnqId, UINT64 virtual, UINT64 physical_ptr);
-    ///
-    /// UNDI will pass the virtual address of a buffer and the virtual
-    /// address of a 64-bit physical buffer.  Convert the virtual address
-    /// to a physical address and write the result to the physical address
-    /// buffer.  If virtual and physical addresses are the same, just
-    /// copy the virtual address to the physical address buffer.
-    ///
-    /// This field can be set to zero if virtual and physical addresses
-    /// are equal.
-    ///
-    UINT64  Virt2Phys;
-    ///
-    /// PXE_VOID Mem_IO(UINT64 UnqId, UINT8 read_write, UINT8 len, UINT64 port,
-    ///              UINT64 buf_addr);
-    ///
-    /// UNDI will read or write the device io space using this call back
-    /// function. It passes the number of bytes as the len parameter and it
-    /// will be either 1,2,4 or 8.
-    ///
-    /// This field can not be set to zero.
-    ///
-    UINT64  Mem_IO;
-    ///
-    /// PXE_VOID Map_Mem(UINT64 unq_id, UINT64 virtual_addr, UINT32 size,
-    ///                 UINT32 Direction, UINT64 mapped_addr);
-    ///
-    /// UNDI will pass the virtual address of a buffer, direction of the data
-    /// flow from/to the mapped buffer (the constants are defined below)
-    /// and a place holder (pointer) for the mapped address.
-    /// This call will Map the given address to a physical DMA address and write
-    /// the result to the mapped_addr pointer.  If there is no need to
-    /// map the given address to a lower address (i.e. the given address is
-    /// associated with a physical address that is already compatible to be
-    /// used with the DMA, it converts the given virtual address to it's
-    /// physical address and write that in the mapped address pointer.
-    ///
-    /// This field can be set to zero if there is no mapping service available.
-    ///
-    UINT64  Map_Mem;
+  ///
+  /// PXE_VOID Virt2Phys(UINT64 UnqId, UINT64 virtual, UINT64 physical_ptr);
+  ///
+  /// UNDI will pass the virtual address of a buffer and the virtual
+  /// address of a 64-bit physical buffer.  Convert the virtual address
+  /// to a physical address and write the result to the physical address
+  /// buffer.  If virtual and physical addresses are the same, just
+  /// copy the virtual address to the physical address buffer.
+  ///
+  /// This field can be set to zero if virtual and physical addresses
+  /// are equal.
+  ///
+  UINT64  Virt2Phys;
+  ///
+  /// PXE_VOID Mem_IO(UINT64 UnqId, UINT8 read_write, UINT8 len, UINT64 port,
+  ///              UINT64 buf_addr);
+  ///
+  /// UNDI will read or write the device io space using this call back
+  /// function. It passes the number of bytes as the len parameter and it
+  /// will be either 1,2,4 or 8.
+  ///
+  /// This field can not be set to zero.
+  ///
+  UINT64  Mem_IO;
+  ///
+  /// PXE_VOID Map_Mem(UINT64 unq_id, UINT64 virtual_addr, UINT32 size,
+  ///                 UINT32 Direction, UINT64 mapped_addr);
+  ///
+  /// UNDI will pass the virtual address of a buffer, direction of the data
+  /// flow from/to the mapped buffer (the constants are defined below)
+  /// and a place holder (pointer) for the mapped address.
+  /// This call will Map the given address to a physical DMA address and write
+  /// the result to the mapped_addr pointer.  If there is no need to
+  /// map the given address to a lower address (i.e. the given address is
+  /// associated with a physical address that is already compatible to be
+  /// used with the DMA, it converts the given virtual address to it's
+  /// physical address and write that in the mapped address pointer.
+  ///
+  /// This field can be set to zero if there is no mapping service available.
+  ///
+  UINT64  Map_Mem;
 
-    ///
-    /// PXE_VOID UnMap_Mem(UINT64 unq_id, UINT64 virtual_addr, UINT32 size,
-    ///            UINT32 Direction, UINT64 mapped_addr);
-    ///
-    /// UNDI will pass the virtual and mapped addresses of a buffer.
-    /// This call will un map the given address.
-    ///
-    /// This field can be set to zero if there is no unmapping service available.
-    ///
-    UINT64  UnMap_Mem;
+  ///
+  /// PXE_VOID UnMap_Mem(UINT64 unq_id, UINT64 virtual_addr, UINT32 size,
+  ///            UINT32 Direction, UINT64 mapped_addr);
+  ///
+  /// UNDI will pass the virtual and mapped addresses of a buffer.
+  /// This call will un map the given address.
+  ///
+  /// This field can be set to zero if there is no unmapping service available.
+  ///
+  UINT64  UnMap_Mem;
 
-    ///
-    /// PXE_VOID Sync_Mem(UINT64 unq_id, UINT64 virtual,
-    ///            UINT32 size, UINT32 Direction, UINT64 mapped_addr);
-    ///
-    /// UNDI will pass the virtual and mapped addresses of a buffer.
-    /// This call will synchronize the contents of both the virtual and mapped.
-    /// buffers for the given Direction.
-    ///
-    /// This field can be set to zero if there is no service available.
-    ///
-    UINT64  Sync_Mem;
+  ///
+  /// PXE_VOID Sync_Mem(UINT64 unq_id, UINT64 virtual,
+  ///            UINT32 size, UINT32 Direction, UINT64 mapped_addr);
+  ///
+  /// UNDI will pass the virtual and mapped addresses of a buffer.
+  /// This call will synchronize the contents of both the virtual and mapped.
+  /// buffers for the given Direction.
+  ///
+  /// This field can be set to zero if there is no service available.
+  ///
+  UINT64  Sync_Mem;
 
-    ///
-    /// protocol driver can provide anything for this Unique_ID, UNDI remembers
-    /// that as just a 64bit value associated to the interface specified by
-    /// the ifnum and gives it back as a parameter to all the call-back routines
-    /// when calling for that interface!
-    ///
-    UINT64  Unique_ID;
+  ///
+  /// protocol driver can provide anything for this Unique_ID, UNDI remembers
+  /// that as just a 64bit value associated to the interface specified by
+  /// the ifnum and gives it back as a parameter to all the call-back routines
+  /// when calling for that interface!
+  ///
+  UINT64  Unique_ID;
 } PXE_CPB_START_31;
 
 #define TO_AND_FROM_DEVICE    0
@@ -1092,84 +1092,84 @@ typedef struct s_pxe_cpb_start_31 {
 #define PXE_MEM_WRITE         4
 
 typedef struct s_pxe_db_get_init_info {
-    ///
-    /// Minimum length of locked memory buffer that must be given to
-    /// the Initialize command. Giving UNDI more memory will generally
-    /// give better performance.
-    ///
-    /// If MemoryRequired is zero, the UNDI does not need and will not
-    /// use system memory to receive and transmit packets.
-    ///
-    PXE_UINT32  MemoryRequired;
+  ///
+  /// Minimum length of locked memory buffer that must be given to
+  /// the Initialize command. Giving UNDI more memory will generally
+  /// give better performance.
+  ///
+  /// If MemoryRequired is zero, the UNDI does not need and will not
+  /// use system memory to receive and transmit packets.
+  ///
+  PXE_UINT32  MemoryRequired;
 
-    ///
-    /// Maximum frame data length for Tx/Rx excluding the media header.
-    ///
-    PXE_UINT32  FrameDataLen;
+  ///
+  /// Maximum frame data length for Tx/Rx excluding the media header.
+  ///
+  PXE_UINT32  FrameDataLen;
 
-    ///
-    /// Supported link speeds are in units of mega bits.  Common ethernet
-    /// values are 10, 100 and 1000.  Unused LinkSpeeds[] entries are zero
-    /// filled.
-    ///
-    PXE_UINT32  LinkSpeeds[4];
+  ///
+  /// Supported link speeds are in units of mega bits.  Common ethernet
+  /// values are 10, 100 and 1000.  Unused LinkSpeeds[] entries are zero
+  /// filled.
+  ///
+  PXE_UINT32  LinkSpeeds[4];
 
-    ///
-    /// Number of non-volatile storage items.
-    ///
-    PXE_UINT32  NvCount;
+  ///
+  /// Number of non-volatile storage items.
+  ///
+  PXE_UINT32  NvCount;
 
-    ///
-    /// Width of non-volatile storage item in bytes.  0, 1, 2 or 4
-    ///
-    PXE_UINT16  NvWidth;
+  ///
+  /// Width of non-volatile storage item in bytes.  0, 1, 2 or 4
+  ///
+  PXE_UINT16  NvWidth;
 
-    ///
-    /// Media header length.  This is the typical media header length for
-    /// this UNDI.  This information is needed when allocating receive
-    /// and transmit buffers.
-    ///
-    PXE_UINT16  MediaHeaderLen;
+  ///
+  /// Media header length.  This is the typical media header length for
+  /// this UNDI.  This information is needed when allocating receive
+  /// and transmit buffers.
+  ///
+  PXE_UINT16  MediaHeaderLen;
 
-    ///
-    /// Number of bytes in the NIC hardware (MAC) address.
-    ///
-    PXE_UINT16  HWaddrLen;
+  ///
+  /// Number of bytes in the NIC hardware (MAC) address.
+  ///
+  PXE_UINT16  HWaddrLen;
 
-    ///
-    /// Maximum number of multicast MAC addresses in the multicast
-    /// MAC address filter list.
-    ///
-    PXE_UINT16  MCastFilterCnt;
+  ///
+  /// Maximum number of multicast MAC addresses in the multicast
+  /// MAC address filter list.
+  ///
+  PXE_UINT16  MCastFilterCnt;
 
-    ///
-    /// Default number and size of transmit and receive buffers that will
-    /// be allocated by the UNDI.  If MemoryRequired is non-zero, this
-    /// allocation will come out of the memory buffer given to the Initialize
-    /// command.  If MemoryRequired is zero, this allocation will come out of
-    /// memory on the NIC.
-    ///
-    PXE_UINT16  TxBufCnt;
-    PXE_UINT16  TxBufSize;
-    PXE_UINT16  RxBufCnt;
-    PXE_UINT16  RxBufSize;
+  ///
+  /// Default number and size of transmit and receive buffers that will
+  /// be allocated by the UNDI.  If MemoryRequired is non-zero, this
+  /// allocation will come out of the memory buffer given to the Initialize
+  /// command.  If MemoryRequired is zero, this allocation will come out of
+  /// memory on the NIC.
+  ///
+  PXE_UINT16  TxBufCnt;
+  PXE_UINT16  TxBufSize;
+  PXE_UINT16  RxBufCnt;
+  PXE_UINT16  RxBufSize;
 
-    ///
-    /// Hardware interface types defined in the Assigned Numbers RFC
-    /// and used in DHCP and ARP packets.
-    /// See the PXE_IFTYPE typedef and PXE_IFTYPE_xxx macros.
-    ///
-    PXE_UINT8   IFtype;
+  ///
+  /// Hardware interface types defined in the Assigned Numbers RFC
+  /// and used in DHCP and ARP packets.
+  /// See the PXE_IFTYPE typedef and PXE_IFTYPE_xxx macros.
+  ///
+  PXE_UINT8   IFtype;
 
-    ///
-    /// Supported duplex.  See PXE_DUPLEX_xxxxx #defines below.
-    ///
-    PXE_UINT8   SupportedDuplexModes;
+  ///
+  /// Supported duplex.  See PXE_DUPLEX_xxxxx #defines below.
+  ///
+  PXE_UINT8   SupportedDuplexModes;
 
-    ///
-    /// Supported loopback options.  See PXE_LOOPBACK_xxxxx #defines below.
-    ///
-    PXE_UINT8   SupportedLoopBackModes;
+  ///
+  /// Supported loopback options.  See PXE_LOOPBACK_xxxxx #defines below.
+  ///
+  PXE_UINT8   SupportedLoopBackModes;
 } PXE_DB_GET_INIT_INFO;
 
 #define PXE_MAX_TXRX_UNIT_ETHER           1500
@@ -1184,105 +1184,105 @@ typedef struct s_pxe_db_get_init_info {
 #define PXE_LOOPBACK_EXTERNAL_SUPPORTED   2
 
 typedef struct s_pxe_pci_config_info {
-    ///
-    /// This is the flag field for the PXE_DB_GET_CONFIG_INFO union.
-    /// For PCI bus devices, this field is set to PXE_BUSTYPE_PCI.
-    ///
-    UINT32  BusType;
+  ///
+  /// This is the flag field for the PXE_DB_GET_CONFIG_INFO union.
+  /// For PCI bus devices, this field is set to PXE_BUSTYPE_PCI.
+  ///
+  UINT32  BusType;
 
-    ///
-    /// This identifies the PCI network device that this UNDI interface.
-    /// is bound to.
-    ///
-    UINT16  Bus;
-    UINT8   Device;
-    UINT8   Function;
+  ///
+  /// This identifies the PCI network device that this UNDI interface.
+  /// is bound to.
+  ///
+  UINT16  Bus;
+  UINT8   Device;
+  UINT8   Function;
 
-    ///
-    /// This is a copy of the PCI configuration space for this
-    /// network device.
-    ///
-    union {
-        UINT8   Byte[256];
-        UINT16  Word[128];
-        UINT32  Dword[64];
-    } Config;
+  ///
+  /// This is a copy of the PCI configuration space for this
+  /// network device.
+  ///
+  union {
+    UINT8   Byte[256];
+    UINT16  Word[128];
+    UINT32  Dword[64];
+  } Config;
 } PXE_PCI_CONFIG_INFO;
 
 typedef struct s_pxe_pcc_config_info {
-    ///
-    /// This is the flag field for the PXE_DB_GET_CONFIG_INFO union.
-    /// For PCC bus devices, this field is set to PXE_BUSTYPE_PCC.
-    ///
-    PXE_UINT32  BusType;
+  ///
+  /// This is the flag field for the PXE_DB_GET_CONFIG_INFO union.
+  /// For PCC bus devices, this field is set to PXE_BUSTYPE_PCC.
+  ///
+  PXE_UINT32  BusType;
 
-    ///
-    /// This identifies the PCC network device that this UNDI interface
-    /// is bound to.
-    ///
-    PXE_UINT16  Bus;
-    PXE_UINT8   Device;
-    PXE_UINT8   Function;
+  ///
+  /// This identifies the PCC network device that this UNDI interface
+  /// is bound to.
+  ///
+  PXE_UINT16  Bus;
+  PXE_UINT8   Device;
+  PXE_UINT8   Function;
 
-    ///
-    /// This is a copy of the PCC configuration space for this
-    /// network device.
-    ///
-    union {
-        PXE_UINT8   Byte[256];
-        PXE_UINT16  Word[128];
-        PXE_UINT32  Dword[64];
-    } Config;
+  ///
+  /// This is a copy of the PCC configuration space for this
+  /// network device.
+  ///
+  union {
+    PXE_UINT8   Byte[256];
+    PXE_UINT16  Word[128];
+    PXE_UINT32  Dword[64];
+  } Config;
 } PXE_PCC_CONFIG_INFO;
 
 typedef union u_pxe_db_get_config_info {
-    PXE_PCI_CONFIG_INFO   pci;
-    PXE_PCC_CONFIG_INFO   pcc;
+  PXE_PCI_CONFIG_INFO   pci;
+  PXE_PCC_CONFIG_INFO   pcc;
 } PXE_DB_GET_CONFIG_INFO;
 
 typedef struct s_pxe_cpb_initialize {
-    ///
-    /// Address of first (lowest) byte of the memory buffer.  This buffer must
-    /// be in contiguous physical memory and cannot be swapped out.  The UNDI
-    /// will be using this for transmit and receive buffering.
-    ///
-    PXE_UINT64  MemoryAddr;
+  ///
+  /// Address of first (lowest) byte of the memory buffer.  This buffer must
+  /// be in contiguous physical memory and cannot be swapped out.  The UNDI
+  /// will be using this for transmit and receive buffering.
+  ///
+  PXE_UINT64  MemoryAddr;
 
-    ///
-    /// MemoryLength must be greater than or equal to MemoryRequired
-    /// returned by the Get Init Info command.
-    ///
-    PXE_UINT32  MemoryLength;
+  ///
+  /// MemoryLength must be greater than or equal to MemoryRequired
+  /// returned by the Get Init Info command.
+  ///
+  PXE_UINT32  MemoryLength;
 
-    ///
-    /// Desired link speed in Mbit/sec.  Common ethernet values are 10, 100
-    /// and 1000.  Setting a value of zero will auto-detect and/or use the
-    /// default link speed (operation depends on UNDI/NIC functionality).
-    ///
-    PXE_UINT32  LinkSpeed;
+  ///
+  /// Desired link speed in Mbit/sec.  Common ethernet values are 10, 100
+  /// and 1000.  Setting a value of zero will auto-detect and/or use the
+  /// default link speed (operation depends on UNDI/NIC functionality).
+  ///
+  PXE_UINT32  LinkSpeed;
 
-    ///
-    /// Suggested number and size of receive and transmit buffers to
-    /// allocate.  If MemoryAddr and MemoryLength are non-zero, this
-    /// allocation comes out of the supplied memory buffer.  If MemoryAddr
-    /// and MemoryLength are zero, this allocation comes out of memory
-    /// on the NIC.
-    ///
-    /// If these fields are set to zero, the UNDI will allocate buffer
-    /// counts and sizes as it sees fit.
-    ///
-    PXE_UINT16  TxBufCnt;
-    PXE_UINT16  TxBufSize;
-    PXE_UINT16  RxBufCnt;
-    PXE_UINT16  RxBufSize;
+  ///
+  /// Suggested number and size of receive and transmit buffers to
+  /// allocate.  If MemoryAddr and MemoryLength are non-zero, this
+  /// allocation comes out of the supplied memory buffer.  If MemoryAddr
+  /// and MemoryLength are zero, this allocation comes out of memory
+  /// on the NIC.
+  ///
+  /// If these fields are set to zero, the UNDI will allocate buffer
+  /// counts and sizes as it sees fit.
+  ///
+  PXE_UINT16  TxBufCnt;
+  PXE_UINT16  TxBufSize;
+  PXE_UINT16  RxBufCnt;
+  PXE_UINT16  RxBufSize;
 
-    ///
-    /// The following configuration parameters are optional and must be zero
-    /// to use the default values.
-    ///
-    PXE_UINT8   DuplexMode;
+  ///
+  /// The following configuration parameters are optional and must be zero
+  /// to use the default values.
+  ///
+  PXE_UINT8   DuplexMode;
 
-    PXE_UINT8   LoopBackMode;
+  PXE_UINT8   LoopBackMode;
 } PXE_CPB_INITIALIZE;
 
 #define PXE_DUPLEX_DEFAULT      0x00
@@ -1296,82 +1296,82 @@ typedef struct s_pxe_cpb_initialize {
 #define LOOPBACK_EXTERNAL       2
 
 typedef struct s_pxe_db_initialize {
-    ///
-    /// Actual amount of memory used from the supplied memory buffer.  This
-    /// may be less that the amount of memory suppllied and may be zero if
-    /// the UNDI and network device do not use external memory buffers.
-    ///
-    /// Memory used by the UNDI and network device is allocated from the
-    /// lowest memory buffer address.
-    ///
-    PXE_UINT32  MemoryUsed;
+  ///
+  /// Actual amount of memory used from the supplied memory buffer.  This
+  /// may be less that the amount of memory suppllied and may be zero if
+  /// the UNDI and network device do not use external memory buffers.
+  ///
+  /// Memory used by the UNDI and network device is allocated from the
+  /// lowest memory buffer address.
+  ///
+  PXE_UINT32  MemoryUsed;
 
-    ///
-    /// Actual number and size of receive and transmit buffers that were
-    /// allocated.
-    ///
-    PXE_UINT16  TxBufCnt;
-    PXE_UINT16  TxBufSize;
-    PXE_UINT16  RxBufCnt;
-    PXE_UINT16  RxBufSize;
+  ///
+  /// Actual number and size of receive and transmit buffers that were
+  /// allocated.
+  ///
+  PXE_UINT16  TxBufCnt;
+  PXE_UINT16  TxBufSize;
+  PXE_UINT16  RxBufCnt;
+  PXE_UINT16  RxBufSize;
 } PXE_DB_INITIALIZE;
 
 typedef struct s_pxe_cpb_receive_filters {
-    ///
-    /// List of multicast MAC addresses.  This list, if present, will
-    /// replace the existing multicast MAC address filter list.
-    ///
-    PXE_MAC_ADDR  MCastList[MAX_MCAST_ADDRESS_CNT];
+  ///
+  /// List of multicast MAC addresses.  This list, if present, will
+  /// replace the existing multicast MAC address filter list.
+  ///
+  PXE_MAC_ADDR  MCastList[MAX_MCAST_ADDRESS_CNT];
 } PXE_CPB_RECEIVE_FILTERS;
 
 typedef struct s_pxe_db_receive_filters {
-    ///
-    /// Filtered multicast MAC address list.
-    ///
-    PXE_MAC_ADDR  MCastList[MAX_MCAST_ADDRESS_CNT];
+  ///
+  /// Filtered multicast MAC address list.
+  ///
+  PXE_MAC_ADDR  MCastList[MAX_MCAST_ADDRESS_CNT];
 } PXE_DB_RECEIVE_FILTERS;
 
 typedef struct s_pxe_cpb_station_address {
-    ///
-    /// If supplied and supported, the current station MAC address
-    /// will be changed.
-    ///
-    PXE_MAC_ADDR  StationAddr;
+  ///
+  /// If supplied and supported, the current station MAC address
+  /// will be changed.
+  ///
+  PXE_MAC_ADDR  StationAddr;
 } PXE_CPB_STATION_ADDRESS;
 
 typedef struct s_pxe_dpb_station_address {
-    ///
-    /// Current station MAC address.
-    ///
-    PXE_MAC_ADDR  StationAddr;
+  ///
+  /// Current station MAC address.
+  ///
+  PXE_MAC_ADDR  StationAddr;
 
-    ///
-    /// Station broadcast MAC address.
-    ///
-    PXE_MAC_ADDR  BroadcastAddr;
+  ///
+  /// Station broadcast MAC address.
+  ///
+  PXE_MAC_ADDR  BroadcastAddr;
 
-    ///
-    /// Permanent station MAC address.
-    ///
-    PXE_MAC_ADDR  PermanentAddr;
+  ///
+  /// Permanent station MAC address.
+  ///
+  PXE_MAC_ADDR  PermanentAddr;
 } PXE_DB_STATION_ADDRESS;
 
 typedef struct s_pxe_db_statistics {
-    ///
-    /// Bit field identifying what statistic data is collected by the
-    /// UNDI/NIC.
-    /// If bit 0x00 is set, Data[0x00] is collected.
-    /// If bit 0x01 is set, Data[0x01] is collected.
-    /// If bit 0x20 is set, Data[0x20] is collected.
-    /// If bit 0x21 is set, Data[0x21] is collected.
-    /// Etc.
-    ///
-    PXE_UINT64  Supported;
+  ///
+  /// Bit field identifying what statistic data is collected by the
+  /// UNDI/NIC.
+  /// If bit 0x00 is set, Data[0x00] is collected.
+  /// If bit 0x01 is set, Data[0x01] is collected.
+  /// If bit 0x20 is set, Data[0x20] is collected.
+  /// If bit 0x21 is set, Data[0x21] is collected.
+  /// Etc.
+  ///
+  PXE_UINT64  Supported;
 
-    ///
-    /// Statistic data.
-    ///
-    PXE_UINT64  Data[64];
+  ///
+  /// Statistic data.
+  ///
+  PXE_UINT64  Data[64];
 } PXE_DB_STATISTICS;
 
 ///
@@ -1473,38 +1473,38 @@ typedef struct s_pxe_db_statistics {
 #define PXE_STATISTICS_TX_RETRY_FRAMES 0x19
 
 typedef struct s_pxe_cpb_mcast_ip_to_mac {
-    ///
-    /// Multicast IP address to be converted to multicast MAC address.
-    ///
-    PXE_IP_ADDR IP;
+  ///
+  /// Multicast IP address to be converted to multicast MAC address.
+  ///
+  PXE_IP_ADDR IP;
 } PXE_CPB_MCAST_IP_TO_MAC;
 
 typedef struct s_pxe_db_mcast_ip_to_mac {
-    ///
-    /// Multicast MAC address.
-    ///
-    PXE_MAC_ADDR  MAC;
+  ///
+  /// Multicast MAC address.
+  ///
+  PXE_MAC_ADDR  MAC;
 } PXE_DB_MCAST_IP_TO_MAC;
 
 typedef struct s_pxe_cpb_nvdata_sparse {
+  ///
+  /// NvData item list.  Only items in this list will be updated.
+  ///
+  struct {
     ///
-    /// NvData item list.  Only items in this list will be updated.
+    ///  Non-volatile storage address to be changed.
     ///
-    struct {
-        ///
-        ///  Non-volatile storage address to be changed.
-        ///
-        PXE_UINT32  Addr;
+    PXE_UINT32  Addr;
 
-        ///
-        /// Data item to write into above storage address.
-        ///
-        union {
-            PXE_UINT8   Byte;
-            PXE_UINT16  Word;
-            PXE_UINT32  Dword;
-        } Data;
-    } Item[MAX_EEPROM_LEN];
+    ///
+    /// Data item to write into above storage address.
+    ///
+    union {
+      PXE_UINT8   Byte;
+      PXE_UINT16  Word;
+      PXE_UINT32  Dword;
+    } Data;
+  } Item[MAX_EEPROM_LEN];
 } PXE_CPB_NVDATA_SPARSE;
 
 ///
@@ -1512,6 +1512,27 @@ typedef struct s_pxe_cpb_nvdata_sparse {
 /// the same size as the non-volatile NIC storage.
 ///
 typedef union u_pxe_cpb_nvdata_bulk {
+  ///
+  /// Array of byte-wide data items.
+  ///
+  PXE_UINT8   Byte[MAX_EEPROM_LEN << 2];
+
+  ///
+  /// Array of word-wide data items.
+  ///
+  PXE_UINT16  Word[MAX_EEPROM_LEN << 1];
+
+  ///
+  /// Array of dword-wide data items.
+  ///
+  PXE_UINT32  Dword[MAX_EEPROM_LEN];
+} PXE_CPB_NVDATA_BULK;
+
+typedef struct s_pxe_db_nvdata {
+  ///
+  /// Arrays of data items from non-volatile storage.
+  ///
+  union {
     ///
     /// Array of byte-wide data items.
     ///
@@ -1526,78 +1547,57 @@ typedef union u_pxe_cpb_nvdata_bulk {
     /// Array of dword-wide data items.
     ///
     PXE_UINT32  Dword[MAX_EEPROM_LEN];
-} PXE_CPB_NVDATA_BULK;
-
-typedef struct s_pxe_db_nvdata {
-    ///
-    /// Arrays of data items from non-volatile storage.
-    ///
-    union {
-        ///
-        /// Array of byte-wide data items.
-        ///
-        PXE_UINT8   Byte[MAX_EEPROM_LEN << 2];
-
-        ///
-        /// Array of word-wide data items.
-        ///
-        PXE_UINT16  Word[MAX_EEPROM_LEN << 1];
-
-        ///
-        /// Array of dword-wide data items.
-        ///
-        PXE_UINT32  Dword[MAX_EEPROM_LEN];
-    } Data;
+  } Data;
 } PXE_DB_NVDATA;
 
 typedef struct s_pxe_db_get_status {
-    ///
-    /// Length of next receive frame (header + data).  If this is zero,
-    /// there is no next receive frame available.
-    ///
-    PXE_UINT32  RxFrameLen;
+  ///
+  /// Length of next receive frame (header + data).  If this is zero,
+  /// there is no next receive frame available.
+  ///
+  PXE_UINT32  RxFrameLen;
 
-    ///
-    /// Reserved, set to zero.
-    ///
-    PXE_UINT32  reserved;
+  ///
+  /// Reserved, set to zero.
+  ///
+  PXE_UINT32  reserved;
 
-    ///
-    ///  Addresses of transmitted buffers that need to be recycled.
-    ///
-    PXE_UINT64  TxBuffer[MAX_XMIT_BUFFERS];
+  ///
+  ///  Addresses of transmitted buffers that need to be recycled.
+  ///
+  PXE_UINT64  TxBuffer[MAX_XMIT_BUFFERS];
 } PXE_DB_GET_STATUS;
 
 typedef struct s_pxe_cpb_fill_header {
-    ///
-    /// Source and destination MAC addresses.  These will be copied into
-    /// the media header without doing byte swapping.
-    ///
-    PXE_MAC_ADDR  SrcAddr;
-    PXE_MAC_ADDR  DestAddr;
+  ///
+  /// Source and destination MAC addresses.  These will be copied into
+  /// the media header without doing byte swapping.
+  ///
+  PXE_MAC_ADDR  SrcAddr;
+  PXE_MAC_ADDR  DestAddr;
 
-    ///
-    /// Address of first byte of media header.  The first byte of packet data
-    /// follows the last byte of the media header.
-    ///
-    PXE_UINT64        MediaHeader;
+  ///
+  /// Address of first byte of media header.  The first byte of packet data
+  /// follows the last byte of the media header.
+  ///
+  PXE_UINT64        MediaHeader;
 
-    ///
-    /// Length of packet data in bytes (not including the media header).
-    ///
-    PXE_UINT32        PacketLen;
+  ///
+  /// Length of packet data in bytes (not including the media header).
+  ///
+  PXE_UINT32        PacketLen;
 
-    ///
-    /// Protocol type.  This will be copied into the media header without
-    /// doing byte swapping.  Protocol type numbers can be obtained from
-    /// the Assigned Numbers RFC 1700.
-    ///
-    PXE_UINT16        Protocol;
+  ///
+  /// Protocol type.  This will be copied into the media header without
+  /// doing byte swapping.  Protocol type numbers can be obtained from
+  /// the Assigned Numbers RFC 1700.
+  ///
+  PXE_UINT16        Protocol;
 
-    ///
-    /// Length of the media header in bytes.
-    ///
-    PXE_UINT16        MediaHeaderLen;
+  ///
+  /// Length of the media header in bytes.
+  ///
+  PXE_UINT16        MediaHeaderLen;
 } PXE_CPB_FILL_HEADER;
 
 #define PXE_PROTOCOL_ETHERNET_IP  0x0800
@@ -1605,179 +1605,179 @@ typedef struct s_pxe_cpb_fill_header {
 #define MAX_XMIT_FRAGMENTS        16
 
 typedef struct s_pxe_cpb_fill_header_fragmented {
+  ///
+  /// Source and destination MAC addresses.  These will be copied into
+  /// the media header without doing byte swapping.
+  ///
+  PXE_MAC_ADDR        SrcAddr;
+  PXE_MAC_ADDR        DestAddr;
+
+  ///
+  /// Length of packet data in bytes (not including the media header).
+  ///
+  PXE_UINT32          PacketLen;
+
+  ///
+  /// Protocol type.  This will be copied into the media header without
+  /// doing byte swapping.  Protocol type numbers can be obtained from
+  /// the Assigned Numbers RFC 1700.
+  ///
+  PXE_MEDIA_PROTOCOL  Protocol;
+
+  ///
+  /// Length of the media header in bytes.
+  ///
+  PXE_UINT16          MediaHeaderLen;
+
+  ///
+  /// Number of packet fragment descriptors.
+  ///
+  PXE_UINT16          FragCnt;
+
+  ///
+  /// Reserved, must be set to zero.
+  ///
+  PXE_UINT16          reserved;
+
+  ///
+  /// Array of packet fragment descriptors.  The first byte of the media
+  /// header is the first byte of the first fragment.
+  ///
+  struct {
     ///
-    /// Source and destination MAC addresses.  These will be copied into
-    /// the media header without doing byte swapping.
+    /// Address of this packet fragment.
     ///
-    PXE_MAC_ADDR        SrcAddr;
-    PXE_MAC_ADDR        DestAddr;
+    PXE_UINT64  FragAddr;
 
     ///
-    /// Length of packet data in bytes (not including the media header).
+    /// Length of this packet fragment.
     ///
-    PXE_UINT32          PacketLen;
-
-    ///
-    /// Protocol type.  This will be copied into the media header without
-    /// doing byte swapping.  Protocol type numbers can be obtained from
-    /// the Assigned Numbers RFC 1700.
-    ///
-    PXE_MEDIA_PROTOCOL  Protocol;
-
-    ///
-    /// Length of the media header in bytes.
-    ///
-    PXE_UINT16          MediaHeaderLen;
-
-    ///
-    /// Number of packet fragment descriptors.
-    ///
-    PXE_UINT16          FragCnt;
-
-    ///
-    /// Reserved, must be set to zero.
-    ///
-    PXE_UINT16          reserved;
-
-    ///
-    /// Array of packet fragment descriptors.  The first byte of the media
-    /// header is the first byte of the first fragment.
-    ///
-    struct {
-        ///
-        /// Address of this packet fragment.
-        ///
-        PXE_UINT64  FragAddr;
-
-        ///
-        /// Length of this packet fragment.
-        ///
-        PXE_UINT32  FragLen;
-
-        ///
-        /// Reserved, must be set to zero.
-        ///
-        PXE_UINT32  reserved;
-    } FragDesc[MAX_XMIT_FRAGMENTS];
-}
-        PXE_CPB_FILL_HEADER_FRAGMENTED;
-
-typedef struct s_pxe_cpb_transmit {
-    ///
-    /// Address of first byte of frame buffer.  This is also the first byte
-    /// of the media header.
-    ///
-    PXE_UINT64  FrameAddr;
-
-    ///
-    /// Length of the data portion of the frame buffer in bytes.  Do not
-    /// include the length of the media header.
-    ///
-    PXE_UINT32  DataLen;
-
-    ///
-    /// Length of the media header in bytes.
-    ///
-    PXE_UINT16  MediaheaderLen;
-
-    ///
-    /// Reserved, must be zero.
-    ///
-    PXE_UINT16  reserved;
-} PXE_CPB_TRANSMIT;
-
-typedef struct s_pxe_cpb_transmit_fragments {
-    ///
-    /// Length of packet data in bytes (not including the media header).
-    ///
-    PXE_UINT32  FrameLen;
-
-    ///
-    /// Length of the media header in bytes.
-    ///
-    PXE_UINT16  MediaheaderLen;
-
-    ///
-    /// Number of packet fragment descriptors.
-    ///
-    PXE_UINT16  FragCnt;
-
-    ///
-    /// Array of frame fragment descriptors.  The first byte of the first
-    /// fragment is also the first byte of the media header.
-    ///
-    struct {
-        ///
-        /// Address of this frame fragment.
-        ///
-        PXE_UINT64  FragAddr;
-
-        ///
-        /// Length of this frame fragment.
-        ///
-        PXE_UINT32  FragLen;
-
-        ///
-        /// Reserved, must be set to zero.
-        ///
-        PXE_UINT32  reserved;
-    } FragDesc[MAX_XMIT_FRAGMENTS];
-}
-        PXE_CPB_TRANSMIT_FRAGMENTS;
-
-typedef struct s_pxe_cpb_receive {
-    ///
-    /// Address of first byte of receive buffer.  This is also the first byte
-    /// of the frame header.
-    ///
-    PXE_UINT64  BufferAddr;
-
-    ///
-    /// Length of receive buffer.  This must be large enough to hold the
-    /// received frame (media header + data).  If the length of smaller than
-    /// the received frame, data will be lost.
-    ///
-    PXE_UINT32  BufferLen;
+    PXE_UINT32  FragLen;
 
     ///
     /// Reserved, must be set to zero.
     ///
     PXE_UINT32  reserved;
+  } FragDesc[MAX_XMIT_FRAGMENTS];
+}
+PXE_CPB_FILL_HEADER_FRAGMENTED;
+
+typedef struct s_pxe_cpb_transmit {
+  ///
+  /// Address of first byte of frame buffer.  This is also the first byte
+  /// of the media header.
+  ///
+  PXE_UINT64  FrameAddr;
+
+  ///
+  /// Length of the data portion of the frame buffer in bytes.  Do not
+  /// include the length of the media header.
+  ///
+  PXE_UINT32  DataLen;
+
+  ///
+  /// Length of the media header in bytes.
+  ///
+  PXE_UINT16  MediaheaderLen;
+
+  ///
+  /// Reserved, must be zero.
+  ///
+  PXE_UINT16  reserved;
+} PXE_CPB_TRANSMIT;
+
+typedef struct s_pxe_cpb_transmit_fragments {
+  ///
+  /// Length of packet data in bytes (not including the media header).
+  ///
+  PXE_UINT32  FrameLen;
+
+  ///
+  /// Length of the media header in bytes.
+  ///
+  PXE_UINT16  MediaheaderLen;
+
+  ///
+  /// Number of packet fragment descriptors.
+  ///
+  PXE_UINT16  FragCnt;
+
+  ///
+  /// Array of frame fragment descriptors.  The first byte of the first
+  /// fragment is also the first byte of the media header.
+  ///
+  struct {
+    ///
+    /// Address of this frame fragment.
+    ///
+    PXE_UINT64  FragAddr;
+
+    ///
+    /// Length of this frame fragment.
+    ///
+    PXE_UINT32  FragLen;
+
+    ///
+    /// Reserved, must be set to zero.
+    ///
+    PXE_UINT32  reserved;
+  } FragDesc[MAX_XMIT_FRAGMENTS];
+}
+PXE_CPB_TRANSMIT_FRAGMENTS;
+
+typedef struct s_pxe_cpb_receive {
+  ///
+  /// Address of first byte of receive buffer.  This is also the first byte
+  /// of the frame header.
+  ///
+  PXE_UINT64  BufferAddr;
+
+  ///
+  /// Length of receive buffer.  This must be large enough to hold the
+  /// received frame (media header + data).  If the length of smaller than
+  /// the received frame, data will be lost.
+  ///
+  PXE_UINT32  BufferLen;
+
+  ///
+  /// Reserved, must be set to zero.
+  ///
+  PXE_UINT32  reserved;
 } PXE_CPB_RECEIVE;
 
 typedef struct s_pxe_db_receive {
-    ///
-    /// Source and destination MAC addresses from media header.
-    ///
-    PXE_MAC_ADDR        SrcAddr;
-    PXE_MAC_ADDR        DestAddr;
+  ///
+  /// Source and destination MAC addresses from media header.
+  ///
+  PXE_MAC_ADDR        SrcAddr;
+  PXE_MAC_ADDR        DestAddr;
 
-    ///
-    /// Length of received frame.  May be larger than receive buffer size.
-    /// The receive buffer will not be overwritten.  This is how to tell
-    /// if data was lost because the receive buffer was too small.
-    ///
-    PXE_UINT32          FrameLen;
+  ///
+  /// Length of received frame.  May be larger than receive buffer size.
+  /// The receive buffer will not be overwritten.  This is how to tell
+  /// if data was lost because the receive buffer was too small.
+  ///
+  PXE_UINT32          FrameLen;
 
-    ///
-    /// Protocol type from media header.
-    ///
-    PXE_MEDIA_PROTOCOL  Protocol;
+  ///
+  /// Protocol type from media header.
+  ///
+  PXE_MEDIA_PROTOCOL  Protocol;
 
-    ///
-    /// Length of media header in received frame.
-    ///
-    PXE_UINT16          MediaHeaderLen;
+  ///
+  /// Length of media header in received frame.
+  ///
+  PXE_UINT16          MediaHeaderLen;
 
-    ///
-    /// Type of receive frame.
-    ///
-    PXE_FRAME_TYPE      Type;
+  ///
+  /// Type of receive frame.
+  ///
+  PXE_FRAME_TYPE      Type;
 
-    ///
-    /// Reserved, must be zero.
-    ///
-    PXE_UINT8           reserved[7];
+  ///
+  /// Reserved, must be zero.
+  ///
+  PXE_UINT8           reserved[7];
 
 } PXE_DB_RECEIVE;
 

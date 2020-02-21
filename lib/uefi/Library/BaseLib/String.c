@@ -122,6 +122,10 @@ StrnCpy (
   ASSERT ((UINTN)(Destination - Source) > StrLen (Source));
   ASSERT ((UINTN)(Source - Destination) >= Length);
 
+  if (PcdGet32 (PcdMaximumUnicodeStringLength) != 0) {
+    ASSERT (Length <= PcdGet32 (PcdMaximumUnicodeStringLength));
+  }
+
   ReturnValue = Destination;
 
   while ((*Source != L'\0') && (Length > 0)) {
@@ -163,6 +167,13 @@ StrLen (
   ASSERT (((UINTN) String & BIT0) == 0);
 
   for (Length = 0; *String != L'\0'; String++, Length++) {
+    //
+    // If PcdMaximumUnicodeStringLength is not zero,
+    // length should not more than PcdMaximumUnicodeStringLength
+    //
+    if (PcdGet32 (PcdMaximumUnicodeStringLength) != 0) {
+      ASSERT (Length < PcdGet32 (PcdMaximumUnicodeStringLength));
+    }
   }
   return Length;
 }
@@ -292,6 +303,10 @@ StrnCmp (
   //
   ASSERT (StrSize (FirstString) != 0);
   ASSERT (StrSize (SecondString) != 0);
+
+  if (PcdGet32 (PcdMaximumUnicodeStringLength) != 0) {
+    ASSERT (Length <= PcdGet32 (PcdMaximumUnicodeStringLength));
+  }
 
   while ((*FirstString != L'\0') &&
          (*SecondString != L'\0') &&
@@ -1017,6 +1032,10 @@ AsciiStrnCpy (
   ASSERT ((UINTN)(Destination - Source) > AsciiStrLen (Source));
   ASSERT ((UINTN)(Source - Destination) >= Length);
 
+  if (PcdGet32 (PcdMaximumAsciiStringLength) != 0) {
+    ASSERT (Length <= PcdGet32 (PcdMaximumAsciiStringLength));
+  }
+
   ReturnValue = Destination;
 
   while (*Source != 0 && Length > 0) {
@@ -1057,6 +1076,13 @@ AsciiStrLen (
   ASSERT (String != NULL);
 
   for (Length = 0; *String != '\0'; String++, Length++) {
+    //
+    // If PcdMaximumUnicodeStringLength is not zero,
+    // length should not more than PcdMaximumUnicodeStringLength
+    //
+    if (PcdGet32 (PcdMaximumAsciiStringLength) != 0) {
+      ASSERT (Length < PcdGet32 (PcdMaximumAsciiStringLength));
+    }
   }
   return Length;
 }
@@ -1287,6 +1313,10 @@ AsciiStrnCmp (
   //
   ASSERT (AsciiStrSize (FirstString));
   ASSERT (AsciiStrSize (SecondString));
+
+  if (PcdGet32 (PcdMaximumAsciiStringLength) != 0) {
+    ASSERT (Length <= PcdGet32 (PcdMaximumAsciiStringLength));
+  }
 
   while ((*FirstString != '\0') &&
          (*SecondString != '\0') &&

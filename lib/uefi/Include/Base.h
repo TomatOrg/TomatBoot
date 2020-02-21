@@ -34,19 +34,19 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 //  a non standard extension
 //
 #if defined(_MSC_EXTENSIONS) && _MSC_VER < 1800 && !defined (MDE_CPU_EBC)
-///
+  ///
   /// Remove global variable from the linked image if there are no references to
   /// it after all compiler and linker optimizations have been performed.
   ///
   ///
   #define GLOBAL_REMOVE_IF_UNREFERENCED __declspec(selectany)
 #else
-///
-/// Remove the global variable from the linked image if there are no references
-///  to it after all compiler and linker optimizations have been performed.
-///
-///
-#define GLOBAL_REMOVE_IF_UNREFERENCED
+  ///
+  /// Remove the global variable from the linked image if there are no references
+  ///  to it after all compiler and linker optimizations have been performed.
+  ///
+  ///
+  #define GLOBAL_REMOVE_IF_UNREFERENCED
 #endif
 
 //
@@ -54,29 +54,29 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 // warnings.
 //
 #ifndef UNREACHABLE
-#ifdef __GNUC__
-///
+  #ifdef __GNUC__
+    ///
     /// Signal compilers and analyzers that this call is not reachable.  It is
     /// up to the compiler to remove any code past that point.
     ///
     #define UNREACHABLE()  __builtin_unreachable ()
-#elif defined (__has_feature)
-#if __has_builtin (__builtin_unreachable)
+  #elif defined (__has_feature)
+    #if __has_builtin (__builtin_unreachable)
       ///
       /// Signal compilers and analyzers that this call is not reachable.  It is
       /// up to the compiler to remove any code past that point.
       ///
       #define UNREACHABLE()  __builtin_unreachable ()
     #endif
-#endif
+  #endif
 
-#ifndef UNREACHABLE
-///
-/// Signal compilers and analyzers that this call is not reachable.  It is
-/// up to the compiler to remove any code past that point.
-///
-#define UNREACHABLE()
-#endif
+  #ifndef UNREACHABLE
+    ///
+    /// Signal compilers and analyzers that this call is not reachable.  It is
+    /// up to the compiler to remove any code past that point.
+    ///
+    #define UNREACHABLE()
+  #endif
 #endif
 
 //
@@ -85,28 +85,28 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 // false positives.
 //
 #ifndef NORETURN
-#if defined (__GNUC__) || defined (__clang__)
-///
+  #if defined (__GNUC__) || defined (__clang__)
+    ///
     /// Signal compilers and analyzers that the function cannot return.
     /// It is up to the compiler to remove any code past a call to functions
     /// flagged with this attribute.
     ///
     #define NORETURN  __attribute__((noreturn))
-#elif defined(_MSC_EXTENSIONS) && !defined(MDE_CPU_EBC)
-///
+  #elif defined(_MSC_EXTENSIONS) && !defined(MDE_CPU_EBC)
+    ///
     /// Signal compilers and analyzers that the function cannot return.
     /// It is up to the compiler to remove any code past a call to functions
     /// flagged with this attribute.
     ///
     #define NORETURN  __declspec(noreturn)
-#else
-///
-/// Signal compilers and analyzers that the function cannot return.
-/// It is up to the compiler to remove any code past a call to functions
-/// flagged with this attribute.
-///
-#define NORETURN
-#endif
+  #else
+    ///
+    /// Signal compilers and analyzers that the function cannot return.
+    /// It is up to the compiler to remove any code past a call to functions
+    /// flagged with this attribute.
+    ///
+    #define NORETURN
+  #endif
 #endif
 
 //
@@ -114,23 +114,23 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 // returns warnings.
 //
 #ifndef ANALYZER_UNREACHABLE
-#ifdef __clang_analyzer__
-#if __has_builtin (__builtin_unreachable)
+  #ifdef __clang_analyzer__
+    #if __has_builtin (__builtin_unreachable)
       ///
       /// Signal the analyzer that this call is not reachable.
       /// This excludes compilers.
       ///
       #define ANALYZER_UNREACHABLE()  __builtin_unreachable ()
     #endif
-#endif
+  #endif
 
-#ifndef ANALYZER_UNREACHABLE
-///
-/// Signal the analyzer that this call is not reachable.
-/// This excludes compilers.
-///
-#define ANALYZER_UNREACHABLE()
-#endif
+  #ifndef ANALYZER_UNREACHABLE
+    ///
+    /// Signal the analyzer that this call is not reachable.
+    /// This excludes compilers.
+    ///
+    #define ANALYZER_UNREACHABLE()
+  #endif
 #endif
 
 //
@@ -140,23 +140,23 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 // for verification.
 //
 #ifndef ANALYZER_NORETURN
-#ifdef __has_feature
-#if __has_feature (attribute_analyzer_noreturn)
+  #ifdef __has_feature
+    #if __has_feature (attribute_analyzer_noreturn)
       ///
       /// Signal analyzers that the function cannot return.
       /// This excludes compilers.
       ///
       #define ANALYZER_NORETURN  __attribute__((analyzer_noreturn))
     #endif
-#endif
+  #endif
 
-#ifndef ANALYZER_NORETURN
-///
-/// Signal the analyzer that the function cannot return.
-/// This excludes compilers.
-///
-#define ANALYZER_NORETURN
-#endif
+  #ifndef ANALYZER_NORETURN
+    ///
+    /// Signal the analyzer that the function cannot return.
+    /// This excludes compilers.
+    ///
+    #define ANALYZER_NORETURN
+  #endif
 #endif
 
 ///
@@ -164,19 +164,19 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 /// This prevents wrong optimizations which can cause bugs.
 ///
 #ifndef RETURNS_TWICE
-#if defined (__GNUC__) || defined (__clang__)
-///
+  #if defined (__GNUC__) || defined (__clang__)
+    ///
     /// Tell the code optimizer that the function will return twice.
     /// This prevents wrong optimizations which can cause bugs.
     ///
     #define RETURNS_TWICE  __attribute__((returns_twice))
-#else
-///
-/// Tell the code optimizer that the function will return twice.
-/// This prevents wrong optimizations which can cause bugs.
-///
-#define RETURNS_TWICE
-#endif
+  #else
+    ///
+    /// Tell the code optimizer that the function will return twice.
+    /// This prevents wrong optimizations which can cause bugs.
+    ///
+    #define RETURNS_TWICE
+  #endif
 #endif
 
 //
@@ -196,23 +196,23 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define ASM_PFX(name) _CONCATENATE (__USER_LABEL_PREFIX__, name)
 
 #if __APPLE__
-//
+  //
   // Apple extension that is used by the linker to optimize code size
   // with assembly functions. Put at the end of your .S files
   //
   #define ASM_FUNCTION_REMOVE_IF_UNREFERENCED  .subsections_via_symbols
 #else
-#define ASM_FUNCTION_REMOVE_IF_UNREFERENCED
+  #define ASM_FUNCTION_REMOVE_IF_UNREFERENCED
 #endif
 
 #ifdef __CC_ARM
-//
+  //
   // Older RVCT ARM compilers don't fully support #pragma pack and require __packed
   // as a prefix for the structure.
   //
   #define PACKED  __packed
 #else
-#define PACKED
+  #define PACKED
 #endif
 
 ///
@@ -220,24 +220,24 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 /// Unless otherwise specified, aligned on a 64 bit boundary.
 ///
 typedef struct {
-    UINT32  Data1;
-    UINT16  Data2;
-    UINT16  Data3;
-    UINT8   Data4[8];
+  UINT32  Data1;
+  UINT16  Data2;
+  UINT16  Data3;
+  UINT8   Data4[8];
 } GUID;
 
 ///
 /// 4-byte buffer. An IPv4 internet protocol address.
 ///
 typedef struct {
-    UINT8 Addr[4];
+  UINT8 Addr[4];
 } IPv4_ADDRESS;
 
 ///
 /// 16-byte buffer. An IPv6 internet protocol address.
 ///
 typedef struct {
-    UINT8 Addr[16];
+  UINT8 Addr[16];
 } IPv6_ADDRESS;
 
 //
@@ -254,8 +254,8 @@ typedef struct _LIST_ENTRY LIST_ENTRY;
 /// _LIST_ENTRY structure definition.
 ///
 struct _LIST_ENTRY {
-    LIST_ENTRY  *ForwardLink;
-    LIST_ENTRY  *BackLink;
+  LIST_ENTRY  *ForwardLink;
+  LIST_ENTRY  *BackLink;
 };
 
 //
@@ -800,11 +800,11 @@ typedef UINTN  *BASE_LIST;
 
 **/
 #ifdef MDE_CPU_EBC
-#define STATIC_ASSERT(Expression, Message)
+  #define STATIC_ASSERT(Expression, Message)
 #elif _MSC_EXTENSIONS
-#define STATIC_ASSERT static_assert
+  #define STATIC_ASSERT static_assert
 #else
-#define STATIC_ASSERT _Static_assert
+  #define STATIC_ASSERT _Static_assert
 #endif
 
 //
@@ -832,15 +832,15 @@ STATIC_ASSERT (sizeof (CHAR16)  == 2, "sizeof (CHAR16) does not meet UEFI Specif
 // other types.
 //
 typedef enum {
-    __VerifyUint8EnumValue = 0xff
+  __VerifyUint8EnumValue = 0xff
 } __VERIFY_UINT8_ENUM_SIZE;
 
 typedef enum {
-    __VerifyUint16EnumValue = 0xffff
+  __VerifyUint16EnumValue = 0xffff
 } __VERIFY_UINT16_ENUM_SIZE;
 
 typedef enum {
-    __VerifyUint32EnumValue = 0xffffffff
+  __VerifyUint32EnumValue = 0xffffffff
 } __VERIFY_UINT32_ENUM_SIZE;
 
 STATIC_ASSERT (sizeof (__VERIFY_UINT8_ENUM_SIZE) == 4, "Size of enum does not meet UEFI Specification Data Type requirements");
@@ -1259,7 +1259,7 @@ typedef UINTN RETURN_STATUS;
     (SIGNATURE_32 (A, B, C, D) | ((UINT64) (SIGNATURE_32 (E, F, G, H)) << 32))
 
 #if defined(_MSC_EXTENSIONS) && !defined (__INTEL_COMPILER) && !defined (MDE_CPU_EBC)
-void * _ReturnAddress(void);
+  void * _ReturnAddress(void);
   #pragma intrinsic(_ReturnAddress)
   /**
     Get the return address of the calling function.
@@ -1275,7 +1275,7 @@ void * _ReturnAddress(void);
   **/
   #define RETURN_ADDRESS(L)     ((L == 0) ? _ReturnAddress() : (VOID *) 0)
 #elif defined (__GNUC__) || defined (__clang__)
-void * __builtin_return_address (unsigned int level);
+  void * __builtin_return_address (unsigned int level);
   /**
     Get the return address of the calling function.
 
@@ -1289,15 +1289,15 @@ void * __builtin_return_address (unsigned int level);
   **/
   #define RETURN_ADDRESS(L)     __builtin_return_address (L)
 #else
-/**
-  Get the return address of the calling function.
+  /**
+    Get the return address of the calling function.
 
-  @param L    Return Level.
+    @param L    Return Level.
 
-  @return 0 as compilers don't support this feature.
+    @return 0 as compilers don't support this feature.
 
-**/
-#define RETURN_ADDRESS(L)     ((VOID *) 0)
+  **/
+  #define RETURN_ADDRESS(L)     ((VOID *) 0)
 #endif
 
 /**
@@ -1314,3 +1314,4 @@ void * __builtin_return_address (unsigned int level);
 #define ARRAY_SIZE(Array) (sizeof (Array) / sizeof ((Array)[0]))
 
 #endif
+

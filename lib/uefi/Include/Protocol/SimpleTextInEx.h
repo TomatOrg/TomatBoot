@@ -49,8 +49,8 @@ typedef struct _EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL EFI_SIMPLE_TEXT_INPUT_EX_PROTO
 typedef
 EFI_STATUS
 (EFIAPI *EFI_INPUT_RESET_EX)(
-IN EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL *This,
-IN BOOLEAN                           ExtendedVerification
+  IN EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL *This,
+  IN BOOLEAN                           ExtendedVerification
 );
 
 
@@ -62,31 +62,31 @@ IN BOOLEAN                           ExtendedVerification
 typedef UINT8 EFI_KEY_TOGGLE_STATE;
 
 typedef struct _EFI_KEY_STATE {
-    ///
-    /// Reflects the currently pressed shift
-    /// modifiers for the input device. The
-    /// returned value is valid only if the high
-    /// order bit has been set.
-    ///
-    UINT32                KeyShiftState;
-    ///
-    /// Reflects the current internal state of
-    /// various toggled attributes. The returned
-    /// value is valid only if the high order
-    /// bit has been set.
-    ///
-    EFI_KEY_TOGGLE_STATE  KeyToggleState;
+  ///
+  /// Reflects the currently pressed shift
+  /// modifiers for the input device. The
+  /// returned value is valid only if the high
+  /// order bit has been set.
+  ///
+  UINT32                KeyShiftState;
+  ///
+  /// Reflects the current internal state of
+  /// various toggled attributes. The returned
+  /// value is valid only if the high order
+  /// bit has been set.
+  ///
+  EFI_KEY_TOGGLE_STATE  KeyToggleState;
 } EFI_KEY_STATE;
 
 typedef struct {
-    ///
-    /// The EFI scan code and Unicode value returned from the input device.
-    ///
-    EFI_INPUT_KEY   Key;
-    ///
-    /// The current state of various toggled attributes as well as input modifier values.
-    ///
-    EFI_KEY_STATE   KeyState;
+  ///
+  /// The EFI scan code and Unicode value returned from the input device.
+  ///
+  EFI_INPUT_KEY   Key;
+  ///
+  /// The current state of various toggled attributes as well as input modifier values.
+  ///
+  EFI_KEY_STATE   KeyState;
 } EFI_KEY_DATA;
 
 //
@@ -194,8 +194,8 @@ typedef struct {
 typedef
 EFI_STATUS
 (EFIAPI *EFI_INPUT_READ_KEY_EX)(
-IN  EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL *This,
-OUT EFI_KEY_DATA                      *KeyData
+  IN  EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL *This,
+  OUT EFI_KEY_DATA                      *KeyData
 );
 
 /**
@@ -221,8 +221,8 @@ OUT EFI_KEY_DATA                      *KeyData
 typedef
 EFI_STATUS
 (EFIAPI *EFI_SET_STATE)(
-IN EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL *This,
-IN EFI_KEY_TOGGLE_STATE              *KeyToggleState
+  IN EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL *This,
+  IN EFI_KEY_TOGGLE_STATE              *KeyToggleState
 );
 
 ///
@@ -231,7 +231,7 @@ IN EFI_KEY_TOGGLE_STATE              *KeyToggleState
 typedef
 EFI_STATUS
 (EFIAPI *EFI_KEY_NOTIFY_FUNCTION)(
-IN EFI_KEY_DATA *KeyData
+  IN EFI_KEY_DATA *KeyData
 );
 
 /**
@@ -263,10 +263,10 @@ IN EFI_KEY_DATA *KeyData
 typedef
 EFI_STATUS
 (EFIAPI *EFI_REGISTER_KEYSTROKE_NOTIFY)(
-IN  EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL *This,
-IN  EFI_KEY_DATA                      *KeyData,
-IN  EFI_KEY_NOTIFY_FUNCTION           KeyNotificationFunction,
-OUT VOID                              **NotifyHandle
+  IN  EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL *This,
+  IN  EFI_KEY_DATA                      *KeyData,
+  IN  EFI_KEY_NOTIFY_FUNCTION           KeyNotificationFunction,
+  OUT VOID                              **NotifyHandle
 );
 
 /**
@@ -287,8 +287,8 @@ OUT VOID                              **NotifyHandle
 typedef
 EFI_STATUS
 (EFIAPI *EFI_UNREGISTER_KEYSTROKE_NOTIFY)(
-IN EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL  *This,
-IN VOID                               *NotificationHandle
+  IN EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL  *This,
+  IN VOID                               *NotificationHandle
 );
 
 
@@ -299,18 +299,19 @@ IN VOID                               *NotificationHandle
 /// returned.
 ///
 struct _EFI_SIMPLE_TEXT_INPUT_EX_PROTOCOL{
-    EFI_INPUT_RESET_EX              Reset;
-    EFI_INPUT_READ_KEY_EX           ReadKeyStrokeEx;
-    ///
-    /// Event to use with WaitForEvent() to wait for a key to be available.
-    ///
-    EFI_EVENT                       WaitForKeyEx;
-    EFI_SET_STATE                   SetState;
-    EFI_REGISTER_KEYSTROKE_NOTIFY   RegisterKeyNotify;
-    EFI_UNREGISTER_KEYSTROKE_NOTIFY UnregisterKeyNotify;
+  EFI_INPUT_RESET_EX              Reset;
+  EFI_INPUT_READ_KEY_EX           ReadKeyStrokeEx;
+  ///
+  /// Event to use with WaitForEvent() to wait for a key to be available.
+  ///
+  EFI_EVENT                       WaitForKeyEx;
+  EFI_SET_STATE                   SetState;
+  EFI_REGISTER_KEYSTROKE_NOTIFY   RegisterKeyNotify;
+  EFI_UNREGISTER_KEYSTROKE_NOTIFY UnregisterKeyNotify;
 };
 
 
 extern EFI_GUID gEfiSimpleTextInputExProtocolGuid;
 
 #endif
+

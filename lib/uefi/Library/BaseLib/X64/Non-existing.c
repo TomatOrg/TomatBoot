@@ -6,6 +6,7 @@
 
 **/
 
+#include <Uefi.h>
 #include <Library/BaseLib.h>
 #include <Library/DebugLib.h>
 
@@ -42,9 +43,6 @@
                       function after paging is enabled.
 
 **/
-
-#include <Uefi.h>
-
 VOID
 EFIAPI
 InternalX86EnablePaging32 (

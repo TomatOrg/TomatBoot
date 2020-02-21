@@ -8,9 +8,9 @@
 
 #include "BaseLibInternals.h"
 
-#define RSIZE_MAX  MAX_UINT32
+#define RSIZE_MAX  (PcdGet32 (PcdMaximumUnicodeStringLength))
 
-#define ASCII_RSIZE_MAX  MAX_UINT32
+#define ASCII_RSIZE_MAX  (PcdGet32 (PcdMaximumAsciiStringLength))
 
 #define SAFE_STRING_CONSTRAINT_CHECK(Expression, Status)  \
   do { \
