@@ -22,7 +22,8 @@ static void draw() {
 
 static const char* loader_names[] = {
     [BOOT_LINUX] = "Linux Boot",
-    [BOOT_TBOOT] = "TomatBoot"
+    [BOOT_TBOOT] = "TomatBoot",
+    [BOOT_UEFI] = "UEFI Boot",
 };
 
 menu_t enter_boot_menu() {

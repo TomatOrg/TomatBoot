@@ -2,6 +2,7 @@
 
 #include "linux_loader.h"
 #include "tboot_loader.h"
+#include "uefi_loader.h"
 
 #include "loader.h"
 
@@ -13,6 +14,10 @@ void load_binary(boot_entry_t* entry) {
 
         case BOOT_TBOOT:
             load_tboot_binary(entry);
+            break;
+
+        case BOOT_UEFI:
+            load_uefi_binary(entry);
             break;
 
         default:

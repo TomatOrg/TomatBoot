@@ -95,7 +95,7 @@ static void draw() {
         if(!EFI_ERROR(status = gBS->LocateProtocol(&gEfiDevicePathToTextProtocolGuid, NULL, (VOID**)&devpath_to_text))) {
             CHAR16* devpath = devpath_to_text->ConvertDevicePathToText(device_path, TRUE, TRUE);
             write_at(0, 17, "%s", devpath);
-            // TODO: How do I free the devpath?
+            ASSERT_EFI_ERROR(gBS->FreePool(devpath));
         }else {
             write_at(0, 17, "Could not get EFI_DEVICE_PATH_TO_TEXT_PROTOCOL (Status=%r)", status);
         }

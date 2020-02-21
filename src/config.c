@@ -45,18 +45,25 @@ CHAR8* read_line(EFI_FILE_PROTOCOL* file) {
     return path;
 }
 
-void get_boot_entries(boot_entries_t* entries) {
+#define CHECK(err) \
+    do { \
+        if(EFI_ERROR(err)) { \
+            return err; \
+        } \
+    } while(0);
+
+EFI_STATUS get_boot_entries(boot_entries_t* entries) {
     EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* filesystem = NULL;
-    ASSERT_EFI_ERROR(gBS->LocateProtocol(&gEfiSimpleFileSystemProtocolGuid, NULL, (VOID**)&filesystem));
+    CHECK(gBS->LocateProtocol(&gEfiSimpleFileSystemProtocolGuid, NULL, (VOID**)&filesystem));
 
     EFI_FILE_PROTOCOL* root = NULL;
-    ASSERT_EFI_ERROR(filesystem->OpenVolume(filesystem, &root));
+    CHECK(filesystem->OpenVolume(filesystem, &root));
 
     EFI_FILE_PROTOCOL* file = NULL;
-    ASSERT_EFI_ERROR(root->Open(root, &file, L"tomatboot.cfg", EFI_FILE_MODE_READ, 0));
+    CHECK(root->Open(root, &file, L"tomatboot.cfg", EFI_FILE_MODE_READ, 0));
 
     // first count how many entries there are
-    ASSERT_EFI_ERROR(file->SetPosition(file, 0));
+    CHECK(file->SetPosition(file, 0));
     UINTN entryCount = 0;
     while(TRUE) {
         CHAR8* line = read_line(file);
@@ -66,17 +73,17 @@ void get_boot_entries(boot_entries_t* entries) {
             entryCount++;
         }
 
-        ASSERT_EFI_ERROR(gBS->FreePool(line));
+        CHECK(gBS->FreePool(line));
     }
 
     // allocate entries
     entries->count = entryCount;
-    ASSERT_EFI_ERROR(gBS->AllocatePool(EfiBootServicesData, sizeof(boot_entry_t) * entryCount, (VOID**)&entries->entries));
+    CHECK(gBS->AllocatePool(EfiBootServicesData, sizeof(boot_entry_t) * entryCount, (VOID**)&entries->entries));
 
     boot_module_t* last_module = NULL;
 
     // now do the actual processing of everything
-    ASSERT_EFI_ERROR(file->SetPosition(file, 0));
+    CHECK(file->SetPosition(file, 0));
     INTN index = -1;
     while(TRUE) {
         CHAR8* line = read_line(file);
@@ -95,7 +102,7 @@ void get_boot_entries(boot_entries_t* entries) {
 
         }else {
             // this is just a parameter
-            ASSERT(index != -1);
+            CHECK(index != -1);
 
             // path of the bootable (only one)
             if(CHECK_OPTION(PATH)) {
@@ -116,17 +123,17 @@ void get_boot_entries(boot_entries_t* entries) {
                 }
 
                 // make sure there is even a path
-                ASSERT(*path != 0);
+                CHECK(*path != 0);
 
                 // set the , to null termination and skip it
                 *path++ = 0;
 
                 // allocate the entry
                 if (last_module == NULL) {
-                    ASSERT_EFI_ERROR(gBS->AllocatePool(EfiBootServicesData, sizeof(boot_module_t), (void *) &last_module));
+                    CHECK(gBS->AllocatePool(EfiBootServicesData, sizeof(boot_module_t), (void *) &last_module));
                     entries->entries[index].modules = last_module;
                 } else {
-                    ASSERT_EFI_ERROR(gBS->AllocatePool(EfiBootServicesData, sizeof(boot_module_t), (void *) &last_module->next));
+                    CHECK(gBS->AllocatePool(EfiBootServicesData, sizeof(boot_module_t), (void *) &last_module->next));
                     last_module = last_module->next;
                 }
 
@@ -138,27 +145,36 @@ void get_boot_entries(boot_entries_t* entries) {
 
                 // if nothing just free the line
             } else if(CHECK_OPTION(PROTOCOL)) {
-                char* protocol = line + sizeof("PROTOCOL");
+                char *protocol = line + sizeof("PROTOCOL");
 
                 // check the options
-                if(AsciiStrCmp(protocol, "LINUX") == 0) {
-                   entries->entries[index].protocol = BOOT_LINUX;
-                }else if(AsciiStrCmp(protocol, "TBOOT") == 0) {
-                   entries->entries[index].protocol = BOOT_TBOOT;
-                }else {
-                    DebugPrint(0, "Unknown protocol `%a` for option `%a`\n", protocol,entries->entries[index].name);
-                    ASSERT(FALSE);
+                if (AsciiStrCmp(protocol, "LINUX") == 0) {
+                    entries->entries[index].protocol = BOOT_LINUX;
+                } else if (AsciiStrCmp(protocol, "TBOOT") == 0) {
+                    entries->entries[index].protocol = BOOT_TBOOT;
+                } else if (AsciiStrCmp(protocol, "UEFI") == 0) {
+                    entries->entries[index].protocol = BOOT_UEFI;
+                } else {
+                    DebugPrint(0, "Unknown protocol `%a` for option `%a`\n", protocol, entries->entries[index].name);
+                    CHECK(FALSE);
                 }
 
-                ASSERT_EFI_ERROR(gBS->FreePool(line));
+                CHECK(gBS->FreePool(line));
+            } else if(CHECK_OPTION(DEVICE_PATH)) {
+                char* device_path = line + sizeof("DEVICE_PATH");
+
+
+
             }else {
-                ASSERT_EFI_ERROR(gBS->FreePool(line));
+                CHECK(gBS->FreePool(line));
             }
         }
     }
 
-    ASSERT_EFI_ERROR(file->Close(file));
-    ASSERT_EFI_ERROR(root->Close(root));
+    CHECK(file->Close(file));
+    CHECK(root->Close(root));
+
+    return EFI_SUCCESS;
 }
 
 void load_boot_config(boot_config_t* config) {
