@@ -9,7 +9,7 @@
 #include <Guid/FileInfo.h>
 #include <Protocol/SimpleFileSystem.h>
 #include <Library/BaseLib.h>
-#include "linux_loader.h"
+#include <config.h>
 
 #define POKE(type, addr, offset) (*(type*)((UINTN)(addr) + (UINTN)(offset)))
 #define POKE16(addr, offset) POKE(UINT16, addr, offset)
@@ -25,11 +25,6 @@
  *
  */
 void load_linux_binary(boot_entry_t* entry) {
-// clear everything, this is going to be a simple log of how we loaded the stuff
-    ASSERT_EFI_ERROR(gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_LIGHTGRAY, EFI_BLACK)));
-    ASSERT_EFI_ERROR(gST->ConOut->SetCursorPosition(gST->ConOut, 0, 0));
-    ASSERT_EFI_ERROR(gST->ConOut->ClearScreen(gST->ConOut));
-
     DebugPrint(0, "Loading kernel image\n");
     UINTN KernelSize;
     UINT8* KernelImage;

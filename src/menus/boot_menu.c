@@ -24,6 +24,7 @@ static const char* loader_names[] = {
     [BOOT_LINUX] = "Linux Boot",
     [BOOT_TBOOT] = "TomatBoot",
     [BOOT_UEFI] = "UEFI Boot",
+    [BOOT_MB2] = "MultiBoot2",
 };
 
 menu_t enter_boot_menu() {

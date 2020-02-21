@@ -12,7 +12,7 @@ boot_entries_t boot_entries;
 
 CHAR8* read_line(EFI_FILE_PROTOCOL* file) {
     CHAR8* path = NULL;
-    ASSERT_EFI_ERROR(gBS->AllocatePool(EfiBootServicesData, 255, (VOID**)&path));
+    ASSERT_EFI_ERROR(gBS->AllocatePool(EfiLoaderData, 255, (VOID**)&path));
     UINTN length = 0;
 
     // max length of 255 for simplicity
@@ -78,7 +78,7 @@ EFI_STATUS get_boot_entries(boot_entries_t* entries) {
 
     // allocate entries
     entries->count = entryCount;
-    CHECK(gBS->AllocatePool(EfiBootServicesData, sizeof(boot_entry_t) * entryCount, (VOID**)&entries->entries));
+    CHECK(gBS->AllocatePool(EfiLoaderData, sizeof(boot_entry_t) * entryCount, (VOID**)&entries->entries));
 
     boot_module_t* last_module = NULL;
 
@@ -130,10 +130,10 @@ EFI_STATUS get_boot_entries(boot_entries_t* entries) {
 
                 // allocate the entry
                 if (last_module == NULL) {
-                    CHECK(gBS->AllocatePool(EfiBootServicesData, sizeof(boot_module_t), (void *) &last_module));
+                    CHECK(gBS->AllocatePool(EfiLoaderData, sizeof(boot_module_t), (void *) &last_module));
                     entries->entries[index].modules = last_module;
                 } else {
-                    CHECK(gBS->AllocatePool(EfiBootServicesData, sizeof(boot_module_t), (void *) &last_module->next));
+                    CHECK(gBS->AllocatePool(EfiLoaderData, sizeof(boot_module_t), (void *) &last_module->next));
                     last_module = last_module->next;
                 }
 
@@ -154,6 +154,8 @@ EFI_STATUS get_boot_entries(boot_entries_t* entries) {
                     entries->entries[index].protocol = BOOT_TBOOT;
                 } else if (AsciiStrCmp(protocol, "UEFI") == 0) {
                     entries->entries[index].protocol = BOOT_UEFI;
+                } else if (AsciiStrCmp(protocol, "MB2") == 0) {
+                    entries->entries[index].protocol = BOOT_MB2;
                 } else {
                     DebugPrint(0, "Unknown protocol `%a` for option `%a`\n", protocol, entries->entries[index].name);
                     CHECK(FALSE);

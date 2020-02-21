@@ -2,11 +2,14 @@
 #define TOMATBOOT_UEFI_PARSE_CONFIG_H
 
 #include <Base.h>
+#include <Uefi.h>
+#include <Protocol/DevicePath.h>
 
 typedef enum boot_protocol {
     BOOT_LINUX,
     BOOT_TBOOT,
     BOOT_UEFI,
+    BOOT_MB2,
 } boot_protocol_t;
 
 typedef struct boot_module {

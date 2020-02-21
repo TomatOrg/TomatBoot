@@ -10,7 +10,7 @@
 #include <uefi/Include/Protocol/GraphicsOutput.h>
 #include <uefi/Include/Guid/FileInfo.h>
 #include <util/file_utils.h>
-#include "tboot_loader.h"
+#include <config.h>
 
 typedef struct acpi_table_entry {
     EFI_GUID* guid;
@@ -96,11 +96,6 @@ static tboot_entry_function load_elf_file(const CHAR8* path) {
 }
 
 void load_tboot_binary(boot_entry_t* entry) {
-    // clear everything, this is going to be a simple log of how we loaded the stuff
-    ASSERT_EFI_ERROR(gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_LIGHTGRAY, EFI_BLACK)));
-    ASSERT_EFI_ERROR(gST->ConOut->SetCursorPosition(gST->ConOut, 0, 0));
-    ASSERT_EFI_ERROR(gST->ConOut->ClearScreen(gST->ConOut));
-
     // get the config once more
     boot_config_t config;
     load_boot_config(&config);
