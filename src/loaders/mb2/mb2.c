@@ -362,8 +362,15 @@ EFI_STATUS LoadMB2(BOOT_ENTRY* Entry) {
         }
     }
 
+    // allocate the needed space for gdt
+    Print(L"Allocating area for GDT\n");
+    InitLinuxDescriptorTables();
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // No prints from here
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     // setup the mmap information
-    Print(L"Preparing to setup memory info\n");
     UINT8 TmpMemoryMap[1];
     UINTN MemoryMapSize = sizeof(TmpMemoryMap);
     UINTN MapKey;
@@ -384,9 +391,8 @@ EFI_STATUS LoadMB2(BOOT_ENTRY* Entry) {
     EFI_CHECK(gBS->GetMemoryMap(&MemoryMapSize, MemoryMap, &MapKey, &DescriptorSize, &DescriptorVersion));
     UINTN EntryCount = (MemoryMapSize / DescriptorSize);
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // No prints from here
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Exit the memory services
+    EFI_CHECK(gBS->ExitBootServices(gImageHandle, MapKey));
 
     // setup the normal memory map
     struct multiboot_tag_mmap* mmap = (void*)start_from;
@@ -416,14 +422,11 @@ EFI_STATUS LoadMB2(BOOT_ENTRY* Entry) {
     end_tag->type = MULTIBOOT_TAG_TYPE_END;
     end_tag->size = sizeof(struct multiboot_tag);
 
-    // last debug print
-    EFI_CHECK(gBS->ExitBootServices(gImageHandle, MapKey));
-
     // no interrupts
     DisableInterrupts();
 
     // setup GDT and IDT
-    SetupMB2Gdt();
+    SetLinuxDescriptorTables();
 
     // jump to the kernel
     JumpToMB2Kernel((void*)EntryAddressOverride, mBootParamsBuffer);
