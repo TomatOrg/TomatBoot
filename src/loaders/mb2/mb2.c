@@ -336,15 +336,13 @@ EFI_STATUS LoadMB2(BOOT_ENTRY* Entry) {
         // TODO: Load raw image
         CHECK_FAIL_TRACE("Raw image is not supported yet");
     } else {
-        ELF_INFO elf_info = {
-            .LoadBase = 0
-        };
+        ELF_INFO elf_info;
 
         // try with 32bit elf
         Print(L"Trying to load ELF32\n");
         if (EFI_ERROR(LoadElf32(Entry->Path, &elf_info))) {
             // try with elf64
-            Print(L"Not ELF32, trying ELF64");
+            Print(L"Not ELF32, trying ELF64\n");
             CHECK_AND_RETHROW(LoadElf64(Entry->Path, &elf_info));
         }
 

@@ -4,9 +4,6 @@
 #include <Uefi.h>
 
 typedef struct _ELF_INFO {
-    // The base to laod the image at
-    UINTN LoadBase;
-
     // The entry of the image
     UINTN Entry;
 

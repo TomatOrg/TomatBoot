@@ -6,9 +6,10 @@
 #include <Uefi.h>
 #include <Protocol/SimpleFileSystem.h>
 #include <Library/DebugLib.h>
-#include <Library/UefiBootServicesTableLib.h>
 #include <Library/FileHandleLib.h>
+#include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
+#include <Library/UefiBootServicesTableLib.h>
 
 #include "elf64.h"
 
@@ -48,11 +49,14 @@ EFI_STATUS LoadElf64(CHAR16* file, ELF_INFO* info) {
 
                 // get the type and pages to allocate
                 EFI_MEMORY_TYPE MemType = (phdr.p_flags & PF_X) ? EfiRuntimeServicesCode : EfiRuntimeServicesData;
-                UINTN nPages = ALIGN_VALUE(phdr.p_memsz, EFI_PAGE_SIZE);
+                UINTN nPages = EFI_SIZE_TO_PAGES(ALIGN_VALUE(phdr.p_memsz, EFI_PAGE_SIZE));
 
                 // allocate the address
-                EFI_PHYSICAL_ADDRESS base = info->LoadBase + phdr.p_paddr;
-                CHECK_AND_RETHROW(gBS->AllocatePages(AllocateAddress, MemType, nPages, &base));
+                EFI_PHYSICAL_ADDRESS base = phdr.p_paddr;
+                Print(L"    BASE = %p, PAGES = %d\n", base, nPages);
+                EFI_CHECK(gBS->AllocatePages(AllocateAddress, MemType, nPages, &base));
+                CHECK_AND_RETHROW(FileRead(elfFile, (void*)base, phdr.p_filesz, phdr.p_offset));
+                ZeroMem((void*)(base + phdr.p_filesz), phdr.p_memsz - phdr.p_filesz);
 
             // ignore entry
             default:
