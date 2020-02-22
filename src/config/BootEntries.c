@@ -60,8 +60,8 @@ EFI_STATUS GetBootEntries(LIST_ENTRY* Head) {
             CurrentEntry = AllocateZeroPool(sizeof(BOOT_ENTRY));
             CurrentEntry->Protocol = BOOT_TBOOT;
             CurrentEntry->Name = CopyString(Line + 1);
-            CurrentEntry->Path = NULL;
-            CurrentEntry->Cmdline = NULL;
+            CurrentEntry->Path = L"";
+            CurrentEntry->Cmdline = L"";
             CurrentEntry->BootModules = (LIST_ENTRY)INITIALIZE_LIST_HEAD_VARIABLE(CurrentEntry->BootModules);
             InsertTailList(Head, &CurrentEntry->Link);
         }else {

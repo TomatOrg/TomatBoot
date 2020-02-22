@@ -8,9 +8,9 @@
     do { \
         if (!(expr)) { \
             Status = error; \
-            AsciiPrint("[-] Check failed with error `%r` in function %a (%a:%d)\n", Status, __func__, __FILE__, __LINE__); \
+            AsciiPrint("%r at %a (%a:%d)\n", Status, __func__, __FILE__, __LINE__); \
             if (fmt[0] != '\0') { \
-                AsciiPrint("[-] " fmt "\n", ## __VA_ARGS__); \
+                AsciiPrint(fmt "\n", ## __VA_ARGS__); \
             } \
             goto label; \
         } \
@@ -27,7 +27,7 @@
     do { \
         Status = status; \
         if (EFI_ERROR(Status)) { \
-            AsciiPrint("[-] Check failed with error `%r` in function %a (%a:%d)\n", Status, __func__, __FILE__, __LINE__); \
+            AsciiPrint("%r at %a (%a:%d)\n", Status, __func__, __FILE__, __LINE__); \
             goto cleanup; \
         } \
     } while(0)
@@ -36,7 +36,7 @@
     do { \
         Status = error; \
         if (EFI_ERROR(Status)) { \
-            AsciiPrint("[-] \trethrown at %a (%a:%d)\n", __func__, __FILE__, __LINE__); \
+            AsciiPrint("  rethrown at %a (%a:%d)\n", __func__, __FILE__, __LINE__); \
             goto label; \
         } \
     } while(0)
@@ -46,7 +46,7 @@
 #define WARN(expr, fmt, ...) \
     do { \
         if (!(expr)) { \
-            AsciiPrint("[!] Warning! " fmt " at %a (%a:%d) \n", ## __VA_ARGS__ , __func__, __FILE__, __LINE__); \
+            AsciiPrint("Warning! " fmt " at (%a:%d) \n", ## __VA_ARGS__ , __func__, __FILE__, __LINE__); \
         } \
     } while(0)
 

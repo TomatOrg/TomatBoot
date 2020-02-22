@@ -11,15 +11,15 @@ typedef enum _BOOT_PROTOCOL {
 
 typedef struct _BOOT_MODULE {
     LIST_ENTRY Link;
-    const CHAR16* Path;
-    const CHAR16* Tag;
+    CHAR16* Path;
+    CHAR16* Tag;
 } BOOT_MODULE;
 
 typedef struct _BOOT_ENTRY {
     BOOT_PROTOCOL Protocol;
-    const CHAR16* Name;
-    const CHAR16* Path;
-    const CHAR16* Cmdline;
+    CHAR16* Name;
+    CHAR16* Path;
+    CHAR16* Cmdline;
     LIST_ENTRY BootModules;
     LIST_ENTRY Link;
 } BOOT_ENTRY;

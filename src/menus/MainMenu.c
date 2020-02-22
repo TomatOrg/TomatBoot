@@ -14,6 +14,7 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/DevicePathLib.h>
 #include <Library/MemoryAllocationLib.h>
+#include <loaders/Loaders.h>
 
 // 14x13 (28x13)
 #define G EFI_GREEN
@@ -183,7 +184,7 @@ MENU EnterMainMenu(BOOLEAN first) {
             ASSERT_EFI_ERROR(gBS->CloseEvent(events[1]));
 
             // call the loader
-//            load_binary(&boot_entries.entries[config.default_os]);
+            LoadKernel(gDefaultEntry);
         }
     } while(TRUE);
 }

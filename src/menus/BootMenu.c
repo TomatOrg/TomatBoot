@@ -6,6 +6,8 @@
 #include <Uefi.h>
 #include <Library/DebugLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <loaders/Loaders.h>
+#include <Library/CpuLib.h>
 
 static void draw() {
     UINTN width = 0;
@@ -96,7 +98,8 @@ MENU EnterBootMenu() {
 
                 // choose an os to start
             }else {
-//                load_binary(&boot_entries.entries[selected]);
+                LoadKernel(selectedEntry);
+                while(1) CpuSleep();
             }
         }
     }

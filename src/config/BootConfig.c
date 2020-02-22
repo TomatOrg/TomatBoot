@@ -11,10 +11,8 @@
 void LoadBootConfig(BOOT_CONFIG* config) {
     EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* filesystem = NULL;
     ASSERT_EFI_ERROR(gBS->LocateProtocol(&gEfiSimpleFileSystemProtocolGuid, NULL, (VOID**)&filesystem));
-
     EFI_FILE_PROTOCOL* root = NULL;
     ASSERT_EFI_ERROR(filesystem->OpenVolume(filesystem, &root));
-
     EFI_FILE_PROTOCOL* configFile = NULL;
     EFI_STATUS status = root->Open(root, &configFile, L"tomatboot.bin", EFI_FILE_MODE_READ, 0);
 

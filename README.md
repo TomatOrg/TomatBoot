@@ -8,7 +8,7 @@ you won't have to mix UEFI and your kernel code.
 
 ![Main Menu](screenshots/mainmenu.png)
 
-![Setup Menu](screenshots/setup.png)
+![Setup Menu](screenshots/setupmenu.png)
 
 ![Boot Menu](screenshots/bootmenu.png)
 
@@ -18,6 +18,7 @@ you won't have to mix UEFI and your kernel code.
 	* change the framebuffer settings
 	* change default entry and delay 
 * Support for linux boot
+* Support for MB2
 * Custom boot protocol
     * Support for static ELF64 kernels
         * the kernel entry must be sysv abi
@@ -25,14 +26,15 @@ you won't have to mix UEFI and your kernel code.
         * Command line
         * Framebuffer
         * ACPI table
-        * Memory Map (to be changed)
+        * Memory Map
         * TSC frequency (ticks per second)
         * Boot modules (additional files to load)
 
 ### Future plans
-* allow for modifying the command line on the fly
-* support loading to another efi module
-* pass boot device path
+* allow to edit the configuration file on the fly
+* tboot
+    * pass the device path
+    * relocatable kernel support
 
 ## Boot Protocol
 ### TomatBoot (`TBOOT`)
@@ -50,6 +52,10 @@ boot protocol.
 Right now there is an example configuration for TinyCore64, simply put the `corepure64.gz` + `vmlinuz64` and it should
 load you into a console, of course it is a very minimal setup (unlike a normal live boot there is no actual filesystem
 which can contain all the programs... just the ramfs)
+
+### Multiboot 2 (`MB2`)
+With MB2 boot you can load any mb2 compatible kernel image.
+We have a mostly complete MB2 support and accept both ELF32/ELF64.
 
 ## How to
 
@@ -79,7 +85,7 @@ Example file structure inside the UEFI partition:
 ```
 
 Other than the binary, you will also need to provide a configuration file. For an example you can see the 
-[example config](config/linux.cfg). The config file needs to be placed at the root of the efi partition 
+[example config](config/example.cfg). The config file needs to be placed at the root of the efi partition 
 with the name `tomatboot.cfg`
 
 ### Config format
@@ -87,7 +93,7 @@ The configuration format is straight forward, it is a list of entries where each
 ```
 :<name>
 PATH=<path to elf executeable>
-PROTOCOL={TBOOT,LINUX}
+PROTOCOL={TBOOT,LINUX,MB2}
 CMDLINE=<optional command line options>
 MODULE=<tag 1>,<path 1>
 MODULE=<tag 2>,<path 2>
