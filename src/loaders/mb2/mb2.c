@@ -376,8 +376,7 @@ EFI_STATUS LoadMB2Linux(BOOT_ENTRY* Entry) {
     UINTN MapKey;
     UINTN DescriptorSize;
     UINT32 DescriptorVersion;
-    CHECK(gBS->GetMemoryMap(&MemoryMapSize, (EFI_MEMORY_DESCRIPTOR *) TmpMemoryMap, &MapKey, &DescriptorSize, &DescriptorVersion
-    ) == EFI_BUFFER_TOO_SMALL);
+    CHECK(gBS->GetMemoryMap(&MemoryMapSize, (EFI_MEMORY_DESCRIPTOR *) TmpMemoryMap, &MapKey, &DescriptorSize, &DescriptorVersion) == EFI_BUFFER_TOO_SMALL);
 
     // allocate space for the efi mmap and take into
     // account that there will be changes
@@ -402,7 +401,7 @@ EFI_STATUS LoadMB2Linux(BOOT_ENTRY* Entry) {
     mmap->size = OFFSET_OF(struct multiboot_tag_mmap, entries) + EntryCount * sizeof(struct multiboot_mmap_entry);
     for (int i = 0; i < EntryCount; i++) {
         struct multiboot_mmap_entry* entry = &mmap->entries[i];
-        EFI_MEMORY_DESCRIPTOR* desc = &MemoryMap[i];
+        EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)((UINTN)MemoryMap + DescriptorSize * i);
         entry->type = EfiTypeToMB2Type[desc->Type];
         entry->addr = desc->PhysicalStart;
         entry->len = EFI_PAGES_TO_SIZE(desc->NumberOfPages);
