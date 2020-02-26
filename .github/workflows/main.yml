@@ -1,0 +1,25 @@
+name: TomatBoot-UEFI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    
+    # Checkout everything
+    - uses: actions/checkout@v2
+    
+    # Setup 
+    - name: Install packages
+      run: sudo apt install nasm clang-9 lld-9
+    
+    # Finally build it 
+    - name: Build the EFI module
+      run: make 
+    
+    # Once we done upload the artificat 
+    - uses: actions/upload-artifact@v1
+      with:
+        name: BOOTX64.EFI
+        path: bin/BOOTX64.EFI
