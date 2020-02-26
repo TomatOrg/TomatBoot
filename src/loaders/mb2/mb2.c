@@ -280,7 +280,7 @@ EFI_STATUS LoadMB2Linux(BOOT_ENTRY* Entry) {
         mod->mod_end = Start + Size;
         UnicodeStrToAsciiStr(Module->Tag, mod->cmdline);
 
-        Print(L"    Added %s (%s)\n", Module->Tag, Module->Path);
+        Print(L"    Added %s (%s) -> %p - %p\n", Module->Tag, Module->Path, mod->mod_start, mod->mod_end);
     }
 
     // push framebuffer info
