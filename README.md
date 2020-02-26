@@ -40,7 +40,7 @@ We support:
 
 ## How to
 ### Getting the EFI module
-First of all the latest EFI module is available to download [here]().
+First of all the latest EFI module is available to download from [Github Actions as an Artifact](https://github.com/TomatOrg/TomatBoot-UEFI/actions?query=workflow%3ATomatBoot-UEFI).
 
 If you want to build from source then simply run:
 ```shell script
