@@ -119,7 +119,7 @@ cleanup:
     return ptr;
 }
 
-EFI_STATUS LoadMB2(BOOT_ENTRY* Entry) {
+EFI_STATUS LoadMB2Linux(BOOT_ENTRY* Entry) {
     EFI_STATUS Status = EFI_SUCCESS;
     UINTN HeaderOffset = 0;
 
