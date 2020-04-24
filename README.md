@@ -39,17 +39,26 @@ We support:
 * New/Old ACPI tables
 
 ## How to
-### Building
-Before anything we need to actually build the bootloader. To do so simply run the following:
+### Getting the EFI module
+First of all the latest EFI module is available to download from [Github Actions as an Artifact](https://github.com/TomatOrg/TomatBoot-UEFI/actions?query=workflow%3ATomatBoot-UEFI).
+
+If you want to build from source then simply run:
 ```shell script
 git clone git@github.com:TomatOrg/TomatBoot-UEFI.git
 cd TomatBoot-UEFI
 make
 ```
 
-This will make the efi executable which will be found under `bin/BOOTX64.EFI`. in the final image you would want to 
-place it under `EFI/BOOT/BOOTX64.EFI`. Of course you will need to make sure the image is GPT partitioned and has a 
-EFI partition (in that partition you want to place the binary).
+It will create the module and place it under `bin/BOOTX64.EFI`
+
+### Creating an image
+To create a bootable image you will need to have a GPT formatted image with one EFI FAT partition. You will 
+need to place the UEFI module under `EFI/BOOT/BOOTX64.EFI` 
+
+Other than the binary, you will also need to provide a configuration file. For an example you can see the 
+[example config](config/example.cfg). The config file needs to be placed at the root of the efi partition 
+with the name `tomatboot.cfg`
+
 
 Example file structure inside the UEFI partition:
 ```
@@ -60,10 +69,6 @@ Example file structure inside the UEFI partition:
 ├── tomatboot.cfg
 └── kernel.elf
 ```
-
-Other than the binary, you will also need to provide a configuration file. For an example you can see the 
-[example config](config/example.cfg). The config file needs to be placed at the root of the efi partition 
-with the name `tomatboot.cfg`
 
 ### Config format
 The configuration format is straight forward, it is a list of entries where each entry has the format:
