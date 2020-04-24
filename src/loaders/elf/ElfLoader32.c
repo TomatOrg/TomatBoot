@@ -52,7 +52,7 @@ EFI_STATUS LoadElf32(CHAR16* file, ELF_INFO* info) {
                 UINTN nPages = EFI_SIZE_TO_PAGES(ALIGN_VALUE(phdr.p_memsz, EFI_PAGE_SIZE));
 
                 // allocate the address
-                EFI_PHYSICAL_ADDRESS base = phdr.p_paddr;
+                EFI_PHYSICAL_ADDRESS base = info->VirtualOffset ? phdr.p_vaddr - info->VirtualOffset : phdr.p_paddr;
                 EFI_CHECK(gBS->AllocatePages(AllocateAddress, MemType, nPages, &base));
                 CHECK_AND_RETHROW(FileRead(elfFile, (void*)base, phdr.p_filesz, phdr.p_offset));
                 ZeroMem((void*)(base + phdr.p_filesz), phdr.p_memsz - phdr.p_filesz);

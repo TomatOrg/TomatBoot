@@ -4,6 +4,10 @@
 #include <Uefi.h>
 
 typedef struct _ELF_INFO {
+    // will subtract this value from the Virtual address
+    // if zero then physical address is used
+    UINT64 VirtualOffset;
+
     // The entry of the image
     UINTN Entry;
 

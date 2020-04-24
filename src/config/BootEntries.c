@@ -58,7 +58,7 @@ EFI_STATUS GetBootEntries(LIST_ENTRY* Head) {
         if(Line[0] == L':') {
             // got new entry (this is the name)
             CurrentEntry = AllocateZeroPool(sizeof(BOOT_ENTRY));
-            CurrentEntry->Protocol = BOOT_TBOOT;
+            CurrentEntry->Protocol = BOOT_STIVALE;
             CurrentEntry->Name = CopyString(Line + 1);
             CurrentEntry->Path = L"";
             CurrentEntry->Cmdline = L"";
@@ -103,10 +103,10 @@ EFI_STATUS GetBootEntries(LIST_ENTRY* Head) {
                 // check the options
                 if (StrCmp(Protocol, L"LINUX") == 0) {
                     CurrentEntry->Protocol = BOOT_LINUX;
-                } else if (StrCmp(Protocol, L"TBOOT") == 0) {
-                    CurrentEntry->Protocol = BOOT_TBOOT;
                 } else if (StrCmp(Protocol, L"MB2") == 0) {
                     CurrentEntry->Protocol = BOOT_MB2;
+                } else if (StrCmp(Protocol, L"STIVALE") == 0) {
+                    CurrentEntry->Protocol = BOOT_STIVALE;
                 } else {
                     Print(L"Unknown protocol `%a` for option `%a`\n", Protocol, CurrentEntry->Name);
                     CHECK(FALSE);

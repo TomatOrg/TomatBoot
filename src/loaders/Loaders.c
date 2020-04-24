@@ -31,15 +31,15 @@ EFI_STATUS LoadKernel(BOOT_ENTRY* Entry) {
 
     switch (Entry->Protocol) {
         case BOOT_MB2:
-            CHECK_AND_RETHROW(LoadMB2Linux(Entry));
+            CHECK_AND_RETHROW(LoadMB2Kernel(Entry));
             break;
 
         case BOOT_LINUX:
             CHECK_AND_RETHROW(LoadLinuxKernel(Entry));
             break;
 
-        case BOOT_TBOOT:
-            CHECK_FAIL();
+        case BOOT_STIVALE:
+            CHECK_AND_RETHROW(LoadStivaleKernel(Entry));
             break;
     }
 

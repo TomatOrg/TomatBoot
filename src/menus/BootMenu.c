@@ -24,8 +24,8 @@ static void draw() {
 
 static const char* loader_names[] = {
         [BOOT_LINUX] = "Linux Boot",
-        [BOOT_TBOOT] = "TomatBoot",
         [BOOT_MB2] = "MultiBoot2",
+        [BOOT_STIVALE] = "Stivale",
 };
 
 MENU EnterBootMenu() {

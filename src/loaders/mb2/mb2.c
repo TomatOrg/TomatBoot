@@ -119,7 +119,7 @@ cleanup:
     return ptr;
 }
 
-EFI_STATUS LoadMB2Linux(BOOT_ENTRY* Entry) {
+EFI_STATUS LoadMB2Kernel(BOOT_ENTRY* Entry) {
     EFI_STATUS Status = EFI_SUCCESS;
     UINTN HeaderOffset = 0;
 
@@ -326,7 +326,7 @@ EFI_STATUS LoadMB2Linux(BOOT_ENTRY* Entry) {
         struct multiboot_tag_new_acpi* new_acpi = PushBootParams(NULL, 36 + OFFSET_OF(struct multiboot_tag_new_acpi, rsdp));
         new_acpi->size = 36 + OFFSET_OF(struct multiboot_tag_new_acpi, rsdp);
         new_acpi->type = MULTIBOOT_TAG_TYPE_ACPI_NEW;
-        CopyMem(new_acpi->rsdp, acpi20table, 20);
+        CopyMem(new_acpi->rsdp, acpi20table, 36);
     } else if (MustHaveNewAcpi) {
         CHECK_FAIL_TRACE("New ACPI Table is not present");
     }
@@ -384,7 +384,7 @@ EFI_STATUS LoadMB2Linux(BOOT_ENTRY* Entry) {
     EFI_MEMORY_DESCRIPTOR* MemoryMap = AllocatePool(MemoryMapSize);
 
     // allocate all the space we will need (hopefully)
-    UINT8* start_from = PushBootParams(NULL, OFFSET_OF(struct multiboot_tag_efi_mmap, efi_mmap) + MemoryMapSize * OFFSET_OF(struct multiboot_tag_mmap, entries) + MemoryMapSize);
+    UINT8* start_from = PushBootParams(NULL, OFFSET_OF(struct multiboot_tag_efi_mmap, efi_mmap) + MemoryMapSize + OFFSET_OF(struct multiboot_tag_mmap, entries) + MemoryMapSize);
 
     // call it
     EFI_CHECK(gBS->GetMemoryMap(&MemoryMapSize, MemoryMap, &MapKey, &DescriptorSize, &DescriptorVersion));
