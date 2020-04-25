@@ -13,12 +13,10 @@ TomatBoot is a simple kernel loader for 64bit UEFI based systems.
 	* change default entry and delay
 * Support for linux boot
 * Support for MB2
+* Support for Stivale
 
 ### Future plans
 * allow to edit the configuration file on the fly
-* tboot
-    * pass the device path
-    * relocatable kernel support
 
 ## Boot Protocol
 ### Linux Boot (`LINUX`)
@@ -37,6 +35,16 @@ We support:
 * ELF32/ELF64 Images + Elf Sections
 * Framebuffer (Ignores the settings in the image)
 * New/Old ACPI tables
+
+### Stivale (`STIVALE`)
+[Stivale](https://github.com/qloader2/qloader2/blob/master/STIVALE.md) is a simple boot protocol aimed to provide 
+everything a modern x86_64 kernel needs:
+* Direct higher half support
+* Command line
+* Boot Modules
+* E820 Memory Map
+* Framebuffer
+* ACPI tables
 
 ## How to
 ### Getting the EFI module
