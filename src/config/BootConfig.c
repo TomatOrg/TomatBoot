@@ -36,7 +36,15 @@ void LoadBootConfig(BOOT_CONFIG* config) {
         config->BootDelay = 30;
     }
 
-    // TODO: Verify graphics config?
+    // Verify graphics config
+    EFI_GRAPHICS_OUTPUT_PROTOCOL* gop = NULL;
+    ASSERT_EFI_ERROR(gBS->LocateProtocol(&gEfiGraphicsOutputProtocolGuid, NULL, (VOID**)&gop));
+    EFI_GRAPHICS_OUTPUT_MODE_INFORMATION* info = NULL;
+    UINTN sizeOfInfo = sizeof(EFI_GRAPHICS_OUTPUT_MODE_INFORMATION);
+    if(EFI_ERROR(gop->QueryMode(gop, config->GfxMode, &sizeOfInfo, &info))) {
+        config->GfxMode = gop->Mode->Mode;
+    }
+
     // TODO: Verify default os config
 
     // close everything

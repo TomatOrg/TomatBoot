@@ -10,6 +10,8 @@
 #include <loaders/elf/elf64.h>
 #include <loaders/elf/ElfLoader.h>
 #include <util/FileUtils.h>
+#include <loaders/Loaders.h>
+#include <Library/BaseMemoryLib.h>
 
 #include "stivale.h"
 
@@ -79,10 +81,10 @@ static EFI_STATUS LoadStivaleHeader(CHAR16* file, STIVALE_HEADER* header, BOOLEA
             break;
         }
     }
-    CHECK(!found);
+    CHECK(found);
 
-    // read it
-    CHECK(shdr.sh_size >= sizeof(*header));
+    // zero and read it
+    CHECK(sizeof(*header) == shdr.sh_size);
     CHECK_AND_RETHROW(FileRead(image, header, sizeof(*header), shdr.sh_offset));
 
 cleanup:
@@ -91,6 +93,21 @@ cleanup:
     }
     return Status;
 }
+
+typedef union _VA_ADDRESS
+{
+    UINT64 raw;
+
+    //! Figure 4-8. Linear-Address Translation to a 4-KByte Page using IA-32e Paging
+    struct {
+        UINT64 offset : 12;     //!< 0-11
+        UINT64 pte : 9;    //!< 12-20
+        UINT64 pde : 9;    //!< 21-29
+        UINT64 pdpte : 9;  //!< 30-38
+        UINT64 pml4e : 9;  //!< 39-47
+        UINT64 _reserved0 : 16;  //!< 48-63
+    };
+} VA_ADDRESS;
 
 EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     EFI_STATUS Status = EFI_SUCCESS;
@@ -116,13 +133,24 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
         Elf.VirtualOffset = 0xffffffff80000000;
     }
 
+    // we don't support text mode!
+    if ((Header.Flags & 1) == 0) {
+        CHECK_FAIL_TRACE("Text mode is not supported in UEFI!");
+    }
+
     // fully-load the kernel
     CHECK_AND_RETHROW(LoadElf64(Entry->Path, &Elf));
 
     // setup the struct
     STIVALE_STRUCT* Struct = AllocateReservedPool(sizeof(STIVALE_STRUCT));
 
+    // cmdline
+    Print(L"Setting cmdline\n");
+    Struct->Cmdline = (UINT64)AllocateReservedPool(StrLen(Entry->Cmdline) + 1);
+    UnicodeStrToAsciiStr(Entry->Cmdline, (CHAR8*)Struct->Cmdline);
+
     // graphics info
+    Print(L"Setting framebuffer info\n");
     Struct->FramebufferAddr = gop->Mode->FrameBufferBase;
     Struct->FramebufferWidth = gop->Mode->Info->HorizontalResolution;
     Struct->FramebufferHeight = gop->Mode->Info->VerticalResolution;
@@ -139,10 +167,31 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
         Print(L"No ACPI table found, RSDP set to NULL\n");
     }
 
-    // TODO: load modules
+    // push the modules
+    Print(L"Loading modules\n");
+    STIVALE_MODULE* LastModule = NULL;
+    for (LIST_ENTRY* Link = Entry->BootModules.ForwardLink; Link != &Entry->BootModules; Link = Link->ForwardLink) {
+        BOOT_MODULE* Module = BASE_CR(Link, BOOT_MODULE, Link);
+        UINTN Start = 0;
+        UINTN Size = 0;
+        CHECK_AND_RETHROW(LoadBootModule(Module, &Start, &Size));
+
+        STIVALE_MODULE* NewModule = AllocateReservedZeroPool(sizeof(STIVALE_MODULE));
+        NewModule->Begin = Start;
+        NewModule->End = Start + Size;
+        UnicodeStrToAsciiStrS(Module->Tag, NewModule->String, sizeof(NewModule->String));
+
+        if (LastModule != NULL) {
+            LastModule->Next = (UINT64)NewModule;
+        }
+        LastModule = NewModule;
+
+        Print(L"    Added %s (%s) -> %p - %p\n", Module->Tag, Module->Path, Start, Start + Size);
+    }
 
     // setup the page table correctly
     // first disable write protection so we can modify the table
+    Print(L"Preparing higher half\n");
     IA32_CR0 Cr0 = { .UintN = AsmReadCr0() };
     Cr0.Bits.WP = 0;
     AsmWriteCr0(Cr0.UintN);
@@ -150,17 +199,25 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     // get the memory map
     UINT64* Pml4 = (UINT64*)AsmReadCr3();
 
-    // take the first pml4 and copy it to
-    // the 0xffff800000000000 base
+    // take the first pml4 and copy it to 0xffff800000000000
     Pml4[256] = Pml4[0];
 
-    // allocate the 0xffffffff80000000
-    Pml4[511] = (UINT64)AllocatePages(1) | 0x3;
-    UINT64* Pml3High = &Pml4[511];
-    UINT64* Pml3Low = &Pml4[0];
+    // allocate pml3 for 0xffffffff80000000
+    UINT64* Pml3High = AllocateReservedPages(1);
+    SetMem(Pml3High, EFI_PAGE_SIZE, 0);
+    Print(L"Allocated page %p\n", Pml3High);
+    Pml4[511] = ((UINT64)Pml3High) | 0x3;
+
+    // map first 2 pages to 0xffffffff80000000
+    UINT64* Pml3Low = (UINT64*)(Pml4[0] & 0x7ffffffffffff000);
     Pml3High[510] = Pml3Low[0];
     Pml3High[511] = Pml3Low[1];
 
+    // enable back write protection
+    Cr0.Bits.WP = 1;
+    AsmWriteCr0(Cr0.UintN);
+
+    Print(L"Getting memory map\n");
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // No prints from here
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -179,7 +236,7 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     EFI_MEMORY_DESCRIPTOR* MemoryMap = AllocatePool(MemoryMapSize);
 
     // allocate all the space we will need (hopefully)
-    STIVALE_MMAP_ENTRY* StartFrom = AllocateReservedPool(MemoryMapSize);
+    STIVALE_MMAP_ENTRY* StartFrom = AllocateReservedPool((MemoryMapSize / DescriptorSize) * sizeof(STIVALE_MMAP_ENTRY));
 
     // call it
     EFI_CHECK(gBS->GetMemoryMap(&MemoryMapSize, MemoryMap, &MapKey, &DescriptorSize, &DescriptorVersion));
@@ -189,11 +246,10 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     EFI_CHECK(gBS->ExitBootServices(gImageHandle, MapKey));
 
     // setup the normal memory map
-    STIVALE_MMAP_ENTRY* mmap = (void*)StartFrom;
-    Struct->MemoryMapAddr = (UINT64)mmap;
-    Struct->MemoryMapEntries = MemoryMapSize / DescriptorSize;
+    Struct->MemoryMapAddr = (UINT64)StartFrom;
+    Struct->MemoryMapEntries = EntryCount;
     for (int i = 0; i < EntryCount; i++) {
-        STIVALE_MMAP_ENTRY* MmapEntry = &mmap[i];
+        STIVALE_MMAP_ENTRY* MmapEntry = &StartFrom[i];
         EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)((UINTN)MemoryMap + DescriptorSize * i);
         MmapEntry->Type = EfiTypeToStivaleType[desc->Type];
         MmapEntry->Base = desc->PhysicalStart;

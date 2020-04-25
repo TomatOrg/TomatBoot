@@ -6,7 +6,7 @@
 typedef struct _BOOT_CONFIG {
     INT32 BootDelay;
     INT32 DefaultOS;
-    INT32 GfxMode;
+    UINT32 GfxMode;
 } BOOT_CONFIG;
 
 void LoadBootConfig(BOOT_CONFIG* config);

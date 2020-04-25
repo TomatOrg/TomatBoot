@@ -4,6 +4,6 @@
 
 [GLOBAL JumpToStivaleKernel]
 JumpToStivaleKernel:
-    mov rdi, rdx
-    mov rsp, rcx
+    mov rdi, rcx
+    mov rsp, rdx
     jmp r8

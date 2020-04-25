@@ -9,10 +9,10 @@
 
 typedef struct {
     UINT64 Stack;
-    UINT64 Flags;
-    UINT64 FramebufferWidth;
-    UINT64 FramebufferHeight;
-    UINT64 FramebufferBpp;
+    UINT16 Flags;
+    UINT16 FramebufferWidth;
+    UINT16 FramebufferHeight;
+    UINT16 FramebufferBpp;
 } STIVALE_HEADER;
 
 typedef struct {
@@ -20,10 +20,10 @@ typedef struct {
     UINT64 MemoryMapAddr;
     UINT64 MemoryMapEntries;
     UINT64 FramebufferAddr;
-    UINT64 FramebufferPitch;
-    UINT64 FramebufferWidth;
-    UINT64 FramebufferHeight;
-    UINT64 FramebufferBpp;
+    UINT16 FramebufferPitch;
+    UINT16 FramebufferWidth;
+    UINT16 FramebufferHeight;
+    UINT16 FramebufferBpp;
     UINT64 Rsdp;
     UINT64 ModuleCount;
     UINT64 Modules;
