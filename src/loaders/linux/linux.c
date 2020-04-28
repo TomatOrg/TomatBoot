@@ -32,7 +32,7 @@ EFI_STATUS LoadLinuxKernel(BOOT_ENTRY* Entry) {
     SetupSize  = (SetupSize + 1) * 512;
     CHECK(SetupSize < KernelSize);
     KernelSize -= SetupSize;
-    Print(L"Setup Size: 0x%x", SetupSize);
+    Print(L"Setup Size: 0x%x\n", SetupSize);
 
     // load the setup
     UINT8* SetupBuf = LoadLinuxAllocateKernelSetupPages(EFI_SIZE_TO_PAGES(SetupSize));
@@ -60,7 +60,7 @@ EFI_STATUS LoadLinuxKernel(BOOT_ENTRY* Entry) {
     // load the command line arguments, if any
     CHAR8* CommandLineBuf = NULL;
     if(Entry->Cmdline) {
-        Print(L"Command line: `%a`\n", Entry->Cmdline);
+        Print(L"Command line: `%s`\n", Entry->Cmdline);
         UINTN CommandLineSize = StrLen(Entry->Cmdline) + 1;
         CommandLineBuf = LoadLinuxAllocateCommandLinePages(EFI_SIZE_TO_PAGES(CommandLineSize));
         CHECK(CommandLineBuf != NULL);
@@ -88,9 +88,13 @@ EFI_STATUS LoadLinuxKernel(BOOT_ENTRY* Entry) {
         FreePages(InitrdBase, EFI_SIZE_TO_PAGES(InitrdSize));
         InitrdBase = NULL;
     }
+
+    Print(L"Loading Initrd...");
     EFI_CHECK(LoadLinuxSetInitrd(SetupBuf, InitrdBuf, InitrdSize));
+    Print(L" Dones\n");
 
     // call the kernel
+    Print(L"Calling linux");
     EFI_CHECK(LoadLinux(KernelBuf, SetupBuf));
 
 cleanup:
