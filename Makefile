@@ -139,30 +139,35 @@ all: ./bin/BOOTX64.EFI
 
 # Link the main efi file
 ./bin/BOOTX64.EFI: $(OBJS)
+	@echo LD $@
 	@mkdir -p $(@D)
-	$(CLANG) $(LDFLAGS) -o $@ $(OBJS)
+	@$(CLANG) $(LDFLAGS) -o $@ $(OBJS)
 
 # specifically for the uefi lib
 # we need to generate that file, have it depend on the includes of UEFI
 ./lib/uefi/Library/guids.c: $(UEFI_HDRS)
+	@echo Generating EFI guids
 	@mkdir -p $(@D)
-	cd ./lib/uefi/Library && python gen_guids.py
+	@cd ./lib/uefi/Library && python gen_guids.py
 
 # specifically for the uefi lib as well
 # add the edk2 pcd flags
 ./build/lib/uefi/%.c.o: lib/uefi/%.c
+	@echo CC $@
 	@mkdir -p $(@D)
-	$(CLANG) $(CFLAGS) $(EDK2_FLAGS) -c -o $@ $<
+	@$(CLANG) $(CFLAGS) $(EDK2_FLAGS) -c -o $@ $<
 
 # Build each of the c files
 ./build/%.c.o: %.c
+	@echo CC $@
 	@mkdir -p $(@D)
-	$(CLANG) $(CFLAGS) -MMD -c -o $@ $<
+	@$(CLANG) $(CFLAGS) -MMD -c -o $@ $<
 
 # Build each of the c files
 ./build/%.nasm.o: %.nasm
+	@echo NASM $@
 	@mkdir -p $(@D)
-	nasm $(NASMFLAGS) -o $@ $<
+	@nasm $(NASMFLAGS) -o $@ $<
 
 #########################
 # Test with qemu

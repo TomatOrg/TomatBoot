@@ -48,12 +48,13 @@ EFI_STATUS GetBootEntries(LIST_ENTRY* Head) {
         CHAR16 Line[255] = {0};
         UINTN LineSize = sizeof(Line);
         BOOLEAN Ascii = TRUE;
-        Status = FileHandleReadLine(file, Line, &LineSize, FALSE, &Ascii);
 
-        // got an eof
         if (FileHandleEof(file)) {
             break;
         }
+        EFI_CHECK(FileHandleReadLine(file, Line, &LineSize, FALSE, &Ascii));
+
+        Print(L"%s\n", Line);
 
         if(Line[0] == L':') {
             // got new entry (this is the name)
