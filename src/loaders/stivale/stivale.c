@@ -183,7 +183,11 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
 
         if (LastModule != NULL) {
             LastModule->Next = (UINT64)NewModule;
+        } else {
+            Struct->Modules = (UINT64)NewModule;
         }
+
+        Struct->ModuleCount++;
         LastModule = NewModule;
 
         Print(L"    Added %s (%s) -> %p - %p\n", Module->Tag, Module->Path, Start, Start + Size);
