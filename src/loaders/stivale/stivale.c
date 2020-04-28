@@ -16,20 +16,20 @@
 #include "stivale.h"
 
 static UINT32 EfiTypeToStivaleType[] = {
-        [EfiReservedMemoryType] = 2,
-        [EfiRuntimeServicesCode] = 2,
-        [EfiRuntimeServicesData] = 2,
-        [EfiMemoryMappedIO] = 2,
-        [EfiMemoryMappedIOPortSpace] = 2,
-        [EfiPalCode] = 2,
-        [EfiUnusableMemory] = 5,
-        [EfiACPIReclaimMemory] = 3,
-        [EfiLoaderCode] = 1,
-        [EfiLoaderData] = 1,
-        [EfiBootServicesCode] = 1,
-        [EfiBootServicesData] = 1,
-        [EfiConventionalMemory] = 1,
-        [EfiACPIMemoryNVS] = 4
+        [EfiReservedMemoryType] = E820_TYPE_RESERVED,
+        [EfiRuntimeServicesCode] = E820_TYPE_RESERVED,
+        [EfiRuntimeServicesData] = E820_TYPE_RESERVED,
+        [EfiMemoryMappedIO] = E820_TYPE_RESERVED,
+        [EfiMemoryMappedIOPortSpace] = E820_TYPE_RESERVED,
+        [EfiPalCode] = E820_TYPE_RESERVED,
+        [EfiUnusableMemory] = E820_TYPE_BAD_MEMORY,
+        [EfiACPIReclaimMemory] = E820_TYPE_ACPI_RECLAIM,
+        [EfiLoaderCode] = E820_TYPE_USABLE,
+        [EfiLoaderData] = E820_TYPE_USABLE,
+        [EfiBootServicesCode] = E820_TYPE_USABLE,
+        [EfiBootServicesData] = E820_TYPE_USABLE,
+        [EfiConventionalMemory] = E820_TYPE_USABLE,
+        [EfiACPIMemoryNVS] = E820_TYPE_ACPI_NVS
 };
 
 void NORETURN JumpToStivaleKernel(STIVALE_STRUCT* strct, UINT64 Stack, void* KernelEntry);

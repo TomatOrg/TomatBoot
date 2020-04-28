@@ -29,6 +29,12 @@ typedef struct {
     UINT64 Modules;
 } STIVALE_STRUCT;
 
+#define E820_TYPE_USABLE            (1)
+#define E820_TYPE_RESERVED          (2)
+#define E820_TYPE_ACPI_RECLAIM      (3)
+#define E820_TYPE_ACPI_NVS          (4)
+#define E820_TYPE_BAD_MEMORY        (5)
+
 typedef struct {
     UINT64 Base;
     UINT64 Length;
