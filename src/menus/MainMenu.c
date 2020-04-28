@@ -99,7 +99,7 @@ static void draw() {
     // options for what we can do
     WriteAt(0, 13, "Press B for BOOTMENU");
     WriteAt(0, 14, "Press S for SETUP");
-    WriteAt(0, 15, "Press ESC for SHUTDOWN");
+    WriteAt(0, 15, "Press TAB for SHUTDOWN");
 
     // draw the logo
     DrawImage(30 + ((width - 30) / 2) - 14, 1, TomatoImage2, 13, 14);
@@ -150,7 +150,7 @@ MENU EnterMainMenu(BOOLEAN first) {
                 return MENU_BOOT_MENU;
             } else if(key.UnicodeChar == L's' || key.UnicodeChar == L'S') {
                 return MENU_SETUP;
-            } else if(key.ScanCode == SCAN_ESC) {
+            } else if(key.ScanCode == CHAR_TAB) {
                 return MENU_SHUTDOWN;
             }
 
