@@ -97,33 +97,9 @@ static void draw() {
     WriteAt(0, 7, "UEFI Version: %d.%d", (gST->Hdr.Revision >> 16u) & 0xFFFFu, gST->Hdr.Revision & 0xFFFFu);
 
     // options for what we can do
-    WriteAt(0, 12, "Press B for BOOTMENU");
-    WriteAt(0, 13, "Press S for SETUP");
-    WriteAt(0, 14, "Press ESC for SHUTDOWN");
-
-    /**
-     * display the boot device path
-     *
-     * it seems that some UEFI implementations (Thinkpad x220) do not
-     * support this protocol, so we will not assert on it but just
-     * display a warning instead :shrug:
-     */
-    EFI_STATUS status;
-    EFI_DEVICE_PATH_PROTOCOL* device_path = NULL;
-    if(!EFI_ERROR(status = gBS->OpenProtocol(
-            gImageHandle,
-            &gEfiLoadedImageDevicePathProtocolGuid,
-            (VOID**)&device_path,
-            gImageHandle,
-            NULL,
-            EFI_OPEN_PROTOCOL_GET_PROTOCOL))) {
-
-        CHAR16* devpath = ConvertDevicePathToText(device_path, TRUE, TRUE);
-        WriteAt(0, 17, "%s", devpath);
-        FreePool(devpath);
-    }else {
-        WriteAt(0, 17, "Could not get EFI_LOADED_IMAGE_DEVICE_PATH_PROTOCOL (Status=%r)", status);
-    }
+    WriteAt(0, 13, "Press B for BOOTMENU");
+    WriteAt(0, 14, "Press S for SETUP");
+    WriteAt(0, 15, "Press ESC for SHUTDOWN");
 
     // draw the logo
     DrawImage(30 + ((width - 30) / 2) - 14, 1, TomatoImage2, 13, 14);

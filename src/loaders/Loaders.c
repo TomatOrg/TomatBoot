@@ -6,13 +6,11 @@
 
 EFI_STATUS LoadBootModule(BOOT_MODULE* Module, UINTN* Base, UINTN* Size) {
     EFI_STATUS Status = EFI_SUCCESS;
-    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* filesystem = NULL;
     EFI_FILE_PROTOCOL* root = NULL;
     EFI_FILE_PROTOCOL* moduleImage = NULL;
 
     // open the executable file
-    EFI_CHECK(gBS->LocateProtocol(&gEfiSimpleFileSystemProtocolGuid, NULL, (void**)&filesystem));
-    EFI_CHECK(filesystem->OpenVolume(filesystem, &root));
+    EFI_CHECK(Module->Fs->OpenVolume(Module->Fs, &root));
     EFI_CHECK(root->Open(root, &moduleImage, Module->Path, EFI_FILE_MODE_READ, 0));
 
     // read it all
@@ -22,7 +20,18 @@ EFI_STATUS LoadBootModule(BOOT_MODULE* Module, UINTN* Base, UINTN* Size) {
     CHECK_AND_RETHROW(FileRead(moduleImage, (void*)*Base, *Size, 0));
 
 cleanup:
-    // TODO: Free if failed on reading
+    if (root != NULL) {
+        FileHandleClose(root);
+    }
+
+    if (moduleImage != NULL) {
+        FileHandleClose(moduleImage);
+    }
+
+    if (EFI_ERROR(Status) && Base != NULL && Size != NULL) {
+        gBS->FreePages(*Base, EFI_SIZE_TO_PAGES(*Size));
+    }
+
     return Status;
 }
 

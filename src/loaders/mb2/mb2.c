@@ -74,17 +74,15 @@ static multiboot_uint32_t EfiTypeToMB2Type[] = {
     [EfiACPIMemoryNVS] = MULTIBOOT_MEMORY_NVS
 };
 
-static struct multiboot_header* LoadMB2Header(CHAR16* file, UINTN* headerOff) {
+static struct multiboot_header* LoadMB2Header(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* fs, CHAR16* file, UINTN* headerOff) {
     EFI_STATUS Status = EFI_SUCCESS;
-    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* filesystem = NULL;
     EFI_FILE_PROTOCOL* root = NULL;
     EFI_FILE_PROTOCOL* mb2image = NULL;
     struct multiboot_header* ptr = NULL;
 
     // open the executable file
     Print(L"Loading image `%s`\n", file);
-    EFI_CHECK(gBS->LocateProtocol(&gEfiSimpleFileSystemProtocolGuid, NULL, (VOID**)&filesystem));
-    EFI_CHECK(filesystem->OpenVolume(filesystem, &root));
+    EFI_CHECK(fs->OpenVolume(fs, &root));
     EFI_CHECK(root->Open(root, &mb2image, file, EFI_FILE_MODE_READ, 0));
 
     Print(L"Searching for mb2 header\n");
@@ -136,7 +134,7 @@ EFI_STATUS LoadMB2Kernel(BOOT_ENTRY* Entry) {
     ASSERT_EFI_ERROR(gop->SetMode(gop, (UINT32) config.GfxMode));
 
     // get the header
-    struct multiboot_header* header = LoadMB2Header(Entry->Path, &HeaderOffset);
+    struct multiboot_header* header = LoadMB2Header(Entry->Fs, Entry->Path, &HeaderOffset);
     CHECK_ERROR_TRACE(header != NULL, EFI_NOT_FOUND, "Could not find a valid multiboot2 header!");
     Print(L"Found header at offset %d\n", HeaderOffset);
 
@@ -340,10 +338,10 @@ EFI_STATUS LoadMB2Kernel(BOOT_ENTRY* Entry) {
 
         // try with 32bit elf
         Print(L"Trying to load ELF32\n");
-        if (EFI_ERROR(LoadElf32(Entry->Path, &elf_info))) {
+        if (EFI_ERROR(LoadElf32(Entry->Fs, Entry->Path, &elf_info))) {
             // try with elf64
             Print(L"Not ELF32, trying ELF64\n");
-            CHECK_AND_RETHROW(LoadElf64(Entry->Path, &elf_info));
+            CHECK_AND_RETHROW(LoadElf64(Entry->Fs, Entry->Path, &elf_info));
         }
 
         // push elf info

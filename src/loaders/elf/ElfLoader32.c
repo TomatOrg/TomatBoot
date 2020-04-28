@@ -4,8 +4,6 @@
 #include <util/FileUtils.h>
 
 #include <Uefi.h>
-#include <Protocol/SimpleFileSystem.h>
-#include <Library/DebugLib.h>
 #include <Library/FileHandleLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
@@ -13,15 +11,13 @@
 
 #include "elf32.h"
 
-EFI_STATUS LoadElf32(CHAR16* file, ELF_INFO* info) {
+EFI_STATUS LoadElf32(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* fs, CHAR16* file, ELF_INFO* info) {
     EFI_STATUS Status = EFI_SUCCESS;
-    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* filesystem = NULL;
     EFI_FILE_PROTOCOL* root = NULL;
     EFI_FILE_PROTOCOL* elfFile = NULL;
 
     // open the executable file
-    EFI_CHECK(gBS->LocateProtocol(&gEfiSimpleFileSystemProtocolGuid, NULL, (VOID**)&filesystem));
-    EFI_CHECK(filesystem->OpenVolume(filesystem, &root));
+    EFI_CHECK(fs->OpenVolume(fs, &root));
     EFI_CHECK(root->Open(root, &elfFile, file, EFI_FILE_MODE_READ, 0));
 
     // read the header

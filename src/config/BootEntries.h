@@ -2,6 +2,7 @@
 #define __CONFIG_CONFIG_H__
 
 #include <Uefi.h>
+#include <Protocol/SimpleFileSystem.h>
 
 typedef enum _BOOT_PROTOCOL {
     BOOT_LINUX,
@@ -11,6 +12,7 @@ typedef enum _BOOT_PROTOCOL {
 
 typedef struct _BOOT_MODULE {
     LIST_ENTRY Link;
+    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* Fs;
     CHAR16* Path;
     CHAR16* Tag;
 } BOOT_MODULE;
@@ -18,6 +20,7 @@ typedef struct _BOOT_MODULE {
 typedef struct _BOOT_ENTRY {
     BOOT_PROTOCOL Protocol;
     CHAR16* Name;
+    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* Fs;
     CHAR16* Path;
     CHAR16* Cmdline;
     LIST_ENTRY BootModules;
@@ -34,7 +37,7 @@ BOOT_ENTRY* GetBootEntryAt(int i);
 
 /**
  * Will append to the list all the boot entries found in the configuration
- * file
+ * files across all found filesystems
  */
 EFI_STATUS GetBootEntries(LIST_ENTRY* Head);
 

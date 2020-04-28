@@ -14,6 +14,11 @@
 BOOT_ENTRY* gDefaultEntry = NULL;
 LIST_ENTRY gBootEntries = INITIALIZE_LIST_HEAD_VARIABLE(gBootEntries);
 
+static CHAR16* ConfigPaths[] = {
+        L"boot/tomatboot.cfg",
+        L"tomatboot.cfg"
+};
+
 BOOT_ENTRY* GetBootEntryAt(int index) {
     int i = 0;
     for (LIST_ENTRY* Link = gBootEntries.ForwardLink; Link != &gBootEntries; Link = Link->ForwardLink, i++) {
@@ -28,16 +33,28 @@ static CHAR16* CopyString(CHAR16* String) {
     return AllocateCopyPool((1 + StrLen(String)) * sizeof(CHAR16), String);
 }
 
-EFI_STATUS GetBootEntries(LIST_ENTRY* Head) {
+static EFI_STATUS LoadBootConfig(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS, LIST_ENTRY* Head) {
     EFI_STATUS Status = EFI_SUCCESS;
     EFI_FILE_PROTOCOL* root = NULL;
     EFI_FILE_PROTOCOL* file = NULL;
 
     // open the configurations
-    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* filesystem = NULL;
-    EFI_CHECK(gBS->LocateProtocol(&gEfiSimpleFileSystemProtocolGuid, NULL, (VOID**)&filesystem));
-    EFI_CHECK(filesystem->OpenVolume(filesystem, &root));
-    EFI_CHECK(root->Open(root, &file, L"tomatboot.cfg", EFI_FILE_MODE_READ, 0));
+    CHECK(FS != NULL);
+    EFI_CHECK(FS->OpenVolume(FS, &root));
+
+    for (int i = 0; i < ARRAY_SIZE(ConfigPaths); i++) {
+        if (!EFI_ERROR(root->Open(root, &file, ConfigPaths[i], EFI_FILE_MODE_READ, 0))) {
+            break;
+        }
+
+        // just in case
+        file = NULL;
+    }
+
+    // if no config found just ignore and continue to next fs
+    if (file == NULL) {
+        goto cleanup;
+    }
 
     // Start from a clean state
     *Head = (LIST_ENTRY)INITIALIZE_LIST_HEAD_VARIABLE(*Head);
@@ -54,17 +71,18 @@ EFI_STATUS GetBootEntries(LIST_ENTRY* Head) {
         }
         EFI_CHECK(FileHandleReadLine(file, Line, &LineSize, FALSE, &Ascii));
 
-        Print(L"%s\n", Line);
-
         if(Line[0] == L':') {
             // got new entry (this is the name)
             CurrentEntry = AllocateZeroPool(sizeof(BOOT_ENTRY));
             CurrentEntry->Protocol = BOOT_STIVALE;
             CurrentEntry->Name = CopyString(Line + 1);
+            CurrentEntry->Fs = FS;
             CurrentEntry->Path = L"";
             CurrentEntry->Cmdline = L"";
             CurrentEntry->BootModules = (LIST_ENTRY)INITIALIZE_LIST_HEAD_VARIABLE(CurrentEntry->BootModules);
             InsertTailList(Head, &CurrentEntry->Link);
+
+            Print(L"Adding %s\n", CurrentEntry->Name);
         }else {
             // this is just a parameter
             CHECK(CurrentEntry != NULL);
@@ -95,9 +113,10 @@ EFI_STATUS GetBootEntries(LIST_ENTRY* Head) {
                 BOOT_MODULE* Module = AllocateZeroPool(sizeof(BOOT_MODULE));
                 Module->Tag = CopyString(Line + sizeof("MODULE"));
                 Module->Path = CopyString(path);
+                Module->Fs = FS;
                 InsertTailList(&CurrentEntry->BootModules, &Module->Link);
 
-            // the boot protocol to use (onyl one)
+                // the boot protocol to use (onyl one)
             } else if(CHECK_OPTION(L"PROTOCOL")) {
                 CHAR16* Protocol = Line + sizeof("PROTOCOL");
 
@@ -123,6 +142,27 @@ cleanup:
 
     if (root != NULL) {
         FileHandleClose(root);
+    }
+
+    return Status;
+}
+
+EFI_STATUS GetBootEntries(LIST_ENTRY* Head) {
+    EFI_STATUS Status = EFI_SUCCESS;
+    EFI_HANDLE* Handles = NULL;
+    UINTN HandlesCount = 0;
+
+    EFI_CHECK(gBS->LocateHandleBuffer(ByProtocol, &gEfiSimpleFileSystemProtocolGuid, NULL, &HandlesCount, &Handles));
+
+    for (int i = 0; i < HandlesCount; i++) {
+        EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS = NULL;
+        EFI_CHECK(gBS->HandleProtocol(Handles[i], &gEfiSimpleFileSystemProtocolGuid, (void**)&FS));
+        CHECK_AND_RETHROW(LoadBootConfig(FS, Head));
+    }
+
+cleanup:
+    if (Handles != NULL) {
+        FreePool(Handles);
     }
 
     return Status;

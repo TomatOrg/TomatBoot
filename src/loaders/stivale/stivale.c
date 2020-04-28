@@ -12,6 +12,7 @@
 #include <util/FileUtils.h>
 #include <loaders/Loaders.h>
 #include <Library/BaseMemoryLib.h>
+#include <Library/FileHandleLib.h>
 
 #include "stivale.h"
 
@@ -34,9 +35,8 @@ static UINT32 EfiTypeToStivaleType[] = {
 
 void NORETURN JumpToStivaleKernel(STIVALE_STRUCT* strct, UINT64 Stack, void* KernelEntry);
 
-static EFI_STATUS LoadStivaleHeader(CHAR16* file, STIVALE_HEADER* header, BOOLEAN* HigherHalf) {
+static EFI_STATUS LoadStivaleHeader(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS, CHAR16* file, STIVALE_HEADER* header, BOOLEAN* HigherHalf) {
     EFI_STATUS Status = EFI_SUCCESS;
-    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* filesystem = NULL;
     EFI_FILE_PROTOCOL* root = NULL;
     EFI_FILE_PROTOCOL* image = NULL;
     CHAR8* names = NULL;
@@ -45,8 +45,7 @@ static EFI_STATUS LoadStivaleHeader(CHAR16* file, STIVALE_HEADER* header, BOOLEA
 
     // open the executable file
     Print(L"Loading image `%s`\n", file);
-    EFI_CHECK(gBS->LocateProtocol(&gEfiSimpleFileSystemProtocolGuid, NULL, (VOID**)&filesystem));
-    EFI_CHECK(filesystem->OpenVolume(filesystem, &root));
+    EFI_CHECK(FS->OpenVolume(FS, &root));
     EFI_CHECK(root->Open(root, &image, file, EFI_FILE_MODE_READ, 0));
 
     Elf64_Ehdr ehdr = {0};
@@ -91,23 +90,17 @@ cleanup:
     if (names != NULL) {
         FreePool(names);
     }
+
+    if (root != NULL) {
+        FileHandleClose(root);
+    }
+
+    if (image != NULL) {
+        FileHandleClose(image);
+    }
+
     return Status;
 }
-
-typedef union _VA_ADDRESS
-{
-    UINT64 raw;
-
-    //! Figure 4-8. Linear-Address Translation to a 4-KByte Page using IA-32e Paging
-    struct {
-        UINT64 offset : 12;     //!< 0-11
-        UINT64 pte : 9;    //!< 12-20
-        UINT64 pde : 9;    //!< 21-29
-        UINT64 pdpte : 9;  //!< 30-38
-        UINT64 pml4e : 9;  //!< 39-47
-        UINT64 _reserved0 : 16;  //!< 48-63
-    };
-} VA_ADDRESS;
 
 EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     EFI_STATUS Status = EFI_SUCCESS;
@@ -128,7 +121,7 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
 
     // get the header and decide on higher half
     BOOLEAN HigherHalf = FALSE;
-    CHECK_AND_RETHROW(LoadStivaleHeader(Entry->Path, &Header, &HigherHalf));
+    CHECK_AND_RETHROW(LoadStivaleHeader(Entry->Fs, Entry->Path, &Header, &HigherHalf));
     if (HigherHalf) {
         Elf.VirtualOffset = 0xffffffff80000000;
     }
@@ -139,7 +132,7 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     }
 
     // fully-load the kernel
-    CHECK_AND_RETHROW(LoadElf64(Entry->Path, &Elf));
+    CHECK_AND_RETHROW(LoadElf64(Entry->Fs, Entry->Path, &Elf));
 
     // setup the struct
     STIVALE_STRUCT* Struct = AllocateReservedPool(sizeof(STIVALE_STRUCT));

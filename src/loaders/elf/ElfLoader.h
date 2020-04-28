@@ -2,6 +2,7 @@
 #define __LOADERS_ELF_ELFLOADER_H__
 
 #include <Uefi.h>
+#include <Protocol/SimpleFileSystem.h>
 
 typedef struct _ELF_INFO {
     // will subtract this value from the Virtual address
@@ -18,8 +19,8 @@ typedef struct _ELF_INFO {
     UINTN StringSectionIndex;
 } ELF_INFO;
 
-EFI_STATUS LoadElf32(CHAR16* file, ELF_INFO* info);
+EFI_STATUS LoadElf32(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* fs, CHAR16* file, ELF_INFO* info);
 
-EFI_STATUS LoadElf64(CHAR16* file, ELF_INFO* info);
+EFI_STATUS LoadElf64(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* fs, CHAR16* file, ELF_INFO* info);
 
 #endif //__LOADERS_ELF_ELFLOADER_H__
