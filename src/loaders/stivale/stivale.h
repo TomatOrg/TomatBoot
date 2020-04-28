@@ -32,8 +32,8 @@ typedef struct {
 typedef struct {
     UINT64 Base;
     UINT64 Length;
-    UINT64 Type;
-    UINT64 Unused;
+    UINT32 Type;
+    UINT32 Unused;
 } STIVALE_MMAP_ENTRY;
 
 typedef struct {
