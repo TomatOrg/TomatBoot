@@ -143,6 +143,7 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
 
     // setup the struct
     STIVALE_STRUCT* Struct = AllocateReservedPool(sizeof(STIVALE_STRUCT));
+    SetMem(Struct, sizeof(STIVALE_STRUCT), 0);
 
     // cmdline
     Print(L"Setting cmdline\n");
