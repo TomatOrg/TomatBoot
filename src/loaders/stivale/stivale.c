@@ -279,15 +279,15 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
         int Type = EfiTypeToStivaleType[Desc->Type];
 
         if (LastType == Type && LastEnd == Desc->PhysicalStart) {
-            StartFrom->Length += EFI_PAGES_TO_SIZE(Desc->NumberOfPages);
-            LastEnd = StartFrom->Base + StartFrom->Length;
+            StartFrom[-1].Length += EFI_PAGES_TO_SIZE(Desc->NumberOfPages);
+            LastEnd = Desc->PhysicalStart + EFI_PAGES_TO_SIZE(Desc->NumberOfPages);
         } else {
             StartFrom->Type = Type;
             StartFrom->Length = EFI_PAGES_TO_SIZE(Desc->NumberOfPages);
             StartFrom->Base = Desc->PhysicalStart;
             StartFrom->Unused = 0;
             LastType = Type;
-            LastEnd = StartFrom->Base + StartFrom->Length;
+            LastEnd = Desc->PhysicalStart + EFI_PAGES_TO_SIZE(Desc->NumberOfPages);
             StartFrom++;
             Struct->MemoryMapEntries++;
         }
