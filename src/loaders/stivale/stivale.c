@@ -272,27 +272,23 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     // setup the normal memory map
     Struct->MemoryMapAddr = (UINT64)StartFrom;
     Struct->MemoryMapEntries = 0;
+    int LastType = -1;
+    UINTN LastEnd = 0xFFFFFFFFFFFF;
     for (int i = 0; i < EntryCount; i++) {
-        EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)((UINTN)MemoryMap + DescriptorSize * i);
-        int type = EfiTypeToStivaleType[desc->Type];
+        EFI_MEMORY_DESCRIPTOR* Desc = (EFI_MEMORY_DESCRIPTOR*)((UINTN)MemoryMap + DescriptorSize * i);
+        int Type = EfiTypeToStivaleType[Desc->Type];
 
-        // ugly but it works
-        if (i != 0) {
-            if (type == StartFrom->Type && StartFrom->Base + StartFrom->Length == desc->PhysicalStart) {
-                StartFrom += desc->NumberOfPages * EFI_PAGE_SIZE;
-            } else {
-                StartFrom++;
-                StartFrom->Length = desc->NumberOfPages * EFI_PAGE_SIZE;
-                StartFrom->Base = desc->PhysicalStart;
-                StartFrom->Type = type;
-                StartFrom->Unused = 0;
-                Struct->MemoryMapEntries++;
-            }
+        if (LastType == Type && LastEnd == Desc->PhysicalStart) {
+            StartFrom->Length += EFI_PAGES_TO_SIZE(Desc->NumberOfPages);
+            LastEnd = StartFrom->Base + StartFrom->Length;
         } else {
-            StartFrom->Length = desc->NumberOfPages * EFI_PAGE_SIZE;
-            StartFrom->Base = desc->PhysicalStart;
-            StartFrom->Type = type;
+            StartFrom->Type = Type;
+            StartFrom->Length = EFI_PAGES_TO_SIZE(Desc->NumberOfPages);
+            StartFrom->Base = Desc->PhysicalStart;
             StartFrom->Unused = 0;
+            LastType = Type;
+            LastEnd = StartFrom->Base + StartFrom->Length;
+            StartFrom++;
             Struct->MemoryMapEntries++;
         }
     }
