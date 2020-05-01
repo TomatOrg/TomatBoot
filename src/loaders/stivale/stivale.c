@@ -13,6 +13,7 @@
 #include <loaders/Loaders.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/FileHandleLib.h>
+#include <Library/UefiRuntimeServicesTableLib.h>
 
 #include "stivale.h"
 
@@ -34,6 +35,8 @@ static UINT32 EfiTypeToStivaleType[] = {
 };
 
 void NORETURN JumpToStivaleKernel(STIVALE_STRUCT* strct, UINT64 Stack, void* KernelEntry);
+
+
 
 static EFI_STATUS LoadStivaleHeader(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS, CHAR16* file, STIVALE_HEADER* header, BOOLEAN* HigherHalf) {
     EFI_STATUS Status = EFI_SUCCESS;
@@ -102,6 +105,24 @@ cleanup:
     return Status;
 }
 
+// Julian date calculation from https://en.wikipedia.org/wiki/Julian_day
+static UINT64 GetJdn(UINT8 days, UINT8 months, UINT16 years) {
+    return (1461 * (years + 4800 + (months - 14)/12))/4 + (367 *
+           (months - 2 - 12 * ((months - 14)/12)))/12 -
+           (3 * ((years + 4900 + (months - 14)/12)/100))/4
+           + days - 32075;
+}
+
+static UINT64 GetUnixEpoch(UINT8 seconds, UINT8 minutes, UINT8  hours,
+                             UINT8 days,    UINT8 months,  UINT8 years) {
+    UINT64 jdn_current = GetJdn(days, months, years);
+    UINT64 jdn_1970    = GetJdn(1, 1, 1970);
+
+    UINT64 jdn_diff = jdn_current - jdn_1970;
+
+    return (jdn_diff * (60 * 60 * 24)) + hours * 3600 + minutes * 60 + seconds;
+}
+
 EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     EFI_STATUS Status = EFI_SUCCESS;
     STIVALE_HEADER Header = {0};
@@ -160,6 +181,11 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     } else {
         Print(L"No ACPI table found, RSDP set to NULL\n");
     }
+
+    Print(L"Setting epoch\n");
+    EFI_TIME Time = { 0 };
+    EFI_CHECK(gRT->GetTime(&Time, NULL));
+    Struct->Epoch = GetUnixEpoch(Time.Second, Time.Minute, Time.Hour, Time.Day, Time.Month, Time.Year);
 
     // push the modules
     Print(L"Loading modules\n");

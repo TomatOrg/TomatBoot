@@ -27,6 +27,7 @@ typedef struct {
     UINT64 Rsdp;
     UINT64 ModuleCount;
     UINT64 Modules;
+    UINT64 Epoch;
 } STIVALE_STRUCT;
 
 #define E820_TYPE_USABLE            (1)
