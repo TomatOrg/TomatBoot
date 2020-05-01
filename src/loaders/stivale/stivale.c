@@ -271,14 +271,30 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
 
     // setup the normal memory map
     Struct->MemoryMapAddr = (UINT64)StartFrom;
-    Struct->MemoryMapEntries = EntryCount;
+    Struct->MemoryMapEntries = 0;
     for (int i = 0; i < EntryCount; i++) {
-        STIVALE_MMAP_ENTRY* MmapEntry = &StartFrom[i];
         EFI_MEMORY_DESCRIPTOR* desc = (EFI_MEMORY_DESCRIPTOR*)((UINTN)MemoryMap + DescriptorSize * i);
-        MmapEntry->Type = EfiTypeToStivaleType[desc->Type];
-        MmapEntry->Base = desc->PhysicalStart;
-        MmapEntry->Length = EFI_PAGES_TO_SIZE(desc->NumberOfPages);
-        MmapEntry->Unused = 0;
+        int type = EfiTypeToStivaleType[desc->Type];
+
+        // ugly but it works
+        if (i != 0) {
+            if (type == StartFrom->Type && StartFrom->Base + StartFrom->Length == desc->PhysicalStart) {
+                StartFrom += desc->NumberOfPages * EFI_PAGE_SIZE;
+            } else {
+                StartFrom++;
+                StartFrom->Length = desc->NumberOfPages * EFI_PAGE_SIZE;
+                StartFrom->Base = desc->PhysicalStart;
+                StartFrom->Type = type;
+                StartFrom->Unused = 0;
+                Struct->MemoryMapEntries++;
+            }
+        } else {
+            StartFrom->Length = desc->NumberOfPages * EFI_PAGE_SIZE;
+            StartFrom->Base = desc->PhysicalStart;
+            StartFrom->Type = type;
+            StartFrom->Unused = 0;
+            Struct->MemoryMapEntries++;
+        }
     }
 
     // no interrupts
