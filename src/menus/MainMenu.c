@@ -113,12 +113,17 @@ MENU EnterMainMenu(BOOLEAN first) {
     BOOT_CONFIG config;
     LoadBootConfig(&config);
 
-    // create the timer event
+    // create the timer event and counter
+    const UINTN TIMER_INTERVAL = 250000 /* 1/40 sec */;
+    const UINTN INITIAL_TIMEOUT_COUNTER = (config.BootDelay * 10000000) / TIMER_INTERVAL;
+    const UINTN BAR_WIDTH = 80;
+
+    UINTN timeout_counter = INITIAL_TIMEOUT_COUNTER;
     EFI_EVENT events[2] = { gST->ConIn->WaitForKey };
     ASSERT_EFI_ERROR(gBS->CreateEvent(EVT_TIMER, TPL_CALLBACK, NULL, NULL, &events[1]));
 
     if(first) {
-        ASSERT_EFI_ERROR(gBS->SetTimer(events[1], TimerRelative, config.BootDelay * 10000000));
+        ASSERT_EFI_ERROR(gBS->SetTimer(events[1], TimerRelative, TIMER_INTERVAL));
     }
 
     UINTN count = 2;
@@ -143,6 +148,12 @@ MENU EnterMainMenu(BOOLEAN first) {
                 ASSERT_EFI_ERROR(gBS->SetTimer(events[1], TimerCancel, 0));
                 ASSERT_EFI_ERROR(gBS->CloseEvent(events[1]));
                 count = 1;
+
+                // clear the progress bar
+                ASSERT_EFI_ERROR(gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_LIGHTGRAY, EFI_BLACK)));
+                for (int i = 0; i < BAR_WIDTH; i++) {
+                    WriteAt(i, 22, " ");
+                }
             }
 
             // choose the menu or continue
@@ -155,12 +166,32 @@ MENU EnterMainMenu(BOOLEAN first) {
             }
 
             // got timeout
-        }else {
-            // close the event
-            ASSERT_EFI_ERROR(gBS->CloseEvent(events[1]));
+        } else {
+            timeout_counter--;
+            if(timeout_counter == 0) {
+                // set normal text color
+                ASSERT_EFI_ERROR(gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_LIGHTGRAY, EFI_BLACK)));
 
-            // call the loader
-            LoadKernel(gDefaultEntry);
+                // close the event
+                ASSERT_EFI_ERROR(gBS->CloseEvent(events[1]));
+
+                // call the loader
+                LoadKernel(gDefaultEntry);
+            } else {
+                // set bar color
+                ASSERT_EFI_ERROR(gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_BLACK, EFI_LIGHTGRAY)));
+
+                // write new chunk of bar
+                int start = ((INITIAL_TIMEOUT_COUNTER - timeout_counter - 1) * BAR_WIDTH) / INITIAL_TIMEOUT_COUNTER;
+                int end = ((INITIAL_TIMEOUT_COUNTER - timeout_counter) * BAR_WIDTH) / INITIAL_TIMEOUT_COUNTER;
+                for(int i = start; i <= end; i++) {
+                    WriteAt(i, 22, " ");
+                }
+
+                // restart the timer
+                ASSERT_EFI_ERROR(gBS->SetTimer(events[1], TimerRelative, TIMER_INTERVAL));
+            }
+
         }
     } while(TRUE);
 }
