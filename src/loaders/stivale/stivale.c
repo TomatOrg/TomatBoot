@@ -148,8 +148,13 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     }
 
     // we don't support text mode!
-    if ((Header.Flags & 1) == 0) {
+    if ((Header.Flags & STIVALE_HEADER_GRAPHICS_MODE) == 0) {
         CHECK_FAIL_TRACE("Text mode is not supported in UEFI!");
+    }
+
+    // TODO: Support 5-level paging
+    if ((Header.Flags & STIVALE_HEADER_5_LEVEL_PAGING) != 0) {
+        CHECK_FAIL_TRACE("5-Level Paging is not supported yet :(");
     }
 
     // fully-load the kernel

@@ -185,5 +185,5 @@ image: ./bin/BOOTX64.EFI ./config/example.cfg
 	cp ./bin/BOOTX64.EFI ./image/EFI/BOOT/BOOTX64.EFI
 	cp ./config/example.cfg ./image/tomatboot.cfg
 
-qemu: image
+qemu: image tools/OVMF.fd
 	qemu-system-x86_64 -L tools -bios OVMF.fd -hdd fat:rw:image

@@ -5,11 +5,11 @@
 
 #pragma pack(1)
 
-#define STIVALE_MMAP_USABLE_RAM     0
-
 typedef struct {
     UINT64 Stack;
     UINT16 Flags;
+#define STIVALE_HEADER_GRAPHICS_MODE    BIT0
+#define STIVALE_HEADER_5_LEVEL_PAGING   BIT1
     UINT16 FramebufferWidth;
     UINT16 FramebufferHeight;
     UINT16 FramebufferBpp;
@@ -28,6 +28,8 @@ typedef struct {
     UINT64 ModuleCount;
     UINT64 Modules;
     UINT64 Epoch;
+    UINT64 Flags;
+#define STIVALE_STRUCT_BIOS         BIT0
 } STIVALE_STRUCT;
 
 #define E820_TYPE_USABLE            (1)
