@@ -21,6 +21,7 @@ EFI_STATUS LoadLinuxKernel(BOOT_ENTRY* Entry) {
     Print(L"Loading kernel image\n");
     BOOT_MODULE Module = {
         .Path = Entry->Path,
+        .Fs = Entry->Fs,
     };
     CHECK_AND_RETHROW(LoadBootModule(&Module, (UINTN*)&KernelImage, &KernelSize));
 

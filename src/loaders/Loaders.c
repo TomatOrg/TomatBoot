@@ -9,6 +9,9 @@ EFI_STATUS LoadBootModule(BOOT_MODULE* Module, UINTN* Base, UINTN* Size) {
     EFI_FILE_PROTOCOL* root = NULL;
     EFI_FILE_PROTOCOL* moduleImage = NULL;
 
+    CHECK(Module != NULL);
+    CHECK(Module->Fs != NULL);
+
     // open the executable file
     EFI_CHECK(Module->Fs->OpenVolume(Module->Fs, &root));
     EFI_CHECK(root->Open(root, &moduleImage, Module->Path, EFI_FILE_MODE_READ, 0));
@@ -37,6 +40,9 @@ cleanup:
 
 EFI_STATUS LoadKernel(BOOT_ENTRY* Entry) {
     EFI_STATUS Status = EFI_SUCCESS;
+
+    gST->ConOut->ClearScreen(gST->ConOut);
+    gST->ConOut->SetCursorPosition(gST->ConOut, 0, 0);
 
     switch (Entry->Protocol) {
         case BOOT_MB2:

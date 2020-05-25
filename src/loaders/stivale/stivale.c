@@ -128,9 +128,6 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     STIVALE_HEADER Header = {0};
     ELF_INFO Elf = {0};
 
-    gST->ConOut->ClearScreen(gST->ConOut);
-    gST->ConOut->SetCursorPosition(gST->ConOut, 0, 0);
-
     // load config
     BOOT_CONFIG config;
     LoadBootConfig(&config);
