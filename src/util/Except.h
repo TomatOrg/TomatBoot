@@ -18,6 +18,7 @@
 
 #define CHECK_ERROR_TRACE(expr, error, fmt, ...) CHECK_ERROR_LABEL_TRACE(expr, error, cleanup, fmt, ## __VA_ARGS__)
 #define CHECK_ERROR(expr, error) CHECK_ERROR_LABEL_TRACE(expr, error, cleanup, "")
+#define CHECK_TRACE(expr, fmt, ...) CHECK_ERROR_TRACE(expr, EFI_INVALID_PARAMETER, fmt, ## __VA_ARGS__)
 #define CHECK(expr) CHECK_ERROR(expr, EFI_INVALID_PARAMETER)
 #define CHECK_FAIL_ERROR(err) CHECK_ERROR(0, err)
 #define CHECK_FAIL() CHECK(0)

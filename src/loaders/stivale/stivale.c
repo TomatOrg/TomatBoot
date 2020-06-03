@@ -145,17 +145,19 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     }
 
     // we don't support text mode!
-    if ((Header.Flags & STIVALE_HEADER_GRAPHICS_MODE) == 0) {
-        CHECK_FAIL_TRACE("Text mode is not supported in UEFI!");
-    }
+    CHECK_TRACE(Header.GraphicsFramebuffer, "Text mode is not supported in UEFI!");
 
     // TODO: Support 5-level paging
-    if ((Header.Flags & STIVALE_HEADER_5_LEVEL_PAGING) != 0) {
-        CHECK_FAIL_TRACE("5-Level Paging is not supported yet :(");
-    }
+    WARN((Header.Pml5Enable) == 0, "5-Level Paging is not supported yet, ignoring");
+
+    // TODO: Support KASLR
+    CHECK_TRACE(!Header.EnableKASLR, "KASLE Is not supported yet!");
 
     // fully-load the kernel
     CHECK_AND_RETHROW(LoadElf64(Entry->Fs, Entry->Path, &Elf));
+    if (Header.EntryPoint != 0) {
+        Elf.Entry = Header.EntryPoint;
+    }
 
     // setup the struct
     STIVALE_STRUCT* Struct = AllocateReservedPool(sizeof(STIVALE_STRUCT));

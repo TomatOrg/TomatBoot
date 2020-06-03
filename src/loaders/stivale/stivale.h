@@ -7,12 +7,18 @@
 
 typedef struct {
     UINT64 Stack;
-    UINT16 Flags;
-#define STIVALE_HEADER_GRAPHICS_MODE    BIT0
-#define STIVALE_HEADER_5_LEVEL_PAGING   BIT1
+    union {
+        struct {
+            UINT16 GraphicsFramebuffer : 1;
+            UINT16 Pml5Enable : 1;
+            UINT16 EnableKASLR : 1;
+        };
+        UINT16 Flags;
+    };
     UINT16 FramebufferWidth;
     UINT16 FramebufferHeight;
     UINT16 FramebufferBpp;
+    UINT64 EntryPoint;
 } STIVALE_HEADER;
 
 typedef struct {
