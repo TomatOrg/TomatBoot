@@ -89,6 +89,12 @@ static EFI_STATUS LoadStivaleHeader(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS, CHAR16*
     CHECK(sizeof(*header) == shdr.sh_size);
     CHECK_AND_RETHROW(FileRead(image, header, sizeof(*header), shdr.sh_offset));
 
+    // change the higher half spec if we have a
+    // different entry point
+    if (header->EntryPoint != 0) {
+        *HigherHalf = header->EntryPoint > 0xffffffff80000000;
+    }
+
 cleanup:
     if (names != NULL) {
         FreePool(names);
