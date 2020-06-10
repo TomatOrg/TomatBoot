@@ -76,7 +76,7 @@ static EFI_STATUS LoadStivaleHeader(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS, CHAR16*
     // search for the stivale section
     Elf64_Shdr shdr;
     BOOLEAN found = FALSE;
-    for (int i = 0; i < ehdr.e_phnum; i++) {
+    for (int i = 0; i < ehdr.e_shnum; i++) {
         CHECK_AND_RETHROW(FileRead(image, &shdr, sizeof(Elf64_Shdr), ehdr.e_shoff + ehdr.e_shentsize * i));
         if (AsciiStrCmp(&names[shdr.sh_name], ".stivalehdr") == 0) {
             found = TRUE;
