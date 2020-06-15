@@ -14,6 +14,8 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/FileHandleLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
+#include <loaders/mb2/gdt.h>
+#include <Library/BaseLib.h>
 
 #include "stivale.h"
 
@@ -34,7 +36,7 @@ static UINT32 EfiTypeToStivaleType[] = {
         [EfiACPIMemoryNVS] = E820_TYPE_ACPI_NVS
 };
 
-void NORETURN JumpToStivaleKernel(STIVALE_STRUCT* strct, UINT64 Stack, void* KernelEntry);
+void NORETURN JumpToStivaleKernel(STIVALE_STRUCT* strct, UINT64 Stack, void* KernelEntry, BOOLEAN level5);
 
 
 
@@ -133,6 +135,7 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     EFI_STATUS Status = EFI_SUCCESS;
     STIVALE_HEADER Header = {0};
     ELF_INFO Elf = {0};
+    BOOLEAN level5Supported = FALSE;
 
     // load config
     BOOT_CONFIG config;
@@ -153,8 +156,11 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     // we don't support text mode!
     CHECK_TRACE(Header.GraphicsFramebuffer, "Text mode is not supported in UEFI!");
 
-    // TODO: Support 5-level paging
-    WARN((Header.Pml5Enable) == 0, "5-Level Paging is not supported yet, ignoring");
+    UINT32 eax, ebx, ecx, edx;
+    AsmCpuidEx(0x00000007, 0, &eax, &ebx, &ecx, &edx);
+    if (ecx & (1 << 16)) {
+        level5Supported = TRUE;
+    }
 
     // TODO: Support KASLR
     CHECK_TRACE(!Header.EnableKASLR, "KASLE Is not supported yet!");
@@ -306,7 +312,7 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     // no interrupts
     DisableInterrupts();
 
-    JumpToStivaleKernel(Struct, Header.Stack, (void*)Elf.Entry);
+    JumpToStivaleKernel(Struct, Header.Stack, (void*)Elf.Entry, Header.Pml5Enable && level5Supported);
 
 cleanup:
     return Status;
