@@ -19,13 +19,13 @@ TomatBoot is a simple kernel loader for 64bit UEFI based systems.
 * allow to edit the configuration file on the fly
 
 ## Boot Protocol
-### Linux Boot (`LINUX`)
+### Linux Boot (`linux`)
 With linux boot you can give TomatBoot a `vmlinuz` and `initrd` images and it will load it according to the linux 
 boot protocol.
 
 It supports both 32bit and a EFI Handover boot.
 
-### Multiboot 2 (`MB2`)
+### Multiboot 2 (`mb2`)
 With MB2 boot you can load any mb2 compatible kernel image.
 
 We support:
@@ -36,13 +36,13 @@ We support:
 * Framebuffer (Ignores the settings in the image)
 * New/Old ACPI tables
 
-### Stivale (`STIVALE`)
-[Stivale](https://github.com/qloader2/qloader2/blob/master/STIVALE.md) is a simple boot protocol aimed to provide 
+### Stivale (`stivale`)
+[Stivale](https://github.com/limine-bootloader/limine/blob/master/STIVALE.md) is a simple boot protocol aimed to provide 
 everything a modern x86_64 kernel needs:
-* Direct higher half support
+* Direct higher half support (with 5 Level paging support)
 * Command line
 * Boot Modules
-* E820 Memory Map
+* Memory Map
 * Framebuffer
 * ACPI tables
 
