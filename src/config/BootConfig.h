@@ -10,10 +10,11 @@ typedef struct _BOOT_CONFIG {
 } BOOT_CONFIG;
 
 /**
- * Figure everything needed to load and
- * save the config files
+ * This allows to set an override to the boot delay
+ *
+ * negative number means no override
  */
-void InitBootConfig();
+extern INT32 gBootDelayOverride;
 
 /**
  * Loaded the config file into the given struct,

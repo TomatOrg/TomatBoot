@@ -79,19 +79,7 @@ Example file structure inside the UEFI partition:
 ```
 
 ### Config format
-The configuration format is straight forward, it is a list of entries where each entry has the format:
-```
-:<name>
-PATH=<path to elf executeable>
-PROTOCOL={LINUX,MB2}
-CMDLINE=<optional command line options>
-MODULE=<tag 1>,<path 1>
-MODULE=<tag 2>,<path 2>
-...
-```
-
-little clarification on the module option, it can be found as many times as you want, the first part will be the tag to
-assign that module, and the path is what file to load.
+Check [CONFIG.md](CONFIG.md).
 
 ## UEFI Library
 

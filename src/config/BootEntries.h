@@ -5,6 +5,7 @@
 #include <Protocol/SimpleFileSystem.h>
 
 typedef enum _BOOT_PROTOCOL {
+    BOOT_INVALID,
     BOOT_LINUX,
     BOOT_MB2,
     BOOT_STIVALE,

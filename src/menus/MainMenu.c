@@ -115,7 +115,7 @@ MENU EnterMainMenu(BOOLEAN first) {
 
     // create the timer event and counter
     const UINTN TIMER_INTERVAL = 250000 /* 1/40 sec */;
-    const UINTN INITIAL_TIMEOUT_COUNTER = (config.BootDelay * 10000000) / TIMER_INTERVAL;
+    const UINTN INITIAL_TIMEOUT_COUNTER = ((gBootDelayOverride > 0 ? gBootDelayOverride : config.BootDelay) * 10000000) / TIMER_INTERVAL;
     const UINTN BAR_WIDTH = 80;
 
     UINTN timeout_counter = INITIAL_TIMEOUT_COUNTER;

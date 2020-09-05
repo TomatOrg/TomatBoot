@@ -56,6 +56,9 @@ EFI_STATUS LoadKernel(BOOT_ENTRY* Entry) {
         case BOOT_STIVALE:
             CHECK_AND_RETHROW(LoadStivaleKernel(Entry));
             break;
+
+        default:
+            CHECK_FAIL_TRACE("Unknown boot protocol!");
     }
 
 cleanup:

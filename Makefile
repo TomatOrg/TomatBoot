@@ -1,6 +1,6 @@
 # Make sure we use the correct compilers
-CLANG ?= clang-9
-FUSE_LD ?= lld-link-9
+CLANG ?= clang
+FUSE_LD ?= lld-link
 
 default: all
 
@@ -186,4 +186,4 @@ image: ./bin/BOOTX64.EFI ./config/example.cfg
 	cp ./config/example.cfg ./image/tomatboot.cfg
 
 qemu: image tools/OVMF.fd
-	qemu-system-x86_64 -L tools -bios OVMF.fd -hdd fat:rw:image
+	qemu-system-x86_64.exe -L tools -bios OVMF.fd -hdd fat:rw:image
