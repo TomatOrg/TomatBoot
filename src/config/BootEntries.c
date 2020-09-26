@@ -149,7 +149,12 @@ static EFI_STATUS LoadBootEntries(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS, LIST_ENTR
                 InsertTailList(&CurrentEntry->BootModules, &Module->Link);
 
             } else if (CHECK_OPTION(L"MODULE_PATH")) {
-                CHECK_TRACE(CurrentEntry->Protocol == BOOT_MB2 || CurrentEntry->Protocol == BOOT_STIVALE, "`MODULE_PATH` is only available for mb2 and stivale (%d)", CurrentEntry->Protocol);
+                CHECK_TRACE(
+                        CurrentEntry->Protocol == BOOT_MB2 ||
+                        CurrentEntry->Protocol == BOOT_STIVALE ||
+                        CurrentEntry->Protocol == BOOT_STIVALE2,
+                        "`MODULE_PATH` is only available for mb2 and stivale{,2} (%d)", CurrentEntry->Protocol);
+
                 BOOT_MODULE* Module = AllocateZeroPool(sizeof(BOOT_MODULE));
                 Module->Path = CopyString(StrStr(Line, L"=") + 1);
                 CurrentModuleString->Tag = L"";
@@ -162,7 +167,11 @@ static EFI_STATUS LoadBootEntries(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS, LIST_ENTR
                 }
 
             } else if (CHECK_OPTION(L"MODULE_STRING")) {
-                CHECK_TRACE(CurrentEntry->Protocol == BOOT_MB2 || CurrentEntry->Protocol == BOOT_STIVALE, "`MODULE_STRING` is only available for mb2 and stivale");
+                CHECK_TRACE(
+                        CurrentEntry->Protocol == BOOT_MB2 ||
+                        CurrentEntry->Protocol == BOOT_STIVALE ||
+                        CurrentEntry->Protocol == BOOT_STIVALE2,
+                        "`MODULE_STRING` is only available for mb2 and stivale{,2} (%d)", CurrentEntry->Protocol);
                 CHECK_TRACE(CurrentModuleString != NULL, "MODULE_STRING must only appear after a MODULE_PATH");
 
                 // set the tag

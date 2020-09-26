@@ -26,6 +26,7 @@ static const char* loader_names[] = {
         [BOOT_LINUX] = "Linux Boot",
         [BOOT_MB2] = "MultiBoot2",
         [BOOT_STIVALE] = "Stivale",
+        [BOOT_STIVALE2] = "Stivale2",
 };
 
 MENU EnterBootMenu() {
