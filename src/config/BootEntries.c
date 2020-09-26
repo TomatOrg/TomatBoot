@@ -128,6 +128,8 @@ static EFI_STATUS LoadBootEntries(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS, LIST_ENTR
                     CurrentEntry->Protocol = BOOT_MB2;
                 } else if (StrCmp(Protocol, L"stivale") == 0) {
                     CurrentEntry->Protocol = BOOT_STIVALE;
+                } else if (StrCmp(Protocol, L"stivale2") == 0) {
+                    CurrentEntry->Protocol = BOOT_STIVALE2;
                 } else {
                     Print(L"Unknown protocol `%s` for option `%s`\n", Protocol, CurrentEntry->Name);
                     CHECK(FALSE);

@@ -44,7 +44,7 @@ EFI_STATUS LoadElf32(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* fs, CHAR16* file, ELF_INFO
                 if (phdr.p_memsz == 0) continue;
 
                 // get the type and pages to allocate
-                EFI_MEMORY_TYPE MemType = (phdr.p_flags & PF_X) ? EfiRuntimeServicesCode : EfiRuntimeServicesData;
+                EFI_MEMORY_TYPE MemType = (phdr.p_flags & PF_X) ? EfiLoaderCode : EfiLoaderData;
                 UINTN nPages = EFI_SIZE_TO_PAGES(ALIGN_VALUE(phdr.p_memsz, EFI_PAGE_SIZE));
 
                 // allocate the address

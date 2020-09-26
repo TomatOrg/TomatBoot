@@ -9,6 +9,7 @@ typedef enum _BOOT_PROTOCOL {
     BOOT_LINUX,
     BOOT_MB2,
     BOOT_STIVALE,
+    BOOT_STIVALE2,
 } BOOT_PROTOCOL;
 
 typedef struct _BOOT_MODULE {

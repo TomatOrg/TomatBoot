@@ -78,12 +78,6 @@ EDK2_FLAGS += $(EDK2_OPTS_UINT8:%=-D_PCD_GET_MODE_8_%)
 EDK2_FLAGS += $(EDK2_OPTS_BOOL:%=-D_PCD_GET_MODE_BOOL_%)
 
 #########################
-# Lua flags
-#########################
-
-LUA_FLAGS := -Dl_signalT=int
-
-#########################
 # Flags
 #########################
 

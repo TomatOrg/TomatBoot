@@ -16,31 +16,30 @@
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <loaders/mb2/gdt.h>
 #include <Library/BaseLib.h>
+#include <util/TimeUtils.h>
 
-#include "stivale.h"
+#include "stivale2.h"
 
 static UINT32 EfiTypeToStivaleType[] = {
-        [EfiReservedMemoryType] = E820_TYPE_RESERVED,
-        [EfiRuntimeServicesCode] = E820_TYPE_RESERVED,
-        [EfiRuntimeServicesData] = E820_TYPE_RESERVED,
-        [EfiMemoryMappedIO] = E820_TYPE_RESERVED,
-        [EfiMemoryMappedIOPortSpace] = E820_TYPE_RESERVED,
-        [EfiPalCode] = E820_TYPE_RESERVED,
-        [EfiUnusableMemory] = E820_TYPE_BAD_MEMORY,
-        [EfiACPIReclaimMemory] = E820_TYPE_ACPI_RECLAIM,
-        [EfiLoaderCode] = E820_TYPE_USABLE,
-        [EfiLoaderData] = E820_TYPE_USABLE,
-        [EfiBootServicesCode] = E820_TYPE_USABLE,
-        [EfiBootServicesData] = E820_TYPE_USABLE,
-        [EfiConventionalMemory] = E820_TYPE_USABLE,
-        [EfiACPIMemoryNVS] = E820_TYPE_ACPI_NVS
+        [EfiReservedMemoryType] = STIVALE2_RESERVED,
+        [EfiRuntimeServicesCode] = STIVALE2_RESERVED,
+        [EfiRuntimeServicesData] = STIVALE2_RESERVED,
+        [EfiMemoryMappedIO] = STIVALE2_RESERVED,
+        [EfiMemoryMappedIOPortSpace] = STIVALE2_RESERVED,
+        [EfiPalCode] = STIVALE2_RESERVED,
+        [EfiUnusableMemory] = STIVALE2_BAD_MEMORY,
+        [EfiACPIReclaimMemory] = STIVALE2_ACPI_RECLAIMABLE,
+        [EfiLoaderCode] = STIVALE2_KERNEL_AND_MODULES,
+        [EfiLoaderData] = STIVALE2_KERNEL_AND_MODULES,
+        [EfiBootServicesCode] = STIVALE2_BOOTLOADER_RECLAIMABLE,
+        [EfiBootServicesData] = STIVALE2_BOOTLOADER_RECLAIMABLE,
+        [EfiConventionalMemory] = STIVALE2_USEABLE,
+        [EfiACPIMemoryNVS] = STIVALE2_ACPI_NVS
 };
 
-void NORETURN JumpToStivaleKernel(STIVALE_STRUCT* strct, UINT64 Stack, void* KernelEntry, BOOLEAN level5);
+void NORETURN JumpToStivale2Kernel(STIVALE2_STRUCT* strct, UINT64 Stack, void* KernelEntry, BOOLEAN level5);
 
-
-
-static EFI_STATUS LoadStivaleHeader(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS, CHAR16* file, STIVALE_HEADER* header, BOOLEAN* HigherHalf) {
+static EFI_STATUS LoadStivaleHeader(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS, CHAR16* file, STIVALE2_HEADER* header, BOOLEAN* HigherHalf) {
     EFI_STATUS Status = EFI_SUCCESS;
     EFI_FILE_PROTOCOL* root = NULL;
     EFI_FILE_PROTOCOL* image = NULL;
@@ -80,7 +79,7 @@ static EFI_STATUS LoadStivaleHeader(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS, CHAR16*
     BOOLEAN found = FALSE;
     for (int i = 0; i < ehdr.e_shnum; i++) {
         CHECK_AND_RETHROW(FileRead(image, &shdr, sizeof(Elf64_Shdr), ehdr.e_shoff + ehdr.e_shentsize * i));
-        if (AsciiStrCmp(&names[shdr.sh_name], ".stivalehdr") == 0) {
+        if (AsciiStrCmp(&names[shdr.sh_name], ".stivale2hdr") == 0) {
             found = TRUE;
             break;
         }
@@ -113,29 +112,11 @@ cleanup:
     return Status;
 }
 
-// Julian date calculation from https://en.wikipedia.org/wiki/Julian_day
-static UINT64 GetJdn(UINT8 days, UINT8 months, UINT16 years) {
-    return (1461 * (years + 4800 + (months - 14)/12))/4 + (367 *
-           (months - 2 - 12 * ((months - 14)/12)))/12 -
-           (3 * ((years + 4900 + (months - 14)/12)/100))/4
-           + days - 32075;
-}
-
-static UINT64 GetUnixEpoch(UINT8 seconds, UINT8 minutes, UINT8  hours,
-                             UINT8 days,    UINT8 months,  UINT8 years) {
-    UINT64 jdn_current = GetJdn(days, months, years);
-    UINT64 jdn_1970    = GetJdn(1, 1, 1970);
-
-    UINT64 jdn_diff = jdn_current - jdn_1970;
-
-    return (jdn_diff * (60 * 60 * 24)) + hours * 3600 + minutes * 60 + seconds;
-}
-
-EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
+EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     EFI_STATUS Status = EFI_SUCCESS;
-    STIVALE_HEADER Header = {0};
+    STIVALE2_HEADER Header = {0};
     ELF_INFO Elf = {0};
-    BOOLEAN level5Supported = FALSE;
+    BOOLEAN Level5Supported = FALSE;
 
     // load config
     BOOT_CONFIG config;
@@ -153,16 +134,16 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
         Elf.VirtualOffset = 0xffffffff80000000;
     }
 
-    // we don't support text mode!
-    CHECK_TRACE(Header.GraphicsFramebuffer, "Text mode is not supported in UEFI!");
+    // TODO: iterate the header tags
+    //          - assert on non-framebuffer
+    //          - warn on kaslr
+    //          - warn on smp boot
 
     UINT32 eax, ebx, ecx, edx;
     AsmCpuidEx(0x00000007, 0, &eax, &ebx, &ecx, &edx);
-    if (ecx & BIT16) {
-        level5Supported = TRUE;
+    if (ecx & (1 << 16)) {
+        Level5Supported = TRUE;
     }
-
-    WARN(!Header.EnableKASLR, "KASLR Is not supported yet! ignoring.");
 
     // fully-load the kernel
     CHECK_AND_RETHROW(LoadElf64(Entry->Fs, Entry->Path, &Elf));
@@ -171,62 +152,88 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     }
 
     // setup the struct
-    STIVALE_STRUCT* Struct = AllocateReservedPool(sizeof(STIVALE_STRUCT));
-    SetMem(Struct, sizeof(STIVALE_STRUCT), 0);
+    STIVALE2_STRUCT* Struct = AllocateZeroPool(sizeof(STIVALE2_STRUCT));
+    AsciiStrnCpy(Struct->BootloaderBrand, "TomatBoot-UEFI", sizeof(Struct->BootloaderBrand));
+    AsciiStrnCpy(Struct->BootloaderVersion, "git rev-parse HEAD", sizeof(Struct->BootloaderVersion));
 
     // cmdline
     Print(L"Setting cmdline\n");
-    Struct->Cmdline = (UINT64)AllocateReservedPool(StrLen(Entry->Cmdline) + 1);
-    UnicodeStrToAsciiStr(Entry->Cmdline, (CHAR8*)Struct->Cmdline);
+    STIVALE2_STRUCT_TAG_CMDLINE* Cmdline = AllocateZeroPool(sizeof(STIVALE2_STRUCT_TAG_CMDLINE));
+    Cmdline->Identifier = STIVALE2_STRUCT_TAG_CMDLINE_IDENT;
+    Cmdline->Cmdline = AllocateReservedPool(StrLen(Entry->Cmdline) + 1);
+    UnicodeStrToAsciiStr(Entry->Cmdline, (CHAR8*)Cmdline->Cmdline);
+    Struct->Tags = Cmdline;
 
     // graphics info
     Print(L"Setting framebuffer info\n");
-    Struct->FramebufferAddr = gop->Mode->FrameBufferBase;
-    Struct->FramebufferWidth = gop->Mode->Info->HorizontalResolution;
-    Struct->FramebufferHeight = gop->Mode->Info->VerticalResolution;
-    Struct->FramebufferPitch = gop->Mode->Info->PixelsPerScanLine * 4;
-    Struct->FramebufferBpp = 32;
+    STIVALE2_STRUCT_TAG_FRAMEBUFFER* Framebuffer = AllocateZeroPool(sizeof(STIVALE2_STRUCT_TAG_FRAMEBUFFER));
+    Framebuffer->Identifier = STIVALE2_STRUCT_TAG_FRAMEBUFFER_IDENT;
+    Framebuffer->FramebufferAddr = gop->Mode->FrameBufferBase;
+    Framebuffer->FramebufferWidth = gop->Mode->Info->HorizontalResolution;
+    Framebuffer->FramebufferHeight = gop->Mode->Info->VerticalResolution;
+    Framebuffer->FramebufferPitch = gop->Mode->Info->PixelsPerScanLine * 4;
+    Framebuffer->FramebufferBpp = 32;
+    Cmdline->Next = Framebuffer;
 
     // set the acpi table
-    void* acpi_table = NULL;
-    if (!EFI_ERROR(EfiGetSystemConfigurationTable(&gEfiAcpi20TableGuid, &acpi_table))) {
-        Struct->Rsdp = (UINT64)AllocateReservedCopyPool(36, acpi_table);
-    } else if (!EFI_ERROR(EfiGetSystemConfigurationTable(&gEfiAcpi10TableGuid, &acpi_table))) {
-        Struct->Rsdp = (UINT64)AllocateReservedCopyPool(20, acpi_table);
+    void** Next = &Framebuffer->Next;
+    void* AcpiTable = NULL;
+    if (!EFI_ERROR(EfiGetSystemConfigurationTable(&gEfiAcpi20TableGuid, &AcpiTable))) {
+        STIVALE2_STRUCT_TAG_RSDP* Rsdp = AllocateZeroPool(sizeof(STIVALE2_STRUCT_TAG_RSDP));
+        EFI_ACPI_2_0_ROOT_SYSTEM_DESCRIPTION_POINTER* ActualRsdp = AcpiTable;
+        Rsdp->Identifier = STIVALE2_STRUCT_TAG_RSDP_IDENT;
+        Rsdp->Rsdp = AllocateReservedCopyPool(ActualRsdp->Length, ActualRsdp);
+        Next = &Rsdp->Next;
+    } else if (!EFI_ERROR(EfiGetSystemConfigurationTable(&gEfiAcpi10TableGuid, &AcpiTable))) {
+        STIVALE2_STRUCT_TAG_RSDP* Rsdp = AllocateZeroPool(sizeof(STIVALE2_STRUCT_TAG_RSDP));
+        Rsdp->Identifier = STIVALE2_STRUCT_TAG_RSDP_IDENT;
+        Rsdp->Rsdp = AllocateReservedCopyPool(sizeof(EFI_ACPI_1_0_ROOT_SYSTEM_DESCRIPTION_POINTER), AcpiTable);
+        Next = &Rsdp->Next;
     } else {
-        Print(L"No ACPI table found, RSDP set to NULL\n");
+        Print(L"No ACPI table found\n");
     }
+
+    Print(L"Setting firmware\n");
+    STIVALE2_STRUCT_TAG_FIRMWARE* Firmware = AllocateZeroPool(sizeof(STIVALE2_STRUCT_TAG_FIRMWARE));
+    Firmware->Identifier = STIVALE2_STRUCT_TAG_FIRMWARE_IDENT;
+    Firmware->Flags = STIVALE2_STRUCT_TAG_FIRMWARE_FLAG_UEFI;
+    *Next = Firmware;
 
     Print(L"Setting epoch\n");
+    STIVALE2_STRUCT_TAG_EPOCH* Epoch = AllocateZeroPool(sizeof(STIVALE2_STRUCT_TAG_EPOCH));
+    Epoch->Identifier = STIVALE2_STRUCT_TAG_EPOCH_IDENT;
     EFI_TIME Time = { 0 };
     EFI_CHECK(gRT->GetTime(&Time, NULL));
-    Struct->Epoch = GetUnixEpoch(Time.Second, Time.Minute, Time.Hour, Time.Day, Time.Month, Time.Year);
+    Epoch->Epoch = GetUnixEpoch(Time.Second, Time.Minute, Time.Hour, Time.Day, Time.Month, Time.Year);
+    Firmware->Next = Epoch;
 
     // push the modules
-    Print(L"Loading modules\n");
-    STIVALE_MODULE* LastModule = NULL;
-    for (LIST_ENTRY* Link = Entry->BootModules.ForwardLink; Link != &Entry->BootModules; Link = Link->ForwardLink) {
-        BOOT_MODULE* Module = BASE_CR(Link, BOOT_MODULE, Link);
-        UINTN Start = 0;
-        UINTN Size = 0;
-        CHECK_AND_RETHROW(LoadBootModule(Module, &Start, &Size));
+//    Print(L"Loading modules\n");
+//    STIVALE_MODULE* LastModule = NULL;
+//    for (LIST_ENTRY* Link = Entry->BootModules.ForwardLink; Link != &Entry->BootModules; Link = Link->ForwardLink) {
+//        BOOT_MODULE* Module = BASE_CR(Link, BOOT_MODULE, Link);
+//        UINTN Start = 0;
+//        UINTN Size = 0;
+//        CHECK_AND_RETHROW(LoadBootModule(Module, &Start, &Size));
+//
+//        STIVALE_MODULE* NewModule = AllocateReservedZeroPool(sizeof(STIVALE_MODULE));
+//        NewModule->Begin = Start;
+//        NewModule->End = Start + Size;
+//        UnicodeStrToAsciiStrS(Module->Tag, NewModule->String, sizeof(NewModule->String));
+//
+//        if (LastModule != NULL) {
+//            LastModule->Next = (UINT64)NewModule;
+//        } else {
+//            Struct->Modules = (UINT64)NewModule;
+//        }
+//
+//        Struct->ModuleCount++;
+//        LastModule = NewModule;
+//
+//        Print(L"    Added %s (%s) -> %p - %p\n", Module->Tag, Module->Path, Start, Start + Size);
+//    }
 
-        STIVALE_MODULE* NewModule = AllocateReservedZeroPool(sizeof(STIVALE_MODULE));
-        NewModule->Begin = Start;
-        NewModule->End = Start + Size;
-        UnicodeStrToAsciiStrS(Module->Tag, NewModule->String, sizeof(NewModule->String));
 
-        if (LastModule != NULL) {
-            LastModule->Next = (UINT64)NewModule;
-        } else {
-            Struct->Modules = (UINT64)NewModule;
-        }
-
-        Struct->ModuleCount++;
-        LastModule = NewModule;
-
-        Print(L"    Added %s (%s) -> %p - %p\n", Module->Tag, Module->Path, Start, Start + Size);
-    }
 
     // setup the page table correctly
     // first disable write protection so we can modify the table
@@ -242,7 +249,7 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     Pml4[256] = Pml4[0];
 
     // allocate pml3 for 0xffffffff80000000
-    UINT64* Pml3High = AllocateReservedPages(1);
+    UINT64* Pml3High = AllocatePages(1);
     SetMem(Pml3High, EFI_PAGE_SIZE, 0);
     Print(L"Allocated page %p\n", Pml3High);
     Pml4[511] = ((UINT64)Pml3High) | 0x3;
@@ -275,7 +282,10 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     EFI_MEMORY_DESCRIPTOR* MemoryMap = AllocatePool(MemoryMapSize);
 
     // allocate all the space we will need (hopefully)
-    STIVALE_MMAP_ENTRY* StartFrom = AllocateReservedPool((MemoryMapSize / DescriptorSize) * sizeof(STIVALE_MMAP_ENTRY));
+    STIVALE2_STRUCT_TAG_MEMMAP* Memmap = AllocateZeroPool(sizeof(STIVALE2_STRUCT_TAG_MEMMAP) + (MemoryMapSize / DescriptorSize) * sizeof(STIVALE2_MMAP_ENTRY));
+    Memmap->Identifier = STIVALE2_STRUCT_TAG_MEMMAP_IDENT;
+    STIVALE2_MMAP_ENTRY* StartFrom = Memmap->Memmap;
+    Firmware->Next = Memmap;
 
     // call it
     EFI_CHECK(gBS->GetMemoryMap(&MemoryMapSize, MemoryMap, &MapKey, &DescriptorSize, &DescriptorVersion));
@@ -285,8 +295,7 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     EFI_CHECK(gBS->ExitBootServices(gImageHandle, MapKey));
 
     // setup the normal memory map
-    Struct->MemoryMapAddr = (UINT64)StartFrom;
-    Struct->MemoryMapEntries = 0;
+    Memmap->Entries = 0;
     int LastType = -1;
     UINTN LastEnd = 0xFFFFFFFFFFFF;
     for (int i = 0; i < EntryCount; i++) {
@@ -304,14 +313,15 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
             LastType = Type;
             LastEnd = Desc->PhysicalStart + EFI_PAGES_TO_SIZE(Desc->NumberOfPages);
             StartFrom++;
-            Struct->MemoryMapEntries++;
+            Memmap->Entries++;
         }
     }
 
     // no interrupts
     DisableInterrupts();
 
-    JumpToStivaleKernel(Struct, Header.Stack, (void*)Elf.Entry, Header.Pml5Enable && level5Supported);
+    // TODO: pml5
+    JumpToStivale2Kernel(Struct, Header.Stack, (void*)Elf.Entry, FALSE && Level5Supported);
 
 cleanup:
     return Status;

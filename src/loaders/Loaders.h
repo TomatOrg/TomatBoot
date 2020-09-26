@@ -12,6 +12,7 @@ EFI_STATUS LoadBootModule(BOOT_MODULE* Module, UINTN* Base, UINTN* Size);
 EFI_STATUS LoadLinuxKernel(BOOT_ENTRY* Entry);
 EFI_STATUS LoadMB2Kernel(BOOT_ENTRY* Entry);
 EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry);
+EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry);
 
 EFI_STATUS LoadKernel(BOOT_ENTRY* Entry);
 
