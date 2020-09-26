@@ -167,6 +167,23 @@ all: ./bin/BOOTX64.EFI
 # Test with qemu
 #########################
 
+QEMU_ARGS += -m 4G -smp 4
+QEMU_ARGS += -machine q35
+QEMU_ARGS += -debugcon stdio
+QEMU_ARGS += -monitor telnet:localhost:4321,server,nowait
+QEMU_ARGS += --no-shutdown
+QEMU_ARGS += --no-reboot
+
+ifeq ($(shell uname -r | sed -n 's/.*\( *Microsoft *\).*/\1/p'), Microsoft)
+    QEMU := qemu-system-x86_64.exe
+    ifneq ($(DEBUGGER), 1)
+        QEMU_ARGS += --accel whpx
+    endif
+else
+    QEMU := qemu-system-x86_64
+	QEMU_ARGS += --enable-kvm
+endif
+
 tools/OVMF.fd:
 	rm -f OVMF-X64.zip
 	mkdir -p ./tools
@@ -180,4 +197,4 @@ image: ./bin/BOOTX64.EFI ./config/example.cfg
 	cp ./config/example.cfg ./image/tomatboot.cfg
 
 qemu: image tools/OVMF.fd
-	qemu-system-x86_64.exe -L tools -bios OVMF.fd -hdd fat:rw:image
+	$(QEMU) $(QEMU_ARGS) -L tools -bios OVMF.fd -hdd fat:rw:image

@@ -13,7 +13,7 @@ TomatBoot is a simple kernel loader for 64bit UEFI based systems.
 	* change default entry and delay
 * Support for linux boot
 * Support for MB2
-* Support for Stivale
+* Support for Stivale/Stivale2
 
 ### Future plans
 * allow to edit the configuration file on the fly
@@ -45,6 +45,12 @@ everything a modern x86_64 kernel needs:
 * Memory Map
 * Framebuffer
 * ACPI tables
+
+### Stivale2 (`stivale2`)
+[Stivale2](https://github.com/limine-bootloader/limine/blob/master/STIVALE2.md) is a simple boot protocol aimed to provide 
+everything an advanced modern x86_64 kernel needs, it includes all provided by stivale along side:
+* More dynamic features (using a linked list of tags)
+* SMP Boot
 
 ## How to
 ### Getting the EFI module

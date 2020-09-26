@@ -141,7 +141,7 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
 
     UINT32 eax, ebx, ecx, edx;
     AsmCpuidEx(0x00000007, 0, &eax, &ebx, &ecx, &edx);
-    if (ecx & (1 << 16)) {
+    if (ecx & BIT16) {
         Level5Supported = TRUE;
     }
 
@@ -183,11 +183,13 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
         EFI_ACPI_2_0_ROOT_SYSTEM_DESCRIPTION_POINTER* ActualRsdp = AcpiTable;
         Rsdp->Identifier = STIVALE2_STRUCT_TAG_RSDP_IDENT;
         Rsdp->Rsdp = AllocateReservedCopyPool(ActualRsdp->Length, ActualRsdp);
+        *Next = Rsdp;
         Next = &Rsdp->Next;
     } else if (!EFI_ERROR(EfiGetSystemConfigurationTable(&gEfiAcpi10TableGuid, &AcpiTable))) {
         STIVALE2_STRUCT_TAG_RSDP* Rsdp = AllocateZeroPool(sizeof(STIVALE2_STRUCT_TAG_RSDP));
         Rsdp->Identifier = STIVALE2_STRUCT_TAG_RSDP_IDENT;
         Rsdp->Rsdp = AllocateReservedCopyPool(sizeof(EFI_ACPI_1_0_ROOT_SYSTEM_DESCRIPTION_POINTER), AcpiTable);
+        *Next = Rsdp;
         Next = &Rsdp->Next;
     } else {
         Print(L"No ACPI table found\n");
@@ -232,8 +234,6 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
 //
 //        Print(L"    Added %s (%s) -> %p - %p\n", Module->Tag, Module->Path, Start, Start + Size);
 //    }
-
-
 
     // setup the page table correctly
     // first disable write protection so we can modify the table
