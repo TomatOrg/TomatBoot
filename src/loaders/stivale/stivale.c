@@ -228,10 +228,10 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     UINT64* Pml3High = AllocateReservedPages(1);
     SetMem(Pml3High, EFI_PAGE_SIZE, 0);
     Print(L"Allocated page %p\n", Pml3High);
-    Pml4[511] = ((UINT64)Pml3High) | 0x3;
+    Pml4[511] = ((UINT64)Pml3High) | 0x3u;
 
     // map first 2 pages to 0xffffffff80000000
-    UINT64* Pml3Low = (UINT64*)(Pml4[0] & 0x7ffffffffffff000);
+    UINT64* Pml3Low = (UINT64*)(Pml4[0] & 0x7ffffffffffff000u);
     Pml3High[510] = Pml3Low[0];
     Pml3High[511] = Pml3Low[1];
 

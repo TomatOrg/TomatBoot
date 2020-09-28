@@ -83,7 +83,19 @@ typedef struct _STIVALE2_STRUCT_TAG_FRAMEBUFFER {
     UINT16 FramebufferBpp;
 } STIVALE2_STRUCT_TAG_FRAMEBUFFER;
 
-// TODO: Modules
+typedef struct _STIVALE2_MODULE {
+    UINT64 Begin;
+    UINT64 End;
+    CHAR8 String[128];
+} STIVALE2_MODULE;
+
+#define STIVALE2_STRUCT_TAG_MODULES_IDENT 0x4b6fe466aade04ce
+typedef struct _STIVALE2_STRUCT_TAG_MODULES {
+    UINT64 Identifier;
+    void* Next;
+    UINT64 ModuleCount;
+    STIVALE2_MODULE Modules[];
+} STIVALE2_STRUCT_TAG_MODULES;
 
 #define STIVALE2_STRUCT_TAG_RSDP_IDENT 0x9e1786930a375e78
 typedef struct _STIVALE2_STRUCT_TAG_RSDP {

@@ -208,32 +208,36 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     EFI_CHECK(gRT->GetTime(&Time, NULL));
     Epoch->Epoch = GetUnixEpoch(Time.Second, Time.Minute, Time.Hour, Time.Day, Time.Month, Time.Year);
     Firmware->Next = Epoch;
+    Next = &Epoch->Next;
 
     // push the modules
-//    Print(L"Loading modules\n");
-//    STIVALE_MODULE* LastModule = NULL;
-//    for (LIST_ENTRY* Link = Entry->BootModules.ForwardLink; Link != &Entry->BootModules; Link = Link->ForwardLink) {
-//        BOOT_MODULE* Module = BASE_CR(Link, BOOT_MODULE, Link);
-//        UINTN Start = 0;
-//        UINTN Size = 0;
-//        CHECK_AND_RETHROW(LoadBootModule(Module, &Start, &Size));
-//
-//        STIVALE_MODULE* NewModule = AllocateReservedZeroPool(sizeof(STIVALE_MODULE));
-//        NewModule->Begin = Start;
-//        NewModule->End = Start + Size;
-//        UnicodeStrToAsciiStrS(Module->Tag, NewModule->String, sizeof(NewModule->String));
-//
-//        if (LastModule != NULL) {
-//            LastModule->Next = (UINT64)NewModule;
-//        } else {
-//            Struct->Modules = (UINT64)NewModule;
-//        }
-//
-//        Struct->ModuleCount++;
-//        LastModule = NewModule;
-//
-//        Print(L"    Added %s (%s) -> %p - %p\n", Module->Tag, Module->Path, Start, Start + Size);
-//    }
+    if (!IsListEmpty(&Entry->BootModules)) {
+        Print(L"Loading modules\n");
+        UINTN ModulesCount = 0;
+        for (LIST_ENTRY* Link = GetFirstNode(&Entry->BootModules); Link != &Entry->BootModules; Link = Link->ForwardLink) {
+            ModulesCount++;
+        }
+
+        STIVALE2_STRUCT_TAG_MODULES* Modules = AllocateZeroPool(sizeof(STIVALE2_STRUCT_TAG_MODULES) + sizeof(STIVALE2_MODULE) * ModulesCount);
+        Modules->Identifier = STIVALE2_STRUCT_TAG_MODULES_IDENT;
+        Modules->ModuleCount = ModulesCount;
+        Epoch->Next = Modules;
+        Next = &Modules->Next;
+
+        UINTN Index = 0;
+        for (LIST_ENTRY* Link = Entry->BootModules.ForwardLink; Link != &Entry->BootModules; Link = Link->ForwardLink, Index++) {
+            BOOT_MODULE* Module = BASE_CR(Link, BOOT_MODULE, Link);
+            UINTN Start = 0;
+            UINTN Size = 0;
+            CHECK_AND_RETHROW(LoadBootModule(Module, &Start, &Size));
+
+            STIVALE2_MODULE* NewModule = &Modules->Modules[Index];
+            NewModule->Begin = Start;
+            NewModule->End = Start + Size;
+            UnicodeStrToAsciiStrS(Module->Tag, NewModule->String, sizeof(NewModule->String));
+            Print(L"    Added %s (%s) -> %p - %p\n", Module->Tag, Module->Path, Start, Start + Size);
+        }
+    }
 
     // setup the page table correctly
     // first disable write protection so we can modify the table
@@ -252,16 +256,12 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     UINT64* Pml3High = AllocatePages(1);
     SetMem(Pml3High, EFI_PAGE_SIZE, 0);
     Print(L"Allocated page %p\n", Pml3High);
-    Pml4[511] = ((UINT64)Pml3High) | 0x3;
+    Pml4[511] = ((UINT64)Pml3High) | 0x3u;
 
     // map first 2 pages to 0xffffffff80000000
-    UINT64* Pml3Low = (UINT64*)(Pml4[0] & 0x7ffffffffffff000);
+    UINT64* Pml3Low = (UINT64*)(Pml4[0] & 0x7ffffffffffff000u);
     Pml3High[510] = Pml3Low[0];
     Pml3High[511] = Pml3Low[1];
-
-    // enable back write protection
-    Cr0.Bits.WP = 1;
-    AsmWriteCr0(Cr0.UintN);
 
     Print(L"Getting memory map\n");
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -285,7 +285,7 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     STIVALE2_STRUCT_TAG_MEMMAP* Memmap = AllocateZeroPool(sizeof(STIVALE2_STRUCT_TAG_MEMMAP) + (MemoryMapSize / DescriptorSize) * sizeof(STIVALE2_MMAP_ENTRY));
     Memmap->Identifier = STIVALE2_STRUCT_TAG_MEMMAP_IDENT;
     STIVALE2_MMAP_ENTRY* StartFrom = Memmap->Memmap;
-    Firmware->Next = Memmap;
+    *Next = Memmap;
 
     // call it
     EFI_CHECK(gBS->GetMemoryMap(&MemoryMapSize, MemoryMap, &MapKey, &DescriptorSize, &DescriptorVersion));
