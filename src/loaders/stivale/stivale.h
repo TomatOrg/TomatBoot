@@ -38,11 +38,13 @@ typedef struct {
 #define STIVALE_STRUCT_BIOS         BIT0
 } STIVALE_STRUCT;
 
-#define E820_TYPE_USABLE            (1)
-#define E820_TYPE_RESERVED          (2)
-#define E820_TYPE_ACPI_RECLAIM      (3)
-#define E820_TYPE_ACPI_NVS          (4)
-#define E820_TYPE_BAD_MEMORY        (5)
+#define STIVALE_USABLE              1
+#define STIVALE_RESERVED            2
+#define STIVALE_ACPI_RECLAIM        3
+#define STIVALE_ACPI_NVS            4
+#define STIVALE_BAD_MEMORY          5
+#define STIVALE_KERNEL_MODULES      10
+#define STIVALE_BOOTLODAER_RECLAIM  0x1000
 
 typedef struct {
     UINT64 Base;
