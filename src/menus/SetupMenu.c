@@ -138,9 +138,12 @@ MENU EnterSetupMenu() {
         if (entry == NULL) {
             config.DefaultOS--;
             entry = GetBootEntryAt(config.DefaultOS);
-            ASSERT(entry != NULL);
         }
-        WriteAt(controls_start, control_line++, "Default OS: %s (%s)", entry->Name, entry->Path);
+        if (entry != NULL) {
+            WriteAt(controls_start, control_line++, "Default OS: %s (%s)", entry->Name, entry->Path);
+        } else {
+            WriteAt(controls_start, control_line++, "Default OS: None");
+        }
 
         ////////////////////////////////////////////////////////////////////////
         // Input handling

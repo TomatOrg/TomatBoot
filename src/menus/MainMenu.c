@@ -93,7 +93,11 @@ static void draw() {
     ASSERT_EFI_ERROR(gRT->GetTime(&time, NULL));
     WriteAt(0, 4, "Current time: %d/%d/%d %d:%d", time.Day, time.Month, time.Year, time.Hour, time.Minute);
     WriteAt(0, 5, "Graphics mode: %dx%d", info->HorizontalResolution, info->VerticalResolution);
-    WriteAt(0, 6, "Current OS: %s (%s)", gDefaultEntry->Name, gDefaultEntry->Path);
+    if (gDefaultEntry != NULL) {
+        WriteAt(0, 6, "Current OS: %s (%s)", gDefaultEntry->Name, gDefaultEntry->Path);
+    } else {
+        WriteAt(0, 6, "No config file found!");
+    }
     WriteAt(0, 7, "UEFI Version: %d.%d", (gST->Hdr.Revision >> 16u) & 0xFFFFu, gST->Hdr.Revision & 0xFFFFu);
 
     // options for what we can do
@@ -122,7 +126,7 @@ MENU EnterMainMenu(BOOLEAN first) {
     EFI_EVENT events[2] = { gST->ConIn->WaitForKey };
     ASSERT_EFI_ERROR(gBS->CreateEvent(EVT_TIMER, TPL_CALLBACK, NULL, NULL, &events[1]));
 
-    if(first) {
+    if(first && !IsListEmpty(&gBootEntries)) {
         ASSERT_EFI_ERROR(gBS->SetTimer(events[1], TimerRelative, TIMER_INTERVAL));
     }
 

@@ -41,6 +41,8 @@ cleanup:
 EFI_STATUS LoadKernel(BOOT_ENTRY* Entry) {
     EFI_STATUS Status = EFI_SUCCESS;
 
+    CHECK(Entry != NULL);
+
     gST->ConOut->ClearScreen(gST->ConOut);
     gST->ConOut->SetCursorPosition(gST->ConOut, 0, 0);
 

@@ -120,7 +120,10 @@ NASMFLAGS += $(INCLUDE_DIRS:%=-i %/)
 
 # Clean
 clean:
-	rm -rf ./bin ./build ./image
+	rm -rf ./build
+
+clean-all:
+	rm -rf ./bin ./image
 
 #########################
 # Actual build process
