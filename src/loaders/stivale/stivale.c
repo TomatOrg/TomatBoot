@@ -16,24 +16,25 @@
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <loaders/mb2/gdt.h>
 #include <Library/BaseLib.h>
+#include <util/TimeUtils.h>
 
 #include "stivale.h"
 
 static UINT32 EfiTypeToStivaleType[] = {
-        [EfiReservedMemoryType] = E820_TYPE_RESERVED,
-        [EfiRuntimeServicesCode] = E820_TYPE_RESERVED,
-        [EfiRuntimeServicesData] = E820_TYPE_RESERVED,
-        [EfiMemoryMappedIO] = E820_TYPE_RESERVED,
-        [EfiMemoryMappedIOPortSpace] = E820_TYPE_RESERVED,
-        [EfiPalCode] = E820_TYPE_RESERVED,
-        [EfiUnusableMemory] = E820_TYPE_BAD_MEMORY,
-        [EfiACPIReclaimMemory] = E820_TYPE_ACPI_RECLAIM,
-        [EfiLoaderCode] = E820_TYPE_USABLE,
-        [EfiLoaderData] = E820_TYPE_USABLE,
-        [EfiBootServicesCode] = E820_TYPE_USABLE,
-        [EfiBootServicesData] = E820_TYPE_USABLE,
-        [EfiConventionalMemory] = E820_TYPE_USABLE,
-        [EfiACPIMemoryNVS] = E820_TYPE_ACPI_NVS
+        [EfiReservedMemoryType] = STIVALE_RESERVED,
+        [EfiRuntimeServicesCode] = STIVALE_RESERVED,
+        [EfiRuntimeServicesData] = STIVALE_RESERVED,
+        [EfiMemoryMappedIO] = STIVALE_RESERVED,
+        [EfiMemoryMappedIOPortSpace] = STIVALE_RESERVED,
+        [EfiPalCode] = STIVALE_RESERVED,
+        [EfiUnusableMemory] = STIVALE_BAD_MEMORY,
+        [EfiACPIReclaimMemory] = STIVALE_ACPI_RECLAIM,
+        [EfiLoaderCode] = STIVALE_KERNEL_MODULES,
+        [EfiLoaderData] = STIVALE_KERNEL_MODULES,
+        [EfiBootServicesCode] = STIVALE_BOOTLODAER_RECLAIM,
+        [EfiBootServicesData] = STIVALE_BOOTLODAER_RECLAIM,
+        [EfiConventionalMemory] = STIVALE_USABLE,
+        [EfiACPIMemoryNVS] = STIVALE_ACPI_NVS
 };
 
 void NORETURN JumpToStivaleKernel(STIVALE_STRUCT* strct, UINT64 Stack, void* KernelEntry, BOOLEAN level5);
@@ -111,24 +112,6 @@ cleanup:
     }
 
     return Status;
-}
-
-// Julian date calculation from https://en.wikipedia.org/wiki/Julian_day
-static UINT64 GetJdn(UINT8 days, UINT8 months, UINT16 years) {
-    return (1461 * (years + 4800 + (months - 14)/12))/4 + (367 *
-           (months - 2 - 12 * ((months - 14)/12)))/12 -
-           (3 * ((years + 4900 + (months - 14)/12)/100))/4
-           + days - 32075;
-}
-
-static UINT64 GetUnixEpoch(UINT8 seconds, UINT8 minutes, UINT8  hours,
-                             UINT8 days,    UINT8 months,  UINT8 years) {
-    UINT64 jdn_current = GetJdn(days, months, years);
-    UINT64 jdn_1970    = GetJdn(1, 1, 1970);
-
-    UINT64 jdn_diff = jdn_current - jdn_1970;
-
-    return (jdn_diff * (60 * 60 * 24)) + hours * 3600 + minutes * 60 + seconds;
 }
 
 EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
@@ -245,16 +228,12 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     UINT64* Pml3High = AllocateReservedPages(1);
     SetMem(Pml3High, EFI_PAGE_SIZE, 0);
     Print(L"Allocated page %p\n", Pml3High);
-    Pml4[511] = ((UINT64)Pml3High) | 0x3;
+    Pml4[511] = ((UINT64)Pml3High) | 0x3u;
 
     // map first 2 pages to 0xffffffff80000000
-    UINT64* Pml3Low = (UINT64*)(Pml4[0] & 0x7ffffffffffff000);
+    UINT64* Pml3Low = (UINT64*)(Pml4[0] & 0x7ffffffffffff000u);
     Pml3High[510] = Pml3Low[0];
     Pml3High[511] = Pml3Low[1];
-
-    // enable back write protection
-    Cr0.Bits.WP = 1;
-    AsmWriteCr0(Cr0.UintN);
 
     Print(L"Getting memory map\n");
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
