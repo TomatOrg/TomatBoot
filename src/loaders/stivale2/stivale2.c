@@ -237,7 +237,7 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     TRACE("Setting firmware");
     STIVALE2_STRUCT_TAG_FIRMWARE* Firmware = AllocateZeroPool(sizeof(STIVALE2_STRUCT_TAG_FIRMWARE));
     Firmware->Identifier = STIVALE2_STRUCT_TAG_FIRMWARE_IDENT;
-    Firmware->Flags = STIVALE2_STRUCT_TAG_FIRMWARE_FLAG_UEFI;
+    Firmware->Flags = 0;
     *Next = Firmware;
 
     TRACE("Setting epoch");
