@@ -1,5 +1,6 @@
 #include <Uefi.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
+#include <Library/BaseLib.h>
 #include "Menus.h"
 
 MENU EnterMainMenu(BOOLEAN first);
@@ -27,6 +28,7 @@ void StartMenus() {
 
             case MENU_SHUTDOWN:
                 gRT->ResetSystem(EfiResetShutdown, 0, 0, "shutdown");
+                CpuDeadLoop();
                 break;
         }
 
