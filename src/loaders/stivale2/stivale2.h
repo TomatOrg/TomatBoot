@@ -81,6 +81,13 @@ typedef struct _STIVALE2_STRUCT_TAG_FRAMEBUFFER {
     UINT16 FramebufferHeight;
     UINT16 FramebufferPitch;
     UINT16 FramebufferBpp;
+    UINT8 MemoryModel;
+    UINT8 RedMaskSize;
+    UINT8 RedMaskShift;
+    UINT8 GreenMaskSize;
+    UINT8 GreenMaskShift;
+    UINT8 BlueMaskSize;
+    UINT8 BlueMaskShift;
 } STIVALE2_STRUCT_TAG_FRAMEBUFFER;
 
 typedef struct _STIVALE2_MODULE {
@@ -119,7 +126,24 @@ typedef struct _STIVALE2_STRUCT_TAG_FIRMWARE {
 #define STIVALE2_STRUCT_TAG_FIRMWARE_FLAG_UEFI BIT0
 } STIVALE2_STRUCT_TAG_FIRMWARE;
 
-// TODO: Smp
+typedef struct _STIVALE2_SMP_INFO {
+    UINT32 AcpiProcessorUid;
+    UINT32 LapicId;
+    UINT64 TargetStack;
+    UINT64 GotoAddress;
+    UINT64 ExtraArgument;
+} STIVALE2_SMP_INFO;
+
+#define STIVALE2_STRUCT_TAG_SMP_IDENT 0x34d1d96339647025
+typedef struct _STIVALE2_STRUCT_TAG_SMP {
+    UINT64 Identifier;
+    void* Next;
+    UINT64 Flags;
+    UINT32 BspLapicId;
+    UINT32 Unused;
+    UINT64 CpuCount;
+    STIVALE2_SMP_INFO SmpInfo[];
+} STIVALE2_STRUCT_TAG_SMP;
 
 #pragma pack()
 

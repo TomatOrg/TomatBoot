@@ -2,9 +2,10 @@
 
 TomatBoot is a simple kernel loader for 64bit UEFI based systems.
 
-![Main Menu](screenshots/mainmenu.png)
+The gold of this bootloader is to serve as an example of how to create UEFI applications, 
+we use the edk2 headers/libraries without the edk2 buildsystem for simplicity.
 
-![Setup Menu](screenshots/setupmenu.png)
+![Main Menu](screenshots/mainmenu.png)
 
 ## Features
 

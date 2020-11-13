@@ -115,7 +115,7 @@ MENU EnterMainMenu(BOOLEAN first) {
 
     // create the timer event and counter
     const UINTN TIMER_INTERVAL = 250000 /* 1/40 sec */;
-    const UINTN INITIAL_TIMEOUT_COUNTER = ((gBootDelayOverride > 0 ? gBootDelayOverride : config.BootDelay) * 10000000) / TIMER_INTERVAL;
+    const UINTN INITIAL_TIMEOUT_COUNTER = ((gBootConfigOverride.BootDelay > 0 ? gBootConfigOverride.BootDelay : config.BootDelay) * 10000000) / TIMER_INTERVAL;
     const UINTN BAR_WIDTH = 80;
 
     UINTN timeout_counter = INITIAL_TIMEOUT_COUNTER;
@@ -176,7 +176,7 @@ MENU EnterMainMenu(BOOLEAN first) {
                 ASSERT_EFI_ERROR(gBS->CloseEvent(events[1]));
 
                 // call the loader
-                LoadKernel(gDefaultEntry);
+                LoadKernel(gBootConfigOverride.DefaultOS > 0 ? GetBootEntryAt(gBootConfigOverride.DefaultOS) : gDefaultEntry);
             } else {
                 // set bar color
                 ASSERT_EFI_ERROR(gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_BLACK, EFI_LIGHTGRAY)));

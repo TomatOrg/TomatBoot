@@ -49,7 +49,7 @@ EFI_STATUS LoadElf64(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* fs, CHAR16* file, ELF_INFO
 
                 // allocate the address
                 EFI_PHYSICAL_ADDRESS base = info->VirtualOffset ? phdr.p_vaddr - info->VirtualOffset : phdr.p_paddr;
-                Print(L"    BASE = %p, PAGES = %d\n", base, nPages);
+                TRACE("    BASE = %p, PAGES = %d", base, nPages);
                 EFI_CHECK(gBS->AllocatePages(AllocateAddress, MemType, nPages, &base));
                 CHECK_AND_RETHROW(FileRead(elfFile, (void*)base, phdr.p_filesz, phdr.p_offset));
                 ZeroMem((void*)(base + phdr.p_filesz), phdr.p_memsz - phdr.p_filesz);

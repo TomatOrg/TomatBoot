@@ -36,7 +36,7 @@ EFI_STATUS EFIAPI EfiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *System
 
     // just a signature that we booted
     EFI_CHECK(gST->ConOut->ClearScreen(gST->ConOut));
-    Print(L"Hello World!\n\n\n");
+    TRACE("Hello World!");
 
     // Load the boot configs and set the default one
     BOOT_CONFIG config;

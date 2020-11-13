@@ -108,6 +108,9 @@ EFI_GUID gEfiHiiImageProtocolGuid = EFI_HII_IMAGE_PROTOCOL_GUID;
 EFI_GUID gEfiLoadedImageProtocolGuid = EFI_LOADED_IMAGE_PROTOCOL_GUID;
 EFI_GUID gEfiLoadedImageDevicePathProtocolGuid = EFI_LOADED_IMAGE_DEVICE_PATH_PROTOCOL_GUID;
 
+#include <Protocol/PartitionInfo.h>
+EFI_GUID gEfiPartitionInfoProtocolGuid = EFI_PARTITION_INFO_PROTOCOL_GUID;
+
 #include <Protocol/SimpleFileSystem.h>
 EFI_GUID gEfiSimpleFileSystemProtocolGuid = EFI_SIMPLE_FILE_SYSTEM_PROTOCOL_GUID;
 

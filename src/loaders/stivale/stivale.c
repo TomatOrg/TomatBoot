@@ -145,7 +145,7 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
         level5Supported = TRUE;
     }
 
-    WARN(!Header.EnableKASLR, "KASLR Is not supported yet! ignoring.");
+    WARN_ON(!Header.EnableKASLR, "KASLR Is not supported yet! ignoring.");
 
     // fully-load the kernel
     CHECK_AND_RETHROW(LoadElf64(Entry->Fs, Entry->Path, &Elf));

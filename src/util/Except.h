@@ -4,13 +4,21 @@
 #include <Uefi.h>
 #include <Library/UefiLib.h>
 
+#ifndef __FILENAME__
+    #define __FILENAME__ __FILE__
+#endif
+
+#define TRACE(fmt, ...) Print(L"[*] " fmt "\n", ## __VA_ARGS__);
+#define WARN(fmt, ...) Print(L"[!] " fmt "\n", ## __VA_ARGS__);
+#define ERROR(fmt, ...) Print(L"[-] " fmt "\n", ## __VA_ARGS__);
+
 #define CHECK_ERROR_LABEL_TRACE(expr, error, label, fmt, ...) \
     do { \
         if (!(expr)) { \
             Status = error; \
-            AsciiPrint("%r at %a (%a:%d)\n", Status, __func__, __FILE__, __LINE__); \
+            ERROR("%r at %a (%a:%d)", Status, __func__, __FILENAME__, __LINE__); \
             if (fmt[0] != '\0') { \
-                AsciiPrint(fmt "\n", ## __VA_ARGS__); \
+                ERROR(fmt, ## __VA_ARGS__); \
             } \
             goto label; \
         } \
@@ -28,7 +36,7 @@
     do { \
         Status = status; \
         if (EFI_ERROR(Status)) { \
-            AsciiPrint("%r at %a (%a:%d)\n", Status, __func__, __FILE__, __LINE__); \
+            ERROR("%r at %a (%a:%d)", Status, __func__, __FILENAME__, __LINE__); \
             goto cleanup; \
         } \
     } while(0)
@@ -37,17 +45,17 @@
     do { \
         Status = error; \
         if (EFI_ERROR(Status)) { \
-            AsciiPrint("  rethrown at %a (%a:%d)\n", __func__, __FILE__, __LINE__); \
+            ERROR("  rethrown at %a (%a:%d)", __func__, __FILENAME__, __LINE__); \
             goto label; \
         } \
     } while(0)
 
 #define CHECK_AND_RETHROW(error) CHECK_AND_RETHROW_LABEL(error, cleanup)
 
-#define WARN(expr, fmt, ...) \
+#define WARN_ON(expr, fmt, ...) \
     do { \
         if (!(expr)) { \
-            AsciiPrint("Warning! " fmt " at (%a:%d) \n", ## __VA_ARGS__ , __func__, __FILE__, __LINE__); \
+            WARN("Warning! " fmt " at (%a:%d)", ## __VA_ARGS__ , __func__, __FILENAME__, __LINE__); \
         } \
     } while(0)
 

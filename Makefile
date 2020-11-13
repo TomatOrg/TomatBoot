@@ -64,6 +64,8 @@ EDK2_OPTS_UINT32 += PcdSpinLockTimeout=10000000
 EDK2_OPTS_UINT32 += PcdFixedDebugPrintErrorLevel=0xFFFFFFFF
 EDK2_OPTS_UINT32 += PcdUefiLibMaxPrintBufferSize=320
 EDK2_OPTS_UINT32 += PcdMaximumDevicePathNodeCount=0
+EDK2_OPTS_UINT32 += PcdCpuLocalApicBaseAddress=0xfee00000
+EDK2_OPTS_UINT32 += PcdCpuInitIpiDelayInMicroSeconds=10000
 
 EDK2_OPTS_UINT16 := PcdUefiFileHandleLibPrintBufferSize=1536
 
@@ -95,6 +97,8 @@ CFLAGS := \
 	-flto \
 	-g
 
+CFLAGS += -D__GIT_REVISION__=\"$(shell git rev-parse HEAD)\"
+
 # Add all the includes
 CFLAGS += $(INCLUDE_DIRS:%=-I%)
 
@@ -120,7 +124,10 @@ NASMFLAGS += $(INCLUDE_DIRS:%=-i %/)
 
 # Clean
 clean:
-	rm -rf ./bin ./build ./image
+	rm -rf ./build
+
+clean-all: clean
+	rm -rf ./bin ./image
 
 #########################
 # Actual build process
@@ -155,7 +162,7 @@ all: ./bin/BOOTX64.EFI
 ./build/%.c.o: %.c
 	@echo CC $@
 	@mkdir -p $(@D)
-	@$(CLANG) $(CFLAGS) -MMD -c -o $@ $<
+	@$(CLANG) $(CFLAGS) -D__FILENAME__="\"$<\"" -D__MODULE__="\"$(notdir $(basename $<))\"" -MMD -c -o $@ $<
 
 # Build each of the c files
 ./build/%.nasm.o: %.nasm
@@ -189,12 +196,14 @@ tools/OVMF.fd:
 	mkdir -p ./tools
 	wget -P ./tools https://efi.akeo.ie/OVMF/OVMF-X64.zip
 	cd tools && unzip OVMF-X64.zip
-	rm -f LICENSE BUILD_INFO OVMF-X64.zip README
+	rm -f BUILD_INFO OVMF-X64.zip README
 
 image: ./bin/BOOTX64.EFI ./config/example.cfg
 	mkdir -p ./image/EFI/BOOT/
 	cp ./bin/BOOTX64.EFI ./image/EFI/BOOT/BOOTX64.EFI
 	cp ./config/example.cfg ./image/tomatboot.cfg
+	cp ./tests/binaries/test.elf ./image/test.elf
+
 
 qemu: image tools/OVMF.fd
-	$(QEMU) $(QEMU_ARGS) -L tools -bios OVMF.fd -hdd fat:rw:image
+	$(QEMU) $(QEMU_ARGS) -L tools -bios OVMF.fd -hda fat:rw:image

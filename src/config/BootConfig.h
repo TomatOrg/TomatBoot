@@ -10,11 +10,10 @@ typedef struct _BOOT_CONFIG {
 } BOOT_CONFIG;
 
 /**
- * This allows to set an override to the boot delay
- *
- * negative number means no override
+ * This allows to set overrides on the tomatboot config
+ * from the configuration file.
  */
-extern INT32 gBootDelayOverride;
+extern BOOT_CONFIG gBootConfigOverride;
 
 /**
  * Loaded the config file into the given struct,

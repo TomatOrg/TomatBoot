@@ -15,7 +15,11 @@ static EFI_GUID gTomatBootConfigGuid = { 0x2714d689, 0x1da6, 0x49d3,
 
 static CHAR16* gTomatBootConfigName = L"TomatBoot";
 
-INT32 gBootDelayOverride = -1;
+BOOT_CONFIG gBootConfigOverride = {
+    .BootDelay = -1,
+    .DefaultOS = -1,
+    .GfxMode = -1
+};
 
 void LoadBootConfig(BOOT_CONFIG* config) {
     UINT32 Attributes = 0;

@@ -1,13 +1,15 @@
 #include "BootEntries.h"
 #include "BootConfig.h"
 
+#include <util/FileUtils.h>
 #include <util/Except.h>
 
 #include <Uefi.h>
 #include <Protocol/SimpleFileSystem.h>
 #include <Library/UefiBootServicesTableLib.h>
-#include <Library/FileHandleLib.h>
 #include <Library/MemoryAllocationLib.h>
+#include <Library/DevicePathLib.h>
+#include <Library/FileHandleLib.h>
 #include <Library/DebugLib.h>
 
 #define CHECK_OPTION(x) (StrnCmp(Line, x L"=", ARRAY_SIZE(x)) == 0)
@@ -32,6 +34,22 @@ BOOT_ENTRY* GetBootEntryAt(int index) {
 
 static CHAR16* CopyString(CHAR16* String) {
     return AllocateCopyPool((1 + StrLen(String)) * sizeof(CHAR16), String);
+}
+
+static EFI_STATUS ParseUriIntoBootEntry(CHAR16* Uri, BOOT_ENTRY* BootEntry) {
+    EFI_STATUS Status = EFI_SUCCESS;
+
+    if (StrStr(Uri, L":") != NULL) {
+        CHECK_FAIL_TRACE("TODO: support uris", Uri);
+
+    } else {
+        // this is a normal path, just copy the path
+        // and the fs is already set
+        BootEntry->Path = CopyString(Uri);
+    }
+
+cleanup:
+    return Status;
 }
 
 static EFI_STATUS LoadBootEntries(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS, LIST_ENTRY* Head) {
@@ -72,7 +90,6 @@ static EFI_STATUS LoadBootEntries(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS, LIST_ENTR
             break;
         }
         EFI_CHECK(FileHandleReadLine(file, Line, &LineSize, FALSE, &Ascii));
-        Print(L"\t`%s`\n", Line);
 
         //------------------------------------------
         // New entry
@@ -81,23 +98,26 @@ static EFI_STATUS LoadBootEntries(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS, LIST_ENTR
             // got new entry (this is the name)
             CurrentEntry = AllocateZeroPool(sizeof(BOOT_ENTRY));
             CurrentEntry->Protocol = BOOT_STIVALE;
-            CurrentEntry->Name = CopyString(Line + 1);
             CurrentEntry->Fs = FS;
+            CurrentEntry->Name = CopyString(Line + 1);
             CurrentEntry->Protocol = BOOT_INVALID;
-            CurrentEntry->Path = L"";
             CurrentEntry->Cmdline = L"";
             CurrentEntry->BootModules = (LIST_ENTRY) INITIALIZE_LIST_HEAD_VARIABLE(CurrentEntry->BootModules);
             InsertTailList(Head, &CurrentEntry->Link);
             CurrentModuleString = NULL;
 
-            Print(L"Adding %s\n", CurrentEntry->Name);
+            TRACE("Adding %s", CurrentEntry->Name);
 
         //------------------------------------------
         // Global keys
         //------------------------------------------
         } else if (CurrentEntry == NULL) {
             if (CHECK_OPTION(L"TIMEOUT")) {
-                gBootDelayOverride = (INT32)StrDecimalToUintn(StrStr(Line, L"=") + 1);
+                gBootConfigOverride.BootDelay = (INT32)StrDecimalToUintn(StrStr(Line, L"=") + 1);
+            } else if (CHECK_OPTION(L"DEFAULT_ENTRY")) {
+                gBootConfigOverride.DefaultOS = (INT32)StrDecimalToUintn(StrStr(Line, L"=") + 1);
+            } else {
+                WARN("Invalid line `%s`, ignoring", Line);
             }
 
         //------------------------------------------
@@ -109,7 +129,8 @@ static EFI_STATUS LoadBootEntries(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS, LIST_ENTR
             // path of the kernel
             //------------------------------------------
             if(CHECK_OPTION(L"PATH") || CHECK_OPTION(L"KERNEL_PATH")) {
-                CurrentEntry->Path = CopyString(StrStr(Line, L"=") + 1);
+                CHAR16* Path = StrStr(Line, L"=") + 1;
+                CHECK_AND_RETHROW(ParseUriIntoBootEntry(Path, CurrentEntry));
 
             //------------------------------------------
             // command line arguments
@@ -131,8 +152,7 @@ static EFI_STATUS LoadBootEntries(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS, LIST_ENTR
                 } else if (StrCmp(Protocol, L"stivale2") == 0) {
                     CurrentEntry->Protocol = BOOT_STIVALE2;
                 } else {
-                    Print(L"Unknown protocol `%s` for option `%s`\n", Protocol, CurrentEntry->Name);
-                    CHECK(FALSE);
+                    CHECK_FAIL_TRACE("Unknown protocol `%s` for option `%s`", Protocol, CurrentEntry->Name);
                 }
 
             //------------------------------------------
@@ -201,21 +221,11 @@ cleanup:
 
 EFI_STATUS GetBootEntries(LIST_ENTRY* Head) {
     EFI_STATUS Status = EFI_SUCCESS;
-    EFI_HANDLE* Handles = NULL;
-    UINTN HandlesCount = 0;
+    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS = NULL;
 
-    EFI_CHECK(gBS->LocateHandleBuffer(ByProtocol, &gEfiSimpleFileSystemProtocolGuid, NULL, &HandlesCount, &Handles));
-
-    for (int i = 0; i < HandlesCount; i++) {
-        EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS = NULL;
-        EFI_CHECK(gBS->HandleProtocol(Handles[i], &gEfiSimpleFileSystemProtocolGuid, (void**)&FS));
-        CHECK_AND_RETHROW(LoadBootEntries(FS, Head));
-    }
+    CHECK_AND_RETHROW(GetBootFs(&FS));
+    CHECK_AND_RETHROW(LoadBootEntries(FS, Head));
 
 cleanup:
-    if (Handles != NULL) {
-        FreePool(Handles);
-    }
-
     return Status;
 }

@@ -3,6 +3,7 @@
 #include <Library/DebugLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/MemoryAllocationLib.h>
+#include <Library/LocalApicLib.h>
 
 #include <util/Except.h>
 #include <config/BootConfig.h>
@@ -134,11 +135,10 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
         Elf.VirtualOffset = 0xffffffff80000000;
     }
 
-    // TODO: iterate the header tags
-    //          - assert on non-framebuffer
-    //          - warn on kaslr
-    //          - warn on smp boot
+    // kaslr is not supported yet :(
+    WARN_ON(Header.Flags & STIVALE2_HEADER_FLAG_KASLR, "KASLR Is not supported yet");
 
+    // check if pml5 is supported
     UINT32 eax, ebx, ecx, edx;
     AsmCpuidEx(0x00000007, 0, &eax, &ebx, &ecx, &edx);
     if (ecx & BIT16) {
@@ -151,13 +151,45 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
         Elf.Entry = Header.EntryPoint;
     }
 
+    // flags
+    BOOLEAN Pml5Enabled = FALSE;
+    BOOLEAN RequestedGraphics = FALSE;
+    BOOLEAN RequestedSmp = FALSE;
+    BOOLEAN Requestedx2Apic = FALSE;
+
+    // iterate the tags
+    STIVALE2_HDR_TAG* Tag = Header.Tags > (void*)0xffffffff80000000 ? Header.Tags - 0xffffffff80000000 : Header.Tags;
+    while (Tag) {
+        switch (Tag->Identifier) {
+            case STIVALE2_HEADER_TAG_PML5_IDENT: {
+                TRACE("\t* enabling PML5")
+                Pml5Enabled = TRUE;
+            } break;
+
+            case STIVALE2_HEADER_TAG_FRAMEBUFFER_IDENT: {
+                RequestedGraphics = TRUE;
+            } break;
+
+            case STIVALE2_HEADER_TAG_SMP_IDENT: {
+                STIVALE2_HEADER_TAG_SMP* Smp = (STIVALE2_HEADER_TAG_SMP*)Tag;
+                WARN_ON(TRUE, "SMP boot is not fully supported yet");
+                RequestedSmp = TRUE;
+                Requestedx2Apic = Smp->Flags & STIVALE2_HEADER_TAG_SMP_FLAG_X2APIC;
+            } break;
+        }
+
+        Tag = Tag->Next > (void*)0xffffffff80000000 ? Tag->Next - 0xffffffff80000000 : Tag->Next;
+    }
+
+    WARN_ON(!RequestedGraphics, "Text mode is not supported, forcing graphics mode");
+
     // setup the struct
     STIVALE2_STRUCT* Struct = AllocateZeroPool(sizeof(STIVALE2_STRUCT));
     AsciiStrnCpy(Struct->BootloaderBrand, "TomatBoot-UEFI", sizeof(Struct->BootloaderBrand));
-    AsciiStrnCpy(Struct->BootloaderVersion, "git rev-parse HEAD", sizeof(Struct->BootloaderVersion));
+    AsciiStrnCpy(Struct->BootloaderVersion, __GIT_REVISION__, sizeof(Struct->BootloaderVersion));
 
     // cmdline
-    Print(L"Setting cmdline\n");
+    TRACE("Setting cmdline");
     STIVALE2_STRUCT_TAG_CMDLINE* Cmdline = AllocateZeroPool(sizeof(STIVALE2_STRUCT_TAG_CMDLINE));
     Cmdline->Identifier = STIVALE2_STRUCT_TAG_CMDLINE_IDENT;
     Cmdline->Cmdline = AllocateReservedPool(StrLen(Entry->Cmdline) + 1);
@@ -165,14 +197,21 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     Struct->Tags = Cmdline;
 
     // graphics info
-    Print(L"Setting framebuffer info\n");
+    TRACE("Setting framebuffer info");
     STIVALE2_STRUCT_TAG_FRAMEBUFFER* Framebuffer = AllocateZeroPool(sizeof(STIVALE2_STRUCT_TAG_FRAMEBUFFER));
     Framebuffer->Identifier = STIVALE2_STRUCT_TAG_FRAMEBUFFER_IDENT;
     Framebuffer->FramebufferAddr = gop->Mode->FrameBufferBase;
     Framebuffer->FramebufferWidth = gop->Mode->Info->HorizontalResolution;
     Framebuffer->FramebufferHeight = gop->Mode->Info->VerticalResolution;
     Framebuffer->FramebufferPitch = gop->Mode->Info->PixelsPerScanLine * 4;
-    Framebuffer->FramebufferBpp = 32;
+    Framebuffer->FramebufferBpp = gop->Mode->Info->PixelFormat;
+    Framebuffer->MemoryModel = 1;
+    Framebuffer->RedMaskSize = 8;
+    Framebuffer->RedMaskShift = 0;
+    Framebuffer->GreenMaskSize = 8;
+    Framebuffer->GreenMaskShift = 8;
+    Framebuffer->BlueMaskSize = 8;
+    Framebuffer->BlueMaskShift = 16;
     Cmdline->Next = Framebuffer;
 
     // set the acpi table
@@ -192,16 +231,16 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
         *Next = Rsdp;
         Next = &Rsdp->Next;
     } else {
-        Print(L"No ACPI table found\n");
+        WARN("No ACPI table found");
     }
 
-    Print(L"Setting firmware\n");
+    TRACE("Setting firmware");
     STIVALE2_STRUCT_TAG_FIRMWARE* Firmware = AllocateZeroPool(sizeof(STIVALE2_STRUCT_TAG_FIRMWARE));
     Firmware->Identifier = STIVALE2_STRUCT_TAG_FIRMWARE_IDENT;
     Firmware->Flags = STIVALE2_STRUCT_TAG_FIRMWARE_FLAG_UEFI;
     *Next = Firmware;
 
-    Print(L"Setting epoch\n");
+    TRACE("Setting epoch");
     STIVALE2_STRUCT_TAG_EPOCH* Epoch = AllocateZeroPool(sizeof(STIVALE2_STRUCT_TAG_EPOCH));
     Epoch->Identifier = STIVALE2_STRUCT_TAG_EPOCH_IDENT;
     EFI_TIME Time = { 0 };
@@ -212,7 +251,7 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
 
     // push the modules
     if (!IsListEmpty(&Entry->BootModules)) {
-        Print(L"Loading modules\n");
+        TRACE("Loading modules");
         UINTN ModulesCount = 0;
         for (LIST_ENTRY* Link = GetFirstNode(&Entry->BootModules); Link != &Entry->BootModules; Link = Link->ForwardLink) {
             ModulesCount++;
@@ -235,13 +274,35 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
             NewModule->Begin = Start;
             NewModule->End = Start + Size;
             UnicodeStrToAsciiStrS(Module->Tag, NewModule->String, sizeof(NewModule->String));
-            Print(L"    Added %s (%s) -> %p - %p\n", Module->Tag, Module->Path, Start, Start + Size);
+            TRACE("    Added %s (%s) -> %p - %p", Module->Tag, Module->Path, Start, Start + Size);
         }
+    }
+
+    // push smp info
+    if (RequestedSmp) {
+        // TODO: get the amount of cpus
+        UINTN CpuCount = 1;
+
+        // TODO: check if x2apic is supported and adjust Requestedx2Apic accordingly
+
+        // enable apic and program it
+        STIVALE2_STRUCT_TAG_SMP* Smp = AllocateZeroPool(sizeof(STIVALE2_STRUCT_TAG_SMP) + sizeof(STIVALE2_SMP_INFO) * CpuCount);
+        Smp->Identifier = STIVALE2_STRUCT_TAG_SMP_IDENT;
+        Smp->CpuCount = CpuCount;
+        Smp->Flags = GetApicMode() == Requestedx2Apic ? STIVALE2_HEADER_TAG_SMP_FLAG_X2APIC : 0;
+        Smp->BspLapicId = GetApicId();
+        *Next = Smp;
+        Next = &Smp->Next;
+
+        // fill bsp info
+        Smp->SmpInfo[0].LapicId = Smp->BspLapicId;
+
+        // TODO: iterate cpus and set them up
     }
 
     // setup the page table correctly
     // first disable write protection so we can modify the table
-    Print(L"Preparing higher half\n");
+    TRACE("Preparing higher half");
     IA32_CR0 Cr0 = { .UintN = AsmReadCr0() };
     Cr0.Bits.WP = 0;
     AsmWriteCr0(Cr0.UintN);
@@ -255,7 +316,7 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     // allocate pml3 for 0xffffffff80000000
     UINT64* Pml3High = AllocatePages(1);
     SetMem(Pml3High, EFI_PAGE_SIZE, 0);
-    Print(L"Allocated page %p\n", Pml3High);
+    TRACE("Allocated page %p", Pml3High);
     Pml4[511] = ((UINT64)Pml3High) | 0x3u;
 
     // map first 2 pages to 0xffffffff80000000
@@ -263,7 +324,7 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     Pml3High[510] = Pml3Low[0];
     Pml3High[511] = Pml3Low[1];
 
-    Print(L"Getting memory map\n");
+    TRACE("Getting memory map");
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // No prints from here
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -294,6 +355,18 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     // Exit the memory services
     EFI_CHECK(gBS->ExitBootServices(gImageHandle, MapKey));
 
+    // no interrupts
+    DisableInterrupts();
+
+    // setup the local apic
+    InitializeLocalApicSoftwareEnable(TRUE);
+    ProgramVirtualWireMode();
+    if (Requestedx2Apic) {
+        SetApicMode(LOCAL_APIC_MODE_X2APIC);
+    } else {
+        SetApicMode(LOCAL_APIC_MODE_XAPIC);
+    }
+
     // setup the normal memory map
     Memmap->Entries = 0;
     int LastType = -1;
@@ -317,11 +390,7 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
         }
     }
 
-    // no interrupts
-    DisableInterrupts();
-
-    // TODO: pml5
-    JumpToStivale2Kernel(Struct, Header.Stack, (void*)Elf.Entry, FALSE && Level5Supported);
+    JumpToStivale2Kernel(Struct, Header.Stack, (void*)Elf.Entry, Pml5Enabled && Level5Supported);
 
 cleanup:
     return Status;
