@@ -17,6 +17,7 @@
 #include <loaders/mb2/gdt.h>
 #include <Library/BaseLib.h>
 #include <util/TimeUtils.h>
+#include <util/GfxUtils.h>
 
 #include "stivale.h"
 
@@ -124,11 +125,6 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     BOOT_CONFIG config;
     LoadBootConfig(&config);
 
-    // set graphics mode right away
-    EFI_GRAPHICS_OUTPUT_PROTOCOL* gop = NULL;
-    ASSERT_EFI_ERROR(gBS->LocateProtocol(&gEfiGraphicsOutputProtocolGuid, NULL, (VOID**)&gop));
-    ASSERT_EFI_ERROR(gop->SetMode(gop, (UINT32) config.GfxMode));
-
     // get the header and decide on higher half
     BOOLEAN HigherHalf = FALSE;
     CHECK_AND_RETHROW(LoadStivaleHeader(Entry->Fs, Entry->Path, &Header, &HigherHalf));
@@ -138,6 +134,16 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
 
     // we don't support text mode!
     CHECK_TRACE(Header.GraphicsFramebuffer, "Text mode is not supported in UEFI!");
+
+    // override the gfx info
+    INT32 GfxMode = config.GfxMode;
+    if (Header.FramebufferHeight != 0 && Header.FramebufferWidth != 0) {
+        GfxMode = GetBestGfxMode(Header.FramebufferWidth, Header.FramebufferHeight);
+    }
+
+    EFI_GRAPHICS_OUTPUT_PROTOCOL* gop = NULL;
+    ASSERT_EFI_ERROR(gBS->LocateProtocol(&gEfiGraphicsOutputProtocolGuid, NULL, (VOID**)&gop));
+    ASSERT_EFI_ERROR(gop->SetMode(gop, (UINT32) GfxMode));
 
     UINT32 eax, ebx, ecx, edx;
     AsmCpuidEx(0x00000007, 0, &eax, &ebx, &ecx, &edx);
@@ -158,12 +164,12 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     SetMem(Struct, sizeof(STIVALE_STRUCT), 0);
 
     // cmdline
-    Print(L"Setting cmdline\n");
+    TRACE("Setting cmdline");
     Struct->Cmdline = (UINT64)AllocateReservedPool(StrLen(Entry->Cmdline) + 1);
     UnicodeStrToAsciiStr(Entry->Cmdline, (CHAR8*)Struct->Cmdline);
 
     // graphics info
-    Print(L"Setting framebuffer info\n");
+    TRACE("Setting framebuffer info");
     Struct->FramebufferAddr = gop->Mode->FrameBufferBase;
     Struct->FramebufferWidth = gop->Mode->Info->HorizontalResolution;
     Struct->FramebufferHeight = gop->Mode->Info->VerticalResolution;
@@ -177,16 +183,16 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     } else if (!EFI_ERROR(EfiGetSystemConfigurationTable(&gEfiAcpi10TableGuid, &acpi_table))) {
         Struct->Rsdp = (UINT64)AllocateReservedCopyPool(20, acpi_table);
     } else {
-        Print(L"No ACPI table found, RSDP set to NULL\n");
+        WARN("No ACPI table found, RSDP set to NULL");
     }
 
-    Print(L"Setting epoch\n");
+    TRACE("Setting epoch");
     EFI_TIME Time = { 0 };
     EFI_CHECK(gRT->GetTime(&Time, NULL));
     Struct->Epoch = GetUnixEpoch(Time.Second, Time.Minute, Time.Hour, Time.Day, Time.Month, Time.Year);
 
     // push the modules
-    Print(L"Loading modules\n");
+    TRACE("Loading modules");
     STIVALE_MODULE* LastModule = NULL;
     for (LIST_ENTRY* Link = Entry->BootModules.ForwardLink; Link != &Entry->BootModules; Link = Link->ForwardLink) {
         BOOT_MODULE* Module = BASE_CR(Link, BOOT_MODULE, Link);
@@ -208,12 +214,12 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
         Struct->ModuleCount++;
         LastModule = NewModule;
 
-        Print(L"    Added %s (%s) -> %p - %p\n", Module->Tag, Module->Path, Start, Start + Size);
+        TRACE("    Added %s (%s) -> %p - %p", Module->Tag, Module->Path, Start, Start + Size);
     }
 
     // setup the page table correctly
     // first disable write protection so we can modify the table
-    Print(L"Preparing higher half\n");
+    TRACE("Preparing higher half");
     IA32_CR0 Cr0 = { .UintN = AsmReadCr0() };
     Cr0.Bits.WP = 0;
     AsmWriteCr0(Cr0.UintN);
@@ -227,7 +233,7 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     // allocate pml3 for 0xffffffff80000000
     UINT64* Pml3High = AllocateReservedPages(1);
     SetMem(Pml3High, EFI_PAGE_SIZE, 0);
-    Print(L"Allocated page %p\n", Pml3High);
+    TRACE("Allocated page %p", Pml3High);
     Pml4[511] = ((UINT64)Pml3High) | 0x3u;
 
     // map first 2 pages to 0xffffffff80000000
@@ -235,7 +241,7 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     Pml3High[510] = Pml3Low[0];
     Pml3High[511] = Pml3Low[1];
 
-    Print(L"Getting memory map\n");
+    TRACE("Getting memory map");
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // No prints from here
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

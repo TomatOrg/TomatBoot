@@ -18,6 +18,7 @@
 #include <loaders/mb2/gdt.h>
 #include <Library/BaseLib.h>
 #include <util/TimeUtils.h>
+#include <util/GfxUtils.h>
 
 #include "stivale2.h"
 
@@ -123,11 +124,6 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     BOOT_CONFIG config;
     LoadBootConfig(&config);
 
-    // set graphics mode right away
-    EFI_GRAPHICS_OUTPUT_PROTOCOL* gop = NULL;
-    ASSERT_EFI_ERROR(gBS->LocateProtocol(&gEfiGraphicsOutputProtocolGuid, NULL, (VOID**)&gop));
-    ASSERT_EFI_ERROR(gop->SetMode(gop, (UINT32) config.GfxMode));
-
     // get the header and decide on higher half
     BOOLEAN HigherHalf = FALSE;
     CHECK_AND_RETHROW(LoadStivaleHeader(Entry->Fs, Entry->Path, &Header, &HigherHalf));
@@ -153,7 +149,7 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
 
     // flags
     BOOLEAN Pml5Enabled = FALSE;
-    BOOLEAN RequestedGraphics = FALSE;
+    STIVALE2_HEADER_TAG_FRAMEBUFFER* FramebufferReq = NULL;
     BOOLEAN RequestedSmp = FALSE;
     BOOLEAN Requestedx2Apic = FALSE;
 
@@ -167,7 +163,7 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
             } break;
 
             case STIVALE2_HEADER_TAG_FRAMEBUFFER_IDENT: {
-                RequestedGraphics = TRUE;
+                FramebufferReq = (STIVALE2_HEADER_TAG_FRAMEBUFFER*) Tag;
             } break;
 
             case STIVALE2_HEADER_TAG_SMP_IDENT: {
@@ -181,7 +177,19 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
         Tag = Tag->Next > (void*)0xffffffff80000000 ? Tag->Next - 0xffffffff80000000 : Tag->Next;
     }
 
-    WARN_ON(!RequestedGraphics, "Text mode is not supported, forcing graphics mode");
+    WARN_ON(FramebufferReq == NULL, "Text mode is not supported, forcing graphics mode");
+
+    // choose the gfx mode, either the one in the config or choose the mode closest to
+    // the requested mode by the kernel
+    INT32 GfxMode = config.GfxMode;
+    if (FramebufferReq != NULL && FramebufferReq->FramebufferWidth != 0 && FramebufferReq->FramebufferHeight != 0) {
+        GfxMode = GetBestGfxMode(FramebufferReq->FramebufferWidth, FramebufferReq->FramebufferHeight);
+    }
+
+    // set graphics mode
+    EFI_GRAPHICS_OUTPUT_PROTOCOL* gop = NULL;
+    ASSERT_EFI_ERROR(gBS->LocateProtocol(&gEfiGraphicsOutputProtocolGuid, NULL, (VOID**)&gop));
+    ASSERT_EFI_ERROR(gop->SetMode(gop, (UINT32) GfxMode));
 
     // setup the struct
     STIVALE2_STRUCT* Struct = AllocateZeroPool(sizeof(STIVALE2_STRUCT));

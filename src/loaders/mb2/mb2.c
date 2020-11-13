@@ -19,6 +19,7 @@
 #include <Library/UefiRuntimeLib.h>
 #include <Library/CpuLib.h>
 #include <util/DrawUtils.h>
+#include <util/GfxUtils.h>
 
 static UINT8* mBootParamsBuffer = NULL;
 static UINTN mBootParamsSize = 0;
@@ -128,7 +129,8 @@ EFI_STATUS LoadMB2Kernel(BOOT_ENTRY* Entry) {
     BOOT_CONFIG config;
     LoadBootConfig(&config);
 
-    // set graphics mode right away
+    // set the gfx mode right away, optionally we will get an override
+    // later on
     EFI_GRAPHICS_OUTPUT_PROTOCOL* gop = NULL;
     ASSERT_EFI_ERROR(gBS->LocateProtocol(&gEfiGraphicsOutputProtocolGuid, NULL, (VOID**)&gop));
     ASSERT_EFI_ERROR(gop->SetMode(gop, (UINT32) config.GfxMode));
@@ -136,7 +138,7 @@ EFI_STATUS LoadMB2Kernel(BOOT_ENTRY* Entry) {
     // get the header
     struct multiboot_header* header = LoadMB2Header(Entry->Fs, Entry->Path, &HeaderOffset);
     CHECK_ERROR_TRACE(header != NULL, EFI_NOT_FOUND, "Could not find a valid multiboot2 header!");
-    Print(L"Found header at offset %d\n", HeaderOffset);
+    TRACE("Found header at offset %d", HeaderOffset);
 
     // some info we extract
     UINTN EntryAddressOverride = 0;
@@ -200,10 +202,17 @@ EFI_STATUS LoadMB2Kernel(BOOT_ENTRY* Entry) {
             } break;
 
             case MULTIBOOT_HEADER_TAG_FRAMEBUFFER: {
-                /*
-                 * we are gonna ignore the framebuffer configurations and use our own
-                 * configurations from the boot menu
-                 */
+                struct multiboot_header_tag_framebuffer* framebuffer = (void*)tag;
+
+                // we are gonna either use the mode selected in the menu or use the override
+                // as requested from the kernel
+                INT32 GfxMode = config.GfxMode;
+                if (framebuffer->width != 0 && framebuffer->height != 0) {
+                    GfxMode = GetBestGfxMode(framebuffer->width, framebuffer->height);
+                }
+
+                // set graphics mode
+                ASSERT_EFI_ERROR(gop->SetMode(gop, (UINT32) GfxMode));
             } break;
 
             case MULTIBOOT_HEADER_TAG_MODULE_ALIGN: {
@@ -244,7 +253,7 @@ EFI_STATUS LoadMB2Kernel(BOOT_ENTRY* Entry) {
 
     // push the command line
     {
-        Print(L"Pushing cmdline\n");
+        TRACE("Pushing cmdline");
         UINTN size = StrLen(Entry->Cmdline) + 1 + OFFSET_OF(struct multiboot_tag_string, string);
         struct multiboot_tag_string* string = PushBootParams(NULL, size);
         string->type = MULTIBOOT_TAG_TYPE_CMDLINE;
@@ -254,16 +263,16 @@ EFI_STATUS LoadMB2Kernel(BOOT_ENTRY* Entry) {
 
     // push the bootloader name
     {
-        Print(L"Pushing bootloader name\n");
+        TRACE("Pushing bootloader name");
         UINTN size = sizeof("TomatBoot v2 UEFI") + OFFSET_OF(struct multiboot_tag_string, string);
         struct multiboot_tag_string* string = PushBootParams(NULL, size);
         string->type = MULTIBOOT_TAG_TYPE_BOOT_LOADER_NAME;
         string->size = size;
-        AsciiStrCpy(string->string, "TomatBoot v2 UEFI");
+        AsciiStrCpy(string->string, "TomatBoot-UEFI");
     }
 
     // push the modules
-    Print(L"Pushing modules\n");
+    TRACE("Pushing modules");
     for (LIST_ENTRY* Link = Entry->BootModules.ForwardLink; Link != &Entry->BootModules; Link = Link->ForwardLink) {
         BOOT_MODULE* Module = BASE_CR(Link, BOOT_MODULE, Link);
         UINTN Start = 0;
@@ -278,11 +287,11 @@ EFI_STATUS LoadMB2Kernel(BOOT_ENTRY* Entry) {
         mod->mod_end = Start + Size;
         UnicodeStrToAsciiStr(Module->Tag, mod->cmdline);
 
-        Print(L"    Added %s (%s) -> %p - %p\n", Module->Tag, Module->Path, mod->mod_start, mod->mod_end);
+        TRACE("    Added %s (%s) -> %p - %p", Module->Tag, Module->Path, mod->mod_start, mod->mod_end);
     }
 
     // push framebuffer info
-    Print(L"Pushing framebuffer info\n");
+    TRACE("Pushing framebuffer info");
     struct multiboot_tag_framebuffer framebuffer = {
         .common = {
             .type = MULTIBOOT_TAG_TYPE_FRAMEBUFFER,
@@ -307,7 +316,7 @@ EFI_STATUS LoadMB2Kernel(BOOT_ENTRY* Entry) {
     void* acpi10table;
     if (!EFI_ERROR(EfiGetSystemConfigurationTable(&gEfiAcpi10TableGuid, &acpi10table))) {
         // RSDP is 20 bytes long
-        Print(L"Pushing old ACPI info\n");
+        TRACE("Pushing old ACPI info");
         struct multiboot_tag_old_acpi* old_acpi = PushBootParams(NULL, 20 + OFFSET_OF(struct multiboot_tag_old_acpi, rsdp));
         old_acpi->size = 20 + OFFSET_OF(struct multiboot_tag_old_acpi, rsdp);
         old_acpi->type = MULTIBOOT_TAG_TYPE_ACPI_OLD;
@@ -320,7 +329,7 @@ EFI_STATUS LoadMB2Kernel(BOOT_ENTRY* Entry) {
     void* acpi20table;
     if (!EFI_ERROR(EfiGetSystemConfigurationTable(&gEfiAcpi20TableGuid, &acpi20table))) {
         // XSDP is 36 bytes long
-        Print(L"Pushing new ACPI info\n");
+        TRACE("Pushing new ACPI info");
         struct multiboot_tag_new_acpi* new_acpi = PushBootParams(NULL, 36 + OFFSET_OF(struct multiboot_tag_new_acpi, rsdp));
         new_acpi->size = 36 + OFFSET_OF(struct multiboot_tag_new_acpi, rsdp);
         new_acpi->type = MULTIBOOT_TAG_TYPE_ACPI_NEW;
@@ -337,15 +346,15 @@ EFI_STATUS LoadMB2Kernel(BOOT_ENTRY* Entry) {
         ELF_INFO elf_info;
 
         // try with 32bit elf
-        Print(L"Trying to load ELF32\n");
+        TRACE("Trying to load ELF32");
         if (EFI_ERROR(LoadElf32(Entry->Fs, Entry->Path, &elf_info))) {
             // try with elf64
-            Print(L"Not ELF32, trying ELF64\n");
+            TRACE("Not ELF32, trying ELF64");
             CHECK_AND_RETHROW(LoadElf64(Entry->Fs, Entry->Path, &elf_info));
         }
 
         // push elf info
-        Print(L"Pushing ELF info\n");
+        TRACE("Pushing ELF info");
         UINTN Size = OFFSET_OF(struct multiboot_tag_elf_sections, sections) + elf_info.SectionHeadersSize;
         struct multiboot_tag_elf_sections* sections = PushBootParams(NULL, Size);
         sections->size = Size;
@@ -361,7 +370,7 @@ EFI_STATUS LoadMB2Kernel(BOOT_ENTRY* Entry) {
     }
 
     // allocate the needed space for gdt
-    Print(L"Allocating area for GDT\n");
+    TRACE("Allocating area for GDT");
     InitLinuxDescriptorTables();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
