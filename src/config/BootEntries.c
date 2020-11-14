@@ -52,12 +52,12 @@ static EFI_STATUS ParseUriIntoBootEntry(CHAR16* Uri, BOOT_ENTRY* BootEntry) {
     UINTN HandleCount = 0;
 
     // separate the domain from the uri type
-    CHAR16* Domain = StrStr(Uri, L":");
-    *Domain = L'\0';
-    Domain += 3; // skip ://
+    CHAR16* Root = StrStr(Uri, L":");
+    *Root = L'\0';
+    Root += 3; // skip ://
 
     // create the path itself
-    CHAR16* Path = StrStr(Domain, L"/");
+    CHAR16* Path = StrStr(Root, L"/");
     *Path = L'\0';
     Path++; // skip the /
     BootEntry->Path = CopyString(Path);
@@ -66,13 +66,13 @@ static EFI_STATUS ParseUriIntoBootEntry(CHAR16* Uri, BOOT_ENTRY* BootEntry) {
     if (StrCmp(Uri, L"boot") == 0) {
         // boot://[<part num>]/
 
-        if (*Domain == L'\0') {
+        if (*Root == L'\0') {
             // the part num is missing, use
             // the boot fs so there is nothing
             // to do here really
         } else {
             // this has a part num, get it
-            UINTN PartNum = StrDecimalToUintn(Domain);
+            UINTN PartNum = StrDecimalToUintn(Root);
 
             // we need the boot drive device path so we can check the filesystems
             // are on the same drive
@@ -136,7 +136,7 @@ static EFI_STATUS ParseUriIntoBootEntry(CHAR16* Uri, BOOT_ENTRY* BootEntry) {
 
         // parse the guid
         EFI_GUID Guid;
-        EFI_CHECK(StrToGuid(Domain, &Guid));
+        EFI_CHECK(StrToGuid(Root, &Guid));
 
         // iterate the protocols
         EFI_CHECK(gBS->LocateHandleBuffer(ByProtocol, &gEfiSimpleFileSystemProtocolGuid, NULL, &HandleCount, &Handles));
@@ -165,12 +165,12 @@ static EFI_STATUS ParseUriIntoBootEntry(CHAR16* Uri, BOOT_ENTRY* BootEntry) {
         }
 
         // make sure we found it
-        CHECK_TRACE(index != -1, "Could not find partition or fs with guid of `%s`", Domain);
+        CHECK_TRACE(index != -1, "Could not find partition or fs with guid of `%s`", Root);
 
         // get the fs from the guid
         EFI_CHECK(gBS->HandleProtocol(Handles[index], &gEfiSimpleFileSystemProtocolGuid, (void**)BootEntry->Fs));
     } else {
-        CHECK_FAIL_TRACE("Unsupported uri type `%s`", Uri);
+        CHECK_FAIL_TRACE("Unsupported resource type `%s`", Uri);
     }
 
 cleanup:
