@@ -54,7 +54,7 @@
 
 #define WARN_ON(expr, fmt, ...) \
     do { \
-        if (!(expr)) { \
+        if (expr) { \
             WARN("Warning! " fmt " at (%a:%d)", ## __VA_ARGS__ , __func__, __FILENAME__, __LINE__); \
         } \
     } while(0)

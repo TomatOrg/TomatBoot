@@ -93,7 +93,7 @@ CFLAGS := \
 	-std=c11 \
 	-Wall \
 	-Werror \
-	-O3 \
+	-Os \
 	-flto \
 	-g
 

@@ -53,6 +53,12 @@ EFI_GUID gEfiSasDevicePathGuid = EFI_SAS_DEVICE_PATH_GUID;
 #include <Guid/WinCertificate.h>
 EFI_GUID gEfiCertTypeRsa2048Sha256Guid = EFI_CERT_TYPE_RSA2048_SHA256_GUID;
 
+#include <Protocol/BlockIo.h>
+EFI_GUID gEfiBlockIoProtocolGuid = EFI_BLOCK_IO_PROTOCOL_GUID;
+
+#include <Protocol/BlockIo2.h>
+EFI_GUID gEfiBlockIo2ProtocolGuid = EFI_BLOCK_IO2_PROTOCOL_GUID;
+
 #include <Protocol/ComponentName.h>
 EFI_GUID gEfiComponentNameProtocolGuid = EFI_COMPONENT_NAME_PROTOCOL_GUID;
 

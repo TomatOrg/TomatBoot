@@ -19,7 +19,7 @@ we use the edk2 headers/libraries without the edk2 buildsystem for simplicity.
 ### Future plans
 * allow to edit the configuration file on the fly
 
-## Boot Protocol
+## Boot Protocols
 ### Linux Boot (`linux`)
 With linux boot you can give TomatBoot a `vmlinuz` and `initrd` images and it will load it according to the linux 
 boot protocol.
@@ -34,7 +34,7 @@ We support:
 * Boot Modules
 * E820 + Efi Memory Map
 * ELF32/ELF64 Images + Elf Sections
-* Framebuffer (Ignores the settings in the image)
+* Framebuffer
 * New/Old ACPI tables
 
 ### Stivale (`stivale`)
@@ -49,9 +49,9 @@ everything a modern x86_64 kernel needs:
 
 ### Stivale2 (`stivale2`)
 [Stivale2](https://github.com/limine-bootloader/limine/blob/master/STIVALE2.md) is a simple boot protocol aimed to provide 
-everything an advanced modern x86_64 kernel needs, it includes all provided by stivale along side:
+everything an advanced modern x86_64 kernel needs, it includes all provided by `stivale` along side:
 * More dynamic features (using a linked list of tags)
-* SMP Boot
+* SMP Boot (WIP)
 
 ## How to
 ### Getting the EFI module

@@ -11,6 +11,9 @@
 #include <Library/DevicePathLib.h>
 #include <Library/FileHandleLib.h>
 #include <Library/DebugLib.h>
+#include <Protocol/LoadedImage.h>
+#include <util/DPUtils.h>
+#include <Library/BaseMemoryLib.h>
 
 #define CHECK_OPTION(x) (StrnCmp(Line, x L"=", ARRAY_SIZE(x)) == 0)
 
@@ -18,8 +21,13 @@ BOOT_ENTRY* gDefaultEntry = NULL;
 LIST_ENTRY gBootEntries = INITIALIZE_LIST_HEAD_VARIABLE(gBootEntries);
 
 static CHAR16* ConfigPaths[] = {
-        L"boot/tomatboot.cfg",
-        L"tomatboot.cfg"
+    L"boot/tomatboot.cfg",
+    L"tomatboot.cfg",
+
+    // fallback on limine configuration
+    // file because they are compatible
+    L"boot/limine.cfg",
+    L"limine.cfg"
 };
 
 BOOT_ENTRY* GetBootEntryAt(int index) {
@@ -38,17 +46,142 @@ static CHAR16* CopyString(CHAR16* String) {
 
 static EFI_STATUS ParseUriIntoBootEntry(CHAR16* Uri, BOOT_ENTRY* BootEntry) {
     EFI_STATUS Status = EFI_SUCCESS;
+    EFI_LOADED_IMAGE_PROTOCOL* LoadedImage = NULL;
+    EFI_DEVICE_PATH* BootDevicePath = NULL;
+    EFI_HANDLE* Handles = NULL;
+    UINTN HandleCount = 0;
 
-    if (StrStr(Uri, L":") != NULL) {
-        CHECK_FAIL_TRACE("TODO: support uris", Uri);
+    // separate the domain from the uri type
+    CHAR16* Domain = StrStr(Uri, L":");
+    *Domain = L'\0';
+    Domain += 3; // skip ://
 
+    // create the path itself
+    CHAR16* Path = StrStr(Domain, L"/");
+    *Path = L'\0';
+    Path++; // skip the /
+    BootEntry->Path = CopyString(Path);
+
+    // check the uri
+    if (StrCmp(Uri, L"boot") == 0) {
+        // boot://[<part num>]/
+
+        if (*Domain == L'\0') {
+            // the part num is missing, use
+            // the boot fs so there is nothing
+            // to do here really
+        } else {
+            // this has a part num, get it
+            UINTN PartNum = StrDecimalToUintn(Domain);
+
+            // we need the boot drive device path so we can check the filesystems
+            // are on the same drive
+            EFI_CHECK(gBS->HandleProtocol(gImageHandle, &gEfiLoadedImageProtocolGuid, (void**)&LoadedImage));
+            EFI_CHECK(gBS->HandleProtocol(LoadedImage->DeviceHandle, &gEfiDevicePathProtocolGuid, (void**)&BootDevicePath));
+
+            // remove the last part which should be the partition itself
+
+            BootDevicePath = RemoveLastDevicePathNode(BootDevicePath);
+            CHECK(BootDevicePath != NULL);
+
+            CHAR16* Text = ConvertDevicePathToText(BootDevicePath, TRUE, TRUE);
+            TRACE("Boot device path: %s", Text);
+            FreePool(Text);
+
+            // iterate the protocols
+            EFI_CHECK(gBS->LocateHandleBuffer(ByProtocol, &gEfiSimpleFileSystemProtocolGuid, NULL, &HandleCount, &Handles));
+            int index = -1;
+            for (int i = 0; i < HandleCount; i++) {
+                EFI_DEVICE_PATH* DevicePath = NULL;
+                EFI_CHECK(gBS->HandleProtocol(Handles[i], &gEfiDevicePathProtocolGuid, (void**)&DevicePath));
+
+                Text = ConvertDevicePathToText(DevicePath, TRUE, TRUE);
+                TRACE("Testing against filesystem at %s", Text);
+                FreePool(Text);
+
+                // check this is part of the same drive
+                if (!InsideDevicePath(DevicePath, BootDevicePath)) {
+                    // skip this entry
+                    WARN("This is not on the same drive, next");
+                    continue;
+                }
+
+                // get the last one, and make sure it is of
+                // a harddrive part, since we are looking for
+                // partitions
+                DevicePath = LastDevicePathNode(DevicePath);
+                if (DevicePathType(DevicePath) != MEDIA_DEVICE_PATH || DevicePathSubType(DevicePath) != MEDIA_HARDDRIVE_DP) {
+                    // skip it
+                    WARN("The last node is not a harddrive :(");
+                    continue;
+                }
+
+                // we found one which might be valid! check it
+                HARDDRIVE_DEVICE_PATH* Hd = (HARDDRIVE_DEVICE_PATH*)DevicePath;
+                if (Hd->PartitionNumber == PartNum) {
+                    // we freaking found it!
+                    index = i;
+                    break;
+                }
+            }
+
+            // make sure we found it
+            CHECK_TRACE(index != -1, "Could not find partition number `%d`", PartNum);
+
+            // get the fs and set it
+            EFI_CHECK(gBS->HandleProtocol(Handles[index], &gEfiSimpleFileSystemProtocolGuid, (void**)BootEntry->Fs));
+        }
+    } else if (StrCmp(Uri, L"guid") == 0) {
+        // guid://<guid>/
+
+        // parse the guid
+        EFI_GUID Guid;
+        EFI_CHECK(StrToGuid(Domain, &Guid));
+
+        // iterate the protocols
+        EFI_CHECK(gBS->LocateHandleBuffer(ByProtocol, &gEfiSimpleFileSystemProtocolGuid, NULL, &HandleCount, &Handles));
+        int index = -1;
+        for (int i = 0; i < HandleCount; i++) {
+            EFI_DEVICE_PATH* DevicePath = NULL;
+            EFI_CHECK(gBS->HandleProtocol(Handles[i], &gEfiDevicePathProtocolGuid, (void**)&DevicePath));
+
+            // get the last one, and make sure it is of
+            // a harddrive part, since we are looking for
+            // partitions
+            DevicePath = LastDevicePathNode(DevicePath);
+            if (DevicePathType(DevicePath) != MEDIA_DEVICE_PATH || DevicePathSubType(DevicePath) != MEDIA_HARDDRIVE_DP) {
+                // skip it
+                continue;
+            }
+
+            // we found one which might be valid! check that it is a gpt partition (important)
+            // and that it matches the signature
+            HARDDRIVE_DEVICE_PATH* Hd = (HARDDRIVE_DEVICE_PATH*)DevicePath;
+            if (Hd->SignatureType == SIGNATURE_TYPE_GUID && CompareGuid(&Guid, (EFI_GUID*)Hd->Signature)) {
+                // we freaking found it!
+                index = i;
+                break;
+            }
+        }
+
+        // make sure we found it
+        CHECK_TRACE(index != -1, "Could not find partition or fs with guid of `%s`", Domain);
+
+        // get the fs from the guid
+        EFI_CHECK(gBS->HandleProtocol(Handles[index], &gEfiSimpleFileSystemProtocolGuid, (void**)BootEntry->Fs));
     } else {
-        // this is a normal path, just copy the path
-        // and the fs is already set
-        BootEntry->Path = CopyString(Uri);
+        CHECK_FAIL_TRACE("Unsupported uri type `%s`", Uri);
     }
 
 cleanup:
+    if (Handles != NULL) {
+        FreePool(Handles);
+    }
+
+    if (BootDevicePath != NULL) {
+        FreePool(BootDevicePath);
+    }
+
     return Status;
 }
 
@@ -221,10 +354,21 @@ cleanup:
 
 EFI_STATUS GetBootEntries(LIST_ENTRY* Head) {
     EFI_STATUS Status = EFI_SUCCESS;
-    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS = NULL;
+    EFI_LOADED_IMAGE_PROTOCOL* LoadedImage = NULL;
+    EFI_DEVICE_PATH_PROTOCOL* BootDevicePath = NULL;
+    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* BootFs = NULL;
+    EFI_HANDLE FsHandle = NULL;
 
-    CHECK_AND_RETHROW(GetBootFs(&FS));
-    CHECK_AND_RETHROW(LoadBootEntries(FS, Head));
+    // get the boot image device path
+    EFI_CHECK(gBS->HandleProtocol(gImageHandle, &gEfiLoadedImageProtocolGuid, (void**)&LoadedImage));
+    EFI_CHECK(gBS->HandleProtocol(LoadedImage->DeviceHandle, &gEfiDevicePathProtocolGuid, (void**)&BootDevicePath));
+
+    // locate the file system
+    EFI_CHECK(gBS->LocateDevicePath(&gEfiSimpleFileSystemProtocolGuid, &BootDevicePath, &FsHandle));
+    EFI_CHECK(gBS->HandleProtocol(FsHandle, &gEfiSimpleFileSystemProtocolGuid, (void**)&BootFs));
+
+    // try to load a config from it
+    CHECK_AND_RETHROW(LoadBootEntries(BootFs, Head));
 
 cleanup:
     return Status;
