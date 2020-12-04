@@ -32,14 +32,16 @@
 #define CHECK_FAIL() CHECK(0)
 #define CHECK_FAIL_TRACE(fmt, ...) CHECK_ERROR_TRACE(0, EFI_INVALID_PARAMETER, fmt, ## __VA_ARGS__)
 
-#define EFI_CHECK(status) \
+#define EFI_CHECK_LABEL(status, label) \
     do { \
         Status = status; \
         if (EFI_ERROR(Status)) { \
             ERROR("%r at %a (%a:%d)", Status, __func__, __FILENAME__, __LINE__); \
-            goto cleanup; \
+            goto label; \
         } \
     } while(0)
+
+#define EFI_CHECK(status) EFI_CHECK_LABEL(status, cleanup)
 
 #define CHECK_AND_RETHROW_LABEL(error, label) \
     do { \

@@ -174,7 +174,7 @@ all: ./bin/BOOTX64.EFI
 # Test with qemu
 #########################
 
-QEMU_ARGS += -m 4G -smp 4
+QEMU_ARGS += -m 4G -smp 1
 QEMU_ARGS += -machine q35
 QEMU_ARGS += -debugcon stdio
 QEMU_ARGS += -monitor telnet:localhost:4321,server,nowait
@@ -183,9 +183,9 @@ QEMU_ARGS += --no-reboot
 
 ifeq ($(shell uname -r | sed -n 's/.*\( *Microsoft *\).*/\1/p'), Microsoft)
     QEMU := qemu-system-x86_64.exe
-    ifneq ($(DEBUGGER), 1)
-        QEMU_ARGS += --accel whpx
-    endif
+#    ifneq ($(DEBUGGER), 1)
+#        QEMU_ARGS += --accel whpx
+#    endif
 else
     QEMU := qemu-system-x86_64
 	QEMU_ARGS += --enable-kvm

@@ -3,7 +3,8 @@
 [SECTION .data]
 align 16
 
-gdt_ptr:
+[GLOBAL gGdtPtr]
+gGdtPtr:
     dw .gdt_end - .gdt_start - 1 ; gdt limit
     dq .gdt_start                ; gdt base
 
@@ -60,7 +61,7 @@ JumpToStivale2Kernel:
 Translate5Level:
     mov rbx, rdx
     push rcx
-    lgdt [gdt_ptr]
+    lgdt [gGdtPtr]
     lea rbx, [bit64]
 
     ; Jump into the compatibility mode CS

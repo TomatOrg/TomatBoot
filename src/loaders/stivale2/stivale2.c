@@ -1,24 +1,29 @@
 #include <Uefi.h>
-#include <Guid/Acpi.h>
-#include <Library/DebugLib.h>
-#include <Library/UefiBootServicesTableLib.h>
-#include <Library/MemoryAllocationLib.h>
-#include <Library/LocalApicLib.h>
 
-#include <util/Except.h>
-#include <config/BootConfig.h>
-#include <config/BootEntries.h>
-#include <loaders/elf/elf64.h>
-#include <loaders/elf/ElfLoader.h>
-#include <util/FileUtils.h>
-#include <loaders/Loaders.h>
+#include <Guid/Acpi.h>
+
+#include <Protocol/MpService.h>
+
+#include <Library/BaseLib.h>
+#include <Library/DebugLib.h>
+#include <Library/LocalApicLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/FileHandleLib.h>
+#include <Library/MemoryAllocationLib.h>
+#include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
+
+#include <config/BootEntries.h>
+#include <config/BootConfig.h>
+#include <loaders/elf/ElfLoader.h>
+#include <loaders/elf/elf64.h>
 #include <loaders/mb2/gdt.h>
-#include <Library/BaseLib.h>
+#include <loaders/Loaders.h>
+#include <util/FileUtils.h>
 #include <util/TimeUtils.h>
 #include <util/GfxUtils.h>
+#include <util/Except.h>
+#include <Library/IoLib.h>
 
 #include "stivale2.h"
 
@@ -113,6 +118,25 @@ cleanup:
 
     return Status;
 }
+
+/**
+ * Smp parameters
+ */
+extern UINT8 gSmpTrampoline[];
+extern IA32_DESCRIPTOR gSmpTplGdt;
+extern UINT32 gSmpTplTargetMode;
+extern UINT32 gSmpTplPagemap;
+extern UINT32 gSmpTplBootedFlag;
+extern UINT64 gSmpTplInfoStruct;
+extern UINT8 gSmpTrampolineEnd[];
+
+/**
+ * The gdt that will be used when booting
+ * into the kernel
+ */
+extern IA32_DESCRIPTOR gGdtPtr;
+
+EFI_STATUS EFIAPI EfiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable);
 
 EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     EFI_STATUS Status = EFI_SUCCESS;
@@ -287,25 +311,72 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     }
 
     // push smp info
+    STIVALE2_STRUCT_TAG_SMP* Smp = NULL;
+    EFI_PHYSICAL_ADDRESS SmpTplBase = 0x100000;
     if (RequestedSmp) {
-        // TODO: get the amount of cpus
-        UINTN CpuCount = 1;
+        EFI_MP_SERVICES_PROTOCOL* MpServices = NULL;
+        UINTN TotalCpuCount = 0;
+        UINTN ValidCpuCount = 0;
+
+        // allocate the smp trampoline address
+        EFI_CHECK_LABEL(gBS->AllocatePages(AllocateMaxAddress, EfiBootServicesCode, EFI_SIZE_TO_PAGES(gSmpTrampolineEnd - gSmpTrampoline), &SmpTplBase), invalid_cpu_info);
+
+        // TODO: before version 0x0001000A of the PI specification there was a different protocol
+        //       that gave about the same information, we might wanna use it if we ever find such
+        //       a machine that has no new MpServices
+        EFI_CHECK_LABEL(gBS->LocateProtocol(&gEfiMpServiceProtocolGuid, NULL, (void**)&MpServices), invalid_cpu_info);
+        EFI_CHECK_LABEL(MpServices->GetNumberOfProcessors(MpServices, &TotalCpuCount, &ValidCpuCount), invalid_cpu_info);
 
         // TODO: check if x2apic is supported and adjust Requestedx2Apic accordingly
+        Requestedx2Apic = FALSE;
 
         // enable apic and program it
-        STIVALE2_STRUCT_TAG_SMP* Smp = AllocateZeroPool(sizeof(STIVALE2_STRUCT_TAG_SMP) + sizeof(STIVALE2_SMP_INFO) * CpuCount);
+        Smp = AllocateZeroPool(sizeof(STIVALE2_STRUCT_TAG_SMP) + sizeof(STIVALE2_SMP_INFO) * ValidCpuCount);
         Smp->Identifier = STIVALE2_STRUCT_TAG_SMP_IDENT;
-        Smp->CpuCount = CpuCount;
+        Smp->CpuCount = 0;
         Smp->Flags = GetApicMode() == Requestedx2Apic ? STIVALE2_HEADER_TAG_SMP_FLAG_X2APIC : 0;
-        Smp->BspLapicId = GetApicId();
+
+        for (int i = 0; i < TotalCpuCount; i++) {
+            EFI_PROCESSOR_INFORMATION Cpu = {0};
+            EFI_CHECK_LABEL(MpServices->GetProcessorInfo(MpServices, i, &Cpu), invalid_cpu_info);
+
+            if (!(Cpu.StatusFlag & PROCESSOR_HEALTH_STATUS_BIT)) {
+                WARN("Cpu #%d is not healthy, ignoring", i);
+            }
+
+            // set the lapic id
+            Smp->SmpInfo[Smp->CpuCount].LapicId = Cpu.ProcessorId;
+
+            if (Cpu.StatusFlag & PROCESSOR_AS_BSP_BIT) {
+                // this is bsp, set bsp id
+                TRACE("Cpu #%d is BSP (lapic = %d)", i, Cpu.ProcessorId);
+                Smp->BspLapicId = Cpu.ProcessorId;
+            } else {
+                // we will start this apic later
+                TRACE("Cpu #%d (lapic = %d)", i, Cpu.ProcessorId);
+            }
+
+            // next
+            Smp->CpuCount++;
+        }
+
+        // link it
         *Next = Smp;
         Next = &Smp->Next;
 
-        // fill bsp info
-        Smp->SmpInfo[0].LapicId = Smp->BspLapicId;
+        // we got it, skip the failure
+        goto got_cpu_info;
 
-        // TODO: iterate cpus and set them up
+    invalid_cpu_info:
+        if (Smp != NULL) {
+            FreePool(Smp);
+            Smp = NULL;
+        }
+
+        // TODO: free SmpTplBase
+
+    got_cpu_info:
+        (void)0;
     }
 
     // setup the page table correctly
@@ -367,13 +438,59 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     DisableInterrupts();
 
     // setup the local apic
-    InitializeLocalApicSoftwareEnable(TRUE);
-    ProgramVirtualWireMode();
-    if (Requestedx2Apic) {
-        SetApicMode(LOCAL_APIC_MODE_X2APIC);
-    } else {
-        SetApicMode(LOCAL_APIC_MODE_XAPIC);
+    if (Smp != NULL) {
+        InitializeLocalApicSoftwareEnable(TRUE);
+        ProgramVirtualWireMode();
+        if (Requestedx2Apic) {
+            SetApicMode(LOCAL_APIC_MODE_X2APIC);
+        } else {
+            SetApicMode(LOCAL_APIC_MODE_XAPIC);
+        }
+
+        // set the global info like gdt descriptor and the pagemap
+        gSmpTplGdt = gGdtPtr;
+        gSmpTplPagemap = AsmReadCr3();
+
+        // set the optional stuff
+//        gSmpTplTargetMode = 0;
+//        if (Pml5Enabled && Level5Supported) {
+//            gSmpTplTargetMode |= (1 << 1);
+//        }
+//        if (Requestedx2Apic) {
+//            gSmpTplTargetMode |= (1 << 2);
+//        }
+
+        // allocate space for the trampoline
+//        CopyMem((void*)SmpTplBase, gSmpTrampoline, gSmpTrampolineEnd - gSmpTrampoline);
+
+        // calculate the physical addresses
+//        _Atomic(UINT32)* SmpTplBootedFlag = (_Atomic(UINT32)*)((UINT8*)SmpTplBase + ((UINTN)&gSmpTplBootedFlag - (UINTN)gSmpTrampoline));
+//        UINT64* SmpTplInfoStruct = (UINT64*)((UINT8*)SmpTplBase + ((UINTN)&gSmpTplInfoStruct - (UINTN)gSmpTrampoline));
+
+        // now start all aps
+//        for (int i = 0; i < Smp->CpuCount; i++) {
+//            // don't send to bsp lol
+//            if (Smp->BspLapicId == Smp->SmpInfo[i].LapicId) {
+//                continue;
+//            }
+//
+//            // set the params
+//            *SmpTplBootedFlag = 0;
+//            *SmpTplInfoStruct = (UINT64)&Smp->SmpInfo[i];
+//
+//            // don't run this until the flags are set
+//            MemoryFence();
+//            SendInitSipiSipi(Smp->SmpInfo[i].LapicId, SmpTplBase);
+//
+//            // wait until it is done and we can get to
+//            // the next one
+//            while (*SmpTplBootedFlag == 0) {
+//                CpuPause();
+//            }
+//        }
     }
+
+    // initialize all the cores
 
     // setup the normal memory map
     Memmap->Entries = 0;
@@ -381,21 +498,40 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     UINTN LastEnd = 0xFFFFFFFFFFFF;
     for (int i = 0; i < EntryCount; i++) {
         EFI_MEMORY_DESCRIPTOR* Desc = (EFI_MEMORY_DESCRIPTOR*)((UINTN)MemoryMap + DescriptorSize * i);
+        EFI_PHYSICAL_ADDRESS PhysicalBase = Desc->PhysicalStart;
+        UINTN Length = EFI_PAGES_TO_SIZE(Desc->NumberOfPages);
+        EFI_PHYSICAL_ADDRESS PhysicalEnd = Desc->PhysicalStart + Length;
         int Type = EfiTypeToStivaleType[Desc->Type];
 
+        // ignore anything below 1mb just to replicate what
+        // limine does
+        if (PhysicalEnd <= BASE_1MB) {
+            continue;
+        } else if (PhysicalBase < BASE_1MB && PhysicalEnd > BASE_1MB) {
+            Length = PhysicalEnd - BASE_1MB;
+            PhysicalBase = BASE_1MB;
+        }
+
+        // don't include self in kernel and modules
+        if (Type == STIVALE2_KERNEL_AND_MODULES) {
+            if (PhysicalBase < (EFI_PHYSICAL_ADDRESS)EfiMain && (EFI_PHYSICAL_ADDRESS)EfiMain < PhysicalEnd) {
+                Type = STIVALE2_BOOTLOADER_RECLAIMABLE;
+            }
+        }
+
+        // check if we can merge
         if (LastType == Type && LastEnd == Desc->PhysicalStart) {
-            StartFrom[-1].Length += EFI_PAGES_TO_SIZE(Desc->NumberOfPages);
-            LastEnd = Desc->PhysicalStart + EFI_PAGES_TO_SIZE(Desc->NumberOfPages);
+            StartFrom[-1].Length += Length;
         } else {
             StartFrom->Type = Type;
-            StartFrom->Length = EFI_PAGES_TO_SIZE(Desc->NumberOfPages);
-            StartFrom->Base = Desc->PhysicalStart;
+            StartFrom->Length = Length;
+            StartFrom->Base = PhysicalBase;
             StartFrom->Unused = 0;
             LastType = Type;
-            LastEnd = Desc->PhysicalStart + EFI_PAGES_TO_SIZE(Desc->NumberOfPages);
             StartFrom++;
             Memmap->Entries++;
         }
+        LastEnd = PhysicalEnd;
     }
 
     JumpToStivale2Kernel(Struct, Header.Stack, (void*)Elf.Entry, Pml5Enabled && Level5Supported);
