@@ -282,6 +282,7 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     Next = &Epoch->Next;
 
     // push the modules
+    STIVALE2_STRUCT_TAG_MODULES* Modules = NULL;
     if (!IsListEmpty(&Entry->BootModules)) {
         TRACE("Loading modules");
         UINTN ModulesCount = 0;
@@ -289,7 +290,7 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
             ModulesCount++;
         }
 
-        STIVALE2_STRUCT_TAG_MODULES* Modules = AllocateZeroPool(sizeof(STIVALE2_STRUCT_TAG_MODULES) + sizeof(STIVALE2_MODULE) * ModulesCount);
+        Modules = AllocateZeroPool(sizeof(STIVALE2_STRUCT_TAG_MODULES) + sizeof(STIVALE2_MODULE) * ModulesCount);
         Modules->Identifier = STIVALE2_STRUCT_TAG_MODULES_IDENT;
         Modules->ModuleCount = ModulesCount;
         Epoch->Next = Modules;
@@ -431,8 +432,11 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     EFI_CHECK(gBS->GetMemoryMap(&MemoryMapSize, MemoryMap, &MapKey, &DescriptorSize, &DescriptorVersion));
     UINTN EntryCount = (MemoryMapSize / DescriptorSize);
 
-    // Exit the memory services
+    // Exit the memory services, we put fences in here to make sure the compiler
+    // won't try to mix boot services code and non-bootservices code
+    MemoryFence();
     EFI_CHECK(gBS->ExitBootServices(gImageHandle, MapKey));
+    MemoryFence();
 
     // no interrupts
     DisableInterrupts();
@@ -452,42 +456,44 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
         gSmpTplPagemap = AsmReadCr3();
 
         // set the optional stuff
-//        gSmpTplTargetMode = 0;
-//        if (Pml5Enabled && Level5Supported) {
-//            gSmpTplTargetMode |= (1 << 1);
-//        }
-//        if (Requestedx2Apic) {
-//            gSmpTplTargetMode |= (1 << 2);
-//        }
+        gSmpTplTargetMode = 0;
+        if (Pml5Enabled && Level5Supported) {
+            gSmpTplTargetMode |= (1 << 1);
+        }
+        if (Requestedx2Apic) {
+            gSmpTplTargetMode |= (1 << 2);
+        }
 
         // allocate space for the trampoline
-//        CopyMem((void*)SmpTplBase, gSmpTrampoline, gSmpTrampolineEnd - gSmpTrampoline);
+        MemoryFence();
+        CopyMem((void*)SmpTplBase, gSmpTrampoline, gSmpTrampolineEnd - gSmpTrampoline);
+        MemoryFence();
 
         // calculate the physical addresses
-//        _Atomic(UINT32)* SmpTplBootedFlag = (_Atomic(UINT32)*)((UINT8*)SmpTplBase + ((UINTN)&gSmpTplBootedFlag - (UINTN)gSmpTrampoline));
-//        UINT64* SmpTplInfoStruct = (UINT64*)((UINT8*)SmpTplBase + ((UINTN)&gSmpTplInfoStruct - (UINTN)gSmpTrampoline));
+        _Atomic(UINT32)* SmpTplBootedFlag = (_Atomic(UINT32)*)((UINT8*)SmpTplBase + ((UINTN)&gSmpTplBootedFlag - (UINTN)gSmpTrampoline));
+        UINT64* SmpTplInfoStruct = (UINT64*)((UINT8*)SmpTplBase + ((UINTN)&gSmpTplInfoStruct - (UINTN)gSmpTrampoline));
 
         // now start all aps
-//        for (int i = 0; i < Smp->CpuCount; i++) {
-//            // don't send to bsp lol
-//            if (Smp->BspLapicId == Smp->SmpInfo[i].LapicId) {
-//                continue;
-//            }
-//
-//            // set the params
-//            *SmpTplBootedFlag = 0;
-//            *SmpTplInfoStruct = (UINT64)&Smp->SmpInfo[i];
-//
-//            // don't run this until the flags are set
-//            MemoryFence();
-//            SendInitSipiSipi(Smp->SmpInfo[i].LapicId, SmpTplBase);
-//
-//            // wait until it is done and we can get to
-//            // the next one
-//            while (*SmpTplBootedFlag == 0) {
-//                CpuPause();
-//            }
-//        }
+        for (int i = 0; i < Smp->CpuCount; i++) {
+            // don't send to bsp lol
+            if (Smp->BspLapicId == Smp->SmpInfo[i].LapicId) {
+                continue;
+            }
+
+            // set the params
+            *SmpTplBootedFlag = 0;
+            *SmpTplInfoStruct = (UINT64)&Smp->SmpInfo[i];
+
+            // don't run this until the flags are set
+            MemoryFence();
+            SendInitSipiSipi(Smp->SmpInfo[i].LapicId, SmpTplBase);
+
+            // wait until it is done and we can get to
+            // the next one
+            while (*SmpTplBootedFlag == 0) {
+                CpuPause();
+            }
+        }
     }
 
     // initialize all the cores
@@ -503,24 +509,26 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
         EFI_PHYSICAL_ADDRESS PhysicalEnd = Desc->PhysicalStart + Length;
         int Type = EfiTypeToStivaleType[Desc->Type];
 
-        // ignore anything below 1mb just to replicate what
-        // limine does
-        if (PhysicalEnd <= BASE_1MB) {
-            continue;
-        } else if (PhysicalBase < BASE_1MB && PhysicalEnd > BASE_1MB) {
-            Length = PhysicalEnd - BASE_1MB;
-            PhysicalBase = BASE_1MB;
-        }
-
-        // don't include self in kernel and modules
+        // don't include bootloader in kernel and modules
         if (Type == STIVALE2_KERNEL_AND_MODULES) {
-            if (PhysicalBase < (EFI_PHYSICAL_ADDRESS)EfiMain && (EFI_PHYSICAL_ADDRESS)EfiMain < PhysicalEnd) {
+            BOOLEAN IsKernelOrModules = FALSE;
+            if (Elf.PhysicalBase == PhysicalBase) {
+                IsKernelOrModules = TRUE;
+            } else if (Modules != NULL) {
+                for (int j = 0; j < Modules->ModuleCount; j++) {
+                    if (Modules->Modules[j].Begin == PhysicalBase) {
+                        IsKernelOrModules = TRUE;
+                    }
+                }
+            }
+
+            if (!IsKernelOrModules) {
                 Type = STIVALE2_BOOTLOADER_RECLAIMABLE;
             }
         }
 
         // check if we can merge
-        if (LastType == Type && LastEnd == Desc->PhysicalStart) {
+        if (LastType == Type && PhysicalBase == Desc->PhysicalStart) {
             StartFrom[-1].Length += Length;
         } else {
             StartFrom->Type = Type;

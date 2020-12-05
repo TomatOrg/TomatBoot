@@ -16,6 +16,9 @@ EFI_STATUS LoadElf64(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* fs, CHAR16* file, ELF_INFO
     EFI_FILE_PROTOCOL* root = NULL;
     EFI_FILE_PROTOCOL* elfFile = NULL;
 
+    CHECK(info != NULL);
+    info->PhysicalBase = MAX_INT64;
+
     // open the executable file
     EFI_CHECK(fs->OpenVolume(fs, &root));
     EFI_CHECK(root->Open(root, &elfFile, file, EFI_FILE_MODE_READ, 0));
@@ -53,6 +56,10 @@ EFI_STATUS LoadElf64(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* fs, CHAR16* file, ELF_INFO
                 EFI_CHECK(gBS->AllocatePages(AllocateAddress, MemType, nPages, &base));
                 CHECK_AND_RETHROW(FileRead(elfFile, (void*)base, phdr.p_filesz, phdr.p_offset));
                 ZeroMem((void*)(base + phdr.p_filesz), phdr.p_memsz - phdr.p_filesz);
+
+                if (info->PhysicalBase > base) {
+                    info->PhysicalBase = base;
+                }
 
             // ignore entry
             default:
