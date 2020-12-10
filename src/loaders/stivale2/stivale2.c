@@ -28,20 +28,21 @@
 #include "stivale2.h"
 
 static UINT32 EfiTypeToStivaleType[] = {
-        [EfiReservedMemoryType] = STIVALE2_RESERVED,
-        [EfiRuntimeServicesCode] = STIVALE2_RESERVED,
-        [EfiRuntimeServicesData] = STIVALE2_RESERVED,
-        [EfiMemoryMappedIO] = STIVALE2_RESERVED,
-        [EfiMemoryMappedIOPortSpace] = STIVALE2_RESERVED,
-        [EfiPalCode] = STIVALE2_RESERVED,
-        [EfiUnusableMemory] = STIVALE2_BAD_MEMORY,
-        [EfiACPIReclaimMemory] = STIVALE2_ACPI_RECLAIMABLE,
-        [EfiLoaderCode] = STIVALE2_KERNEL_AND_MODULES,
-        [EfiLoaderData] = STIVALE2_KERNEL_AND_MODULES,
-        [EfiBootServicesCode] = STIVALE2_BOOTLOADER_RECLAIMABLE,
-        [EfiBootServicesData] = STIVALE2_BOOTLOADER_RECLAIMABLE,
-        [EfiConventionalMemory] = STIVALE2_USEABLE,
-        [EfiACPIMemoryNVS] = STIVALE2_ACPI_NVS
+    [EfiReservedMemoryType] = STIVALE2_RESERVED,
+    [EfiLoaderCode] = STIVALE2_BOOTLOADER_RECLAIMABLE,
+    [EfiLoaderData] = STIVALE2_BOOTLOADER_RECLAIMABLE,
+    [EfiBootServicesCode] = STIVALE2_BOOTLOADER_RECLAIMABLE,
+    [EfiBootServicesData] = STIVALE2_BOOTLOADER_RECLAIMABLE,
+    [EfiRuntimeServicesCode] = STIVALE2_RESERVED,
+    [EfiRuntimeServicesData] = STIVALE2_RESERVED,
+    [EfiConventionalMemory] = STIVALE2_USEABLE,
+    [EfiUnusableMemory] = STIVALE2_BAD_MEMORY,
+    [EfiACPIReclaimMemory] = STIVALE2_ACPI_RECLAIMABLE,
+    [EfiACPIMemoryNVS] = STIVALE2_ACPI_NVS,
+    [EfiMemoryMappedIO] = STIVALE2_RESERVED,
+    [EfiMemoryMappedIOPortSpace] = STIVALE2_RESERVED,
+    [EfiPalCode] = STIVALE2_RESERVED,
+    [EfiPersistentMemory] = STIVALE2_RESERVED,
 };
 
 void NORETURN JumpToStivale2Kernel(STIVALE2_STRUCT* strct, UINT64 Stack, void* KernelEntry, BOOLEAN level5);
@@ -507,7 +508,11 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
         EFI_PHYSICAL_ADDRESS PhysicalBase = Desc->PhysicalStart;
         UINTN Length = EFI_PAGES_TO_SIZE(Desc->NumberOfPages);
         EFI_PHYSICAL_ADDRESS PhysicalEnd = Desc->PhysicalStart + Length;
-        int Type = EfiTypeToStivaleType[Desc->Type];
+
+        int Type = STIVALE2_RESERVED;
+        if (Desc->Type < EfiMaxMemoryType) {
+            Type = EfiTypeToStivaleType[Desc->Type];
+        }
 
         // don't include bootloader in kernel and modules
         if (Type == STIVALE2_KERNEL_AND_MODULES) {
@@ -528,7 +533,7 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
         }
 
         // check if we can merge
-        if (LastType == Type && PhysicalBase == Desc->PhysicalStart) {
+        if (LastType == Type && LastEnd == Desc->PhysicalStart) {
             StartFrom[-1].Length += Length;
         } else {
             StartFrom->Type = Type;
