@@ -21,12 +21,12 @@ BOOT_ENTRY* gDefaultEntry = NULL;
 LIST_ENTRY gBootEntries = INITIALIZE_LIST_HEAD_VARIABLE(gBootEntries);
 
 static CHAR16* ConfigPaths[] = {
-    L"boot/tomatboot.cfg",
+    L"boot\\tomatboot.cfg",
     L"tomatboot.cfg",
 
     // fallback on limine configuration
     // file because they are compatible
-    L"boot/limine.cfg",
+    L"boot\\limine.cfg",
     L"limine.cfg"
 };
 
@@ -61,6 +61,13 @@ static EFI_STATUS ParseUriIntoBootEntry(CHAR16* Uri, BOOT_ENTRY* BootEntry) {
     *Path = L'\0';
     Path++; // skip the /
     BootEntry->Path = CopyString(Path);
+
+    // convert `/` to `\` for uefi
+    for (CHAR16* C = BootEntry->Path; *C != CHAR_NULL; C++) {
+        if (*C == '/') {
+            *C = '\\';
+        }
+    }
 
     // check the uri
     if (StrCmp(Uri, L"boot") == 0) {
