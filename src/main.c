@@ -9,6 +9,7 @@
 #include <util/Except.h>
 #include <config/BootConfig.h>
 #include <menus/Menus.h>
+#include <uefi/AcpiTimerLib.h>
 
 // define all constructors
 extern EFI_STATUS EFIAPI UefiBootServicesTableLibConstructor(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable);
@@ -30,6 +31,9 @@ EFI_STATUS EFIAPI EfiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *System
     CHECK(gST != NULL);
     CHECK(gBS != NULL);
     CHECK(gRT != NULL);
+
+    // run our own constructors
+    CHECK_AND_RETHROW(AcpiTimerLibConstructor());
 
     // disable the watchdog timer
     EFI_CHECK(gST->BootServices->SetWatchdogTimer(0, 0, 0, NULL));

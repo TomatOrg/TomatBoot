@@ -1,0 +1,6 @@
+#ifndef TOMATOS_ACPITIMERLIB_H
+#define TOMATOS_ACPITIMERLIB_H
+
+EFI_STATUS AcpiTimerLibConstructor();
+
+#endif //TOMATOS_ACPITIMERLIB_H

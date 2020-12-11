@@ -3,8 +3,7 @@
 [SECTION .data]
 align 16
 
-[GLOBAL gGdtPtr]
-gGdtPtr:
+gdt_ptr:
     dw .gdt_end - .gdt_start - 1 ; gdt limit
     dq .gdt_start                ; gdt base
 
@@ -61,7 +60,7 @@ JumpToStivale2Kernel:
 Translate5Level:
     mov rbx, rdx
     push rcx
-    lgdt [gGdtPtr]
+    lgdt [gdt_ptr]
     lea rbx, [bit64]
 
     ; Jump into the compatibility mode CS
@@ -72,7 +71,7 @@ Translate5Level:
     DB 0x48, 0xcb ; retfq
 
 [BITS 32]
-    .cmp_mode:
+.cmp_mode:
 
     ; Now in compatibility mode.
     mov ax, 0x18
@@ -132,6 +131,21 @@ Translate5Level:
 
     ; jump to the kernel
     bits 64
-    bit64:
-    jmp r8
-    hlt
+bit64:
+    push 0
+    push r8
+    xor rax, rax
+    xor rbx, rbx
+    xor rcx, rcx
+    xor rdx, rdx
+    xor rsi, rsi
+    xor rbp, rbp
+    xor r8,  r8
+    xor r9,  r9
+    xor r10, r10
+    xor r11, r11
+    xor r12, r12
+    xor r13, r13
+    xor r14, r14
+    xor r15, r15
+    ret

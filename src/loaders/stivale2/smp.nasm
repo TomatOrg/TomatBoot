@@ -3,24 +3,33 @@
 gSmpTrampoline:
     [BITS 16]
 
+    ; At this point CS = 0x(vv00) and ip= 0x0.
+
     ; clear everything
     cli
     cld
 
-    ; set the ds segment to be 0
-    xor ax, ax
-    mov ds, ax
-
     ; set the gdt
-    lgdt [gSmpTplGdt]
+    mov si, gSmpTplGdt - gSmpTrampoline
+o32 lgdt [cs:si]
+
+    ; calculate our physical address ((.mode32 - base) + cs * 16)
+    mov edi, .mode32 - gSmpTrampoline
+    mov ax, cs
+    shl eax, 4
+    add edi, eax
+
+    ; set it in the buffer
+    mov si, gMode32Addr - gSmpTrampoline
+    mov [cs:si], edi
 
     ; enter protected mode
     mov eax, cr0
     bts eax, 0
     mov cr0, eax
 
-    ; set the cs segment
-    jmp 0x18:.mode32
+    ; jump to it
+    jmp far [cs:si]
 [BITS 32]
     ; set all the segment registers
 .mode32:
@@ -128,6 +137,14 @@ gSmpTrampoline:
     xor r15, r15
     ret
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; These variables are accessed with relative addressing
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+gMode32Addr:
+    dd 0x0000
+    dw 24
+
 [GLOBAL gSmpTplBootedFlag]
 gSmpTplBootedFlag:
     dd 0
@@ -136,15 +153,22 @@ gSmpTplBootedFlag:
 gSmpTplInfoStruct:
     dq 0
 
-[GLOBAL gSmpTrampolineEnd]
-gSmpTrampolineEnd:
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 [GLOBAL gSmpTplGdt]
 gSmpTplGdt:
     dw 0
     dd 0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[GLOBAL gSmpTrampolineEnd]
+gSmpTrampolineEnd:
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; these variables are accessed with abs addresses
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 [GLOBAL gSmpTplTargetMode]
 gSmpTplTargetMode:
@@ -153,3 +177,62 @@ gSmpTplTargetMode:
 [GLOBAL gSmpTplPagemap]
 gSmpTplPagemap:
     dd 0
+
+[GLOBAL gGdtPtr]
+gGdtPtr:
+    dw .size - 1    ; GDT size
+    dd .start       ; GDT start address
+
+    .start:
+        ; Null desc
+        dq 0
+
+        ; 16-bit code
+        dw 0xffff       ; Limit
+        dw 0x0000       ; Base (low 16 bits)
+        db 0x00         ; Base (mid 8 bits)
+        db 10011010b    ; Access
+        db 00000000b    ; Granularity
+        db 0x00         ; Base (high 8 bits)
+
+        ; 16-bit data
+        dw 0xffff       ; Limit
+        dw 0x0000       ; Base (low 16 bits)
+        db 0x00         ; Base (mid 8 bits)
+        db 10010010b    ; Access
+        db 00000000b    ; Granularity
+        db 0x00         ; Base (high 8 bits)
+
+        ; 32-bit code
+        dw 0xffff       ; Limit
+        dw 0x0000       ; Base (low 16 bits)
+        db 0x00         ; Base (mid 8 bits)
+        db 10011010b    ; Access
+        db 11001111b    ; Granularity
+        db 0x00         ; Base (high 8 bits)
+
+        ; 32-bit data
+        dw 0xffff       ; Limit
+        dw 0x0000       ; Base (low 16 bits)
+        db 0x00         ; Base (mid 8 bits)
+        db 10010010b    ; Access
+        db 11001111b    ; Granularity
+        db 0x00         ; Base (high 8 bits)
+
+        ; 64-bit code
+        dw 0x0000       ; Limit
+        dw 0x0000       ; Base (low 16 bits)
+        db 0x00         ; Base (mid 8 bits)
+        db 10011010b    ; Access
+        db 00100000b    ; Granularity
+        db 0x00         ; Base (high 8 bits)
+
+        ; 64-bit data
+        dw 0x0000       ; Limit
+        dw 0x0000       ; Base (low 16 bits)
+        db 0x00         ; Base (mid 8 bits)
+        db 10010010b    ; Access
+        db 00000000b    ; Granularity
+        db 0x00         ; Base (high 8 bits)
+    .end:
+    .size: equ .end - .start
