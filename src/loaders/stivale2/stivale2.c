@@ -189,9 +189,9 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
             } break;
 
             case STIVALE2_HEADER_TAG_SMP_IDENT: {
-                STIVALE2_HEADER_TAG_SMP* Smp = (STIVALE2_HEADER_TAG_SMP*)Tag;
+//                STIVALE2_HEADER_TAG_SMP* Smp = (STIVALE2_HEADER_TAG_SMP*)Tag;
 //                RequestedSmp = TRUE;
-                Requestedx2Apic = Smp->Flags & STIVALE2_HEADER_TAG_SMP_FLAG_X2APIC;
+//                Requestedx2Apic = Smp->Flags & STIVALE2_HEADER_TAG_SMP_FLAG_X2APIC;
             } break;
         }
 
@@ -199,9 +199,14 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     }
 
     // check if pml5 is supported, if not turn of pml5
-    UINT32 eax, ebx, ecx, edx;
+    UINT32 eax = 0, ebx = 0, ecx = 0, edx = 0;
     AsmCpuidEx(0x00000007, 0, &eax, &ebx, &ecx, &edx);
     if (!(ecx & BIT16)) {
+        // at this point I have no idea tbh, this is just fucking weird
+        // that I even have to place this here, why in the name of heck
+        // does a code that has no threads needs memoryfence for things
+        // to not get fucked up, what in the name of hell really
+        MemoryFence();
         RequestedPml5 = FALSE;
     }
 
@@ -536,7 +541,7 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // setup the local apic
-    if (Smp != NULL) {
+    if (RequestedSmp) {
         InitializeLocalApicSoftwareEnable(TRUE);
         ProgramVirtualWireMode();
         if (Requestedx2Apic) {
@@ -571,10 +576,6 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
         // set the descriptor
         *SmpTplGdt = gGdtPtr;
 
-        MicroSecondDelay(10000000);
-
-        IoWrite8(0xE9, 'B');
-
         // now start all aps
         for (int i = 0; i < Smp->CpuCount; i++) {
             // don't send to bsp lol
@@ -582,25 +583,19 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
                 continue;
             }
 
-            IoWrite8(0xE9, 'C');
-
             // set the params
             *SmpTplBootedFlag = 0;
             *SmpTplInfoStruct = (UINT64)&Smp->SmpInfo[i];
 
             // don't run this until the flags are set
-            IoWrite8(0xE9, 'D');
             MemoryFence();
             SendInitSipiSipi(Smp->SmpInfo[i].LapicId, SmpTplBase);
-            IoWrite8(0xE9, 'E');
 
             // wait until it is done and we can get to
             // the next one
             while (*SmpTplBootedFlag == 0) {
                 CpuPause();
             }
-
-            IoWrite8(0xE9, 'F');
         }
     }
 
@@ -660,10 +655,9 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     // Jump to kernel
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    // makes sure everything is done before here
     JumpToStivale2Kernel(Struct, Header.Stack, (void*)Elf.Entry, RequestedPml5);
-
-    // don't go anywhere if failed at this point
-    CpuDeadLoop();
+    UNREACHABLE();
 
 cleanup:
     return Status;
