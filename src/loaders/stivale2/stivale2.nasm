@@ -55,13 +55,13 @@ JumpToStivale2Kernel:
     test r9, r9
     jne Translate5Level
 
-    jmp r8
+    jmp jump_kernel
 
 Translate5Level:
     mov rbx, rdx
     push rcx
     lgdt [gdt_ptr]
-    lea rbx, [bit64]
+    lea rbx, [jump_kernel]
 
     ; Jump into the compatibility mode CS
     push 0x10
@@ -131,7 +131,7 @@ Translate5Level:
 
     ; jump to the kernel
 [BITS 64]
-bit64:
+jump_kernel:
     push 0
     push r8
     xor rax, rax
