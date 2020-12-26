@@ -1,0 +1,90 @@
+Config file found and loaded.
+trace: Stage 2 map file `bios://:1/boot/stage2.map` loaded.
+vbe: Initialising...
+vbe: Version: 3.0
+vbe: OEM: SeaBIOS VBE(C) 2011
+vbe: Graphics vendor: SeaBIOS Developers
+vbe: Product name: SeaBIOS VBE Adapter
+vbe: Product revision: Rev. 1
+vbe: EDID detected screen resolution of 1024x768
+vbe: Found matching mode 0x144, attempting to set...
+vbe: Framebuffer address: 0xfd000000
+mtrr: Max phys addr: 40
+mtrr: Base: 0xfd000000 Mask: 0xffffc00000
+mtrr: Write-combining supported
+mtrr: Block does not overlap other ranges, good to go
+mtrr: Set range in variable MTRR number 1
+echfs: file boot/font.bin not found
+menu: Could not open font file.
+
+
+  [36m Limine's test image [37m
+
+
+Select an entry:
+
+[-] Legacy [0m
+ юд> [47m[30m Stivale Test [0m
+    Stivale2 Test [0m
+
+Arrows to choose, enter to boot, 'e' to edit selected entry.
+
+Booting automatically in 3, press any key to stop the countdown...[2K[2Astivale: 64-bit ELF file detected
+stivale: Requested stack at 0xffffffff80106000
+stivale: Kernel slide: 0x0
+stivale: Top used address in ELF: 0x110000
+stivale: Loading module `bios://:1/boot/test.elf`...
+stivale: Requested module 0:
+         Path:   bios://:1/boot/test.elf
+         String: yooooo
+         Begin:  0x110000
+         End:    0x114798
+stivale: Loading module `bios://:1/boot/bg.bmp`...
+stivale: Requested module 1:
+         Path:   bios://:1/boot/bg.bmp
+         String: yooooo
+         Begin:  0x115000
+         End:    0x35508a
+acpi: Found RSDP at 0xf5a10
+stivale: Current epoch: 1608998568
+vbe: Initialising...
+vbe: Version: 3.0
+vbe: OEM: SeaBIOS VBE(C) 2011
+vbe: Graphics vendor: SeaBIOS Developers
+vbe: Product name: SeaBIOS VBE Adapter
+vbe: Product revision: Rev. 1
+vbe: EDID detected screen resolution of 1024x768
+vbe: Found matching mode 0x144, attempting to set...
+vbe: Framebuffer address: 0xfd000000
+Stivale information passed to the kernel:
+Cmdline: Hi! This is an example!
+Memory map at 0x14aa0 with contents:
+	Entry 0: [0x9fc00+0x400] 0x2
+	Entry 1: [0xf0000+0x10000] 0x2
+	Entry 2: [0x100000+0x10000] 0xa
+	Entry 3: [0x110000+0x4798] 0xa
+	Entry 4: [0x115000+0x24008a] 0xa
+	Entry 5: [0x356000+0x7a1f000] 0x1
+	Entry 6: [0x7d75000+0x26b000] 0x1000
+	Entry 7: [0x7fe0000+0x20000] 0x2
+	Entry 8: [0xfeffc000+0x4000] 0x2
+	Entry 9: [0xfffc0000+0x40000] 0x2
+Framebuffer at 0xfd000000 with specifics:
+	Pitch:  4096
+	Width:  1024
+	Height: 768
+	BPP:    32
+	Extended colour information passed:
+		Memory model:     1
+		Red mask size:    8
+		Red mask shift:   16
+		Green mask size:  8
+		Green mask shift: 8
+		Blue mask size:   8
+		Blue mask shift:  0
+RSDP at 0xf5a10
+Module map at 0x223f8 with modules:
+	Module 0: [0x110000+0x114798] yooooo
+	Module 1: [0x115000+0x35508a] yooooo
+Epoch is  0x5fe75ea8
+Flags are 0x3

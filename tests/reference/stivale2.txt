@@ -1,0 +1,144 @@
+Config file found and loaded.
+trace: Stage 2 map file `bios://:1/boot/stage2.map` loaded.
+vbe: Initialising...
+vbe: Version: 3.0
+vbe: OEM: SeaBIOS VBE(C) 2011
+vbe: Graphics vendor: SeaBIOS Developers
+vbe: Product name: SeaBIOS VBE Adapter
+vbe: Product revision: Rev. 1
+vbe: EDID detected screen resolution of 1024x768
+vbe: Found matching mode 0x144, attempting to set...
+vbe: Framebuffer address: 0xfd000000
+mtrr: Max phys addr: 40
+mtrr: Base: 0xfd000000 Mask: 0xffffc00000
+mtrr: Write-combining supported
+mtrr: Block does not overlap other ranges, good to go
+mtrr: Set range in variable MTRR number 1
+echfs: file boot/font.bin not found
+menu: Could not open font file.
+
+
+  [36m Limine's test image [37m
+
+
+Select an entry:
+
+[-] Legacy [0m
+ юд> [47m[30m Stivale Test [0m
+    Stivale2 Test [0m
+
+Arrows to choose, enter to boot, 'e' to edit selected entry.
+
+Booting automatically in 3, press any key to stop the countdown...[2K[2A
+
+  [36m Limine's test image [37m
+
+
+Select an entry:
+
+[-] Legacy [0m
+ юд>  Stivale Test [0m
+   [47m[30m Stivale2 Test [0m
+
+Arrows to choose, enter to boot, 'e' to edit selected entry.stivale2: 64-bit ELF file detected
+stivale2: Requested stack at 0xffffffff80107000
+stivale2: Kernel slide: 0x0
+stivale2: Top used address in ELF: 0x110000
+stivale2: Loading module `bios://:1/boot/bg.bmp`...
+stivale2: Requested module 0:
+          Path:   bios://:1/boot/bg.bmp
+          String: yooooo
+          Begin:  0x110000
+          End:    0x35008a
+acpi: Found RSDP at 0xf5a10
+stivale2: Current epoch: 1608998575
+vbe: Initialising...
+vbe: Version: 3.0
+vbe: OEM: SeaBIOS VBE(C) 2011
+vbe: Graphics vendor: SeaBIOS Developers
+vbe: Product name: SeaBIOS VBE Adapter
+vbe: Product revision: Rev. 1
+vbe: Requested resolution of 640x480x16
+vbe: Found matching mode 0x111, attempting to set...
+vbe: Framebuffer address: 0xfd000000
+acpi: Found RSDP at 0xf5a10
+acpi: Found "APIC" at 0x7fe14f8
+smp: [xAPIC] Found candidate AP for bring-up. LAPIC ID: 1
+smp: Successfully brought up AP
+smp: [xAPIC] Found candidate AP for bring-up. LAPIC ID: 2
+smp: Successfully brought up AP
+smp: [xAPIC] Found candidate AP for bring-up. LAPIC ID: 3
+smp: Successfully brought up AP
+Generated tags:
+Tag #0  ID: 0x34d1d96339647025
+Tag #1  ID: 0x506461d2950408fa
+Tag #2  ID: 0x566a7bed888e1407
+Tag #3  ID: 0xe5e76a1b4597a781
+Tag #4  ID: 0x9e1786930a375e78
+Tag #5  ID: 0x4b6fe466aade04ce
+Tag #6  ID: 0x359d837855e3858c
+Stivale2 info passed to the kernel:
+Bootloader brand:   Limine
+Bootloader version: 0.7
+Memmap tag:
+	Entries: 9
+		[0x9fc00+0x400] 0x2
+		[0xf0000+0x10000] 0x2
+		[0x100000+0x10000] 0x1001
+		[0x110000+0x24008a] 0x1001
+		[0x351000+0x7a23000] 0x1
+		[0x7d75000+0x26b000] 0x1000
+		[0x7fe0000+0x20000] 0x2
+		[0xfeffc000+0x4000] 0x2
+		[0xfffc0000+0x40000] 0x2
+SMP tag:
+	Flags:        0x0
+	BSP LAPIC ID: 0
+	CPU Count:    4
+		Processor ID:   0
+		LAPIC ID:       0
+		Target Stack:   0x0
+		GOTO Address:   0x0
+		Extra Argument: 0x0
+		Processor ID:   1
+		LAPIC ID:       1
+		Target Stack:   0x0
+		GOTO Address:   0x0
+		Extra Argument: 0x0
+		PAP  srtaorcteesds
+or ID:   2
+		LAPIC ID:       2
+		Target Stack:   0x0
+		GOTO Address:   0x0
+		Extra Argument: 0x0
+		PArPo ce sssotra rItDe:d 
+  3
+		LAPIC ID:       3
+		Target Stack:   0x0
+		GOTO Address:   0x0
+		Extra Argument: 0x0
+FraAPm e bsutfafretre dt
+ag:
+	Address: 0xfd000000
+	Width:   640
+	Height:  480
+	Pitch:   1280
+	BPP:     16
+	Memory model:    1
+	Red mask size:   5
+	Red mask size:   11
+	Green mask size: 6
+	Green mask size: 5
+	Blue mask size:  5
+	Blue mask size:  0
+Epoch tag:
+	Epoch: 0x5fe75eaf
+Commandline tag:
+	Cmdline: Woah! Another example!
+RSDP tag:
+	RSDP: 0xf5a10
+Modules tag:
+	Count: 1
+		[0x110000+0x35008a] yooooo
+Firmware tag:
+	Flags: 0x1
