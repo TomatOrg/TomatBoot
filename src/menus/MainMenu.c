@@ -119,10 +119,10 @@ MENU EnterMainMenu(BOOLEAN first) {
 
     // create the timer event and counter
     const UINTN TIMER_INTERVAL = 250000 /* 1/40 sec */;
-    const UINTN INITIAL_TIMEOUT_COUNTER = ((gBootConfigOverride.BootDelay > 0 ? gBootConfigOverride.BootDelay : config.BootDelay) * 10000000) / TIMER_INTERVAL;
+    const UINTN INITIAL_TIMEOUT_COUNTER = ((gBootConfigOverride.BootDelay >= 0 ? gBootConfigOverride.BootDelay : config.BootDelay) * 10000000) / TIMER_INTERVAL;
     const UINTN BAR_WIDTH = 80;
 
-    UINTN timeout_counter = INITIAL_TIMEOUT_COUNTER;
+    INTN timeout_counter = INITIAL_TIMEOUT_COUNTER;
     EFI_EVENT events[2] = { gST->ConIn->WaitForKey };
     ASSERT_EFI_ERROR(gBS->CreateEvent(EVT_TIMER, TPL_CALLBACK, NULL, NULL, &events[1]));
 
@@ -135,7 +135,6 @@ MENU EnterMainMenu(BOOLEAN first) {
         // get key press
         UINTN which = 0;
         EFI_INPUT_KEY key = {};
-
         ASSERT_EFI_ERROR(gBS->WaitForEvent(count, events, &which));
 
         // got a keypress
@@ -172,7 +171,7 @@ MENU EnterMainMenu(BOOLEAN first) {
             // got timeout
         } else {
             timeout_counter--;
-            if(timeout_counter == 0) {
+            if(timeout_counter <= 0) {
                 // set normal text color
                 ASSERT_EFI_ERROR(gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_LIGHTGRAY, EFI_BLACK)));
 

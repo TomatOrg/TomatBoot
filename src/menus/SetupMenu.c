@@ -97,8 +97,8 @@ MENU EnterSetupMenu() {
                 }
             }else if(op == OP_DEC) {
                 config.BootDelay--;
-                if(config.BootDelay <= 0) {
-                    config.BootDelay = 1;
+                if(config.BootDelay < 0) {
+                    config.BootDelay = 0;
                 }
             }
         });

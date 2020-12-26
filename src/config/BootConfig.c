@@ -32,6 +32,7 @@ void LoadBootConfig(BOOT_CONFIG* config) {
         config->BootDelay = 4;
         config->DefaultOS = 0;
         config->GfxMode = GetFirstGfxMode();
+        config->OverrideGfx = FALSE;
 
         SaveBootConfig(config);
     } else {
