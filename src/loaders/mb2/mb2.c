@@ -207,7 +207,7 @@ EFI_STATUS LoadMB2Kernel(BOOT_ENTRY* Entry) {
                 // we are gonna either use the mode selected in the menu or use the override
                 // as requested from the kernel
                 INT32 GfxMode = config.GfxMode;
-                if (framebuffer->width != 0 && framebuffer->height != 0) {
+                if (!config.OverrideGfx && framebuffer->width != 0 && framebuffer->height != 0) {
                     GfxMode = GetBestGfxMode(framebuffer->width, framebuffer->height);
                 }
 

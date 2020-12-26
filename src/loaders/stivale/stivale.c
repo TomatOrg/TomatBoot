@@ -137,7 +137,7 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
 
     // override the gfx info
     INT32 GfxMode = config.GfxMode;
-    if (Header.FramebufferHeight != 0 && Header.FramebufferWidth != 0) {
+    if (!config.OverrideGfx && Header.FramebufferHeight != 0 && Header.FramebufferWidth != 0) {
         GfxMode = GetBestGfxMode(Header.FramebufferWidth, Header.FramebufferHeight);
     }
 

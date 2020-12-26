@@ -18,8 +18,10 @@ static CHAR16* gTomatBootConfigName = L"TomatBoot";
 BOOT_CONFIG gBootConfigOverride = {
     .BootDelay = -1,
     .DefaultOS = -1,
-    .GfxMode = -1
+    .GfxMode = -1,
+    .OverrideGfx = FALSE
 };
+
 
 void LoadBootConfig(BOOT_CONFIG* config) {
     UINT32 Attributes = 0;

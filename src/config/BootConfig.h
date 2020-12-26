@@ -7,6 +7,7 @@ typedef struct _BOOT_CONFIG {
     INT32 BootDelay;
     INT32 DefaultOS;
     UINT32 GfxMode;
+    BOOLEAN OverrideGfx;
 } BOOT_CONFIG;
 
 /**

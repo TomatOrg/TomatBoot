@@ -120,6 +120,20 @@ MENU EnterSetupMenu() {
         ASSERT_EFI_ERROR(gop->QueryMode(gop, config.GfxMode, &sizeOfInfo, &info));
         WriteAt(controls_start, control_line++, "Graphics Mode: %dx%d (BGRA8)", info->HorizontalResolution, info->VerticalResolution);
 
+        /**
+         * Override Resolution: if true then we will only fallback to this resolution,
+         *                      otherwise we completely override the requested resolution
+         */
+        IF_SELECTED({
+            // check last button press
+            if(op == OP_INC) {
+                config.OverrideGfx = TRUE;
+            }else if(op == OP_DEC) {
+                config.OverrideGfx = FALSE;
+            }
+        });
+        WriteAt(controls_start, control_line++, "Override Graphics: %a", config.OverrideGfx ? "True" : "False");
+
         /*
          * Default os to load
          */

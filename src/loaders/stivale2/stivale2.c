@@ -219,7 +219,7 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     // choose the gfx mode, either the one in the config or choose the mode closest to
     // the requested mode by the kernel
     INT32 GfxMode = config.GfxMode;
-    if (FramebufferReq != NULL && FramebufferReq->FramebufferWidth != 0 && FramebufferReq->FramebufferHeight != 0) {
+    if (!config.OverrideGfx && FramebufferReq != NULL && FramebufferReq->FramebufferWidth != 0 && FramebufferReq->FramebufferHeight != 0) {
         GfxMode = GetBestGfxMode(FramebufferReq->FramebufferWidth, FramebufferReq->FramebufferHeight);
     }
 
