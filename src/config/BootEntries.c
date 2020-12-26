@@ -138,7 +138,7 @@ static EFI_STATUS ParseUriIntoBootEntry(CHAR16* Uri, BOOT_ENTRY* BootEntry) {
             // get the fs and set it
             EFI_CHECK(gBS->HandleProtocol(Handles[index], &gEfiSimpleFileSystemProtocolGuid, (void**)BootEntry->Fs));
         }
-    } else if (StrCmp(Uri, L"guid") == 0) {
+    } else if (StrCmp(Uri, L"guid") == 0 || StrCmp(Uri, L"uuid") == 0) {
         // guid://<guid>/
 
         // parse the guid
