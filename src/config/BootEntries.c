@@ -44,12 +44,16 @@ static CHAR16* CopyString(CHAR16* String) {
     return AllocateCopyPool((1 + StrLen(String)) * sizeof(CHAR16), String);
 }
 
-static EFI_STATUS ParseUriIntoBootEntry(CHAR16* Uri, BOOT_ENTRY* BootEntry) {
+static EFI_STATUS ParseUri(CHAR16* Uri, EFI_SIMPLE_FILE_SYSTEM_PROTOCOL** OutFs, CHAR16** OutPath) {
     EFI_STATUS Status = EFI_SUCCESS;
     EFI_LOADED_IMAGE_PROTOCOL* LoadedImage = NULL;
     EFI_DEVICE_PATH* BootDevicePath = NULL;
     EFI_HANDLE* Handles = NULL;
     UINTN HandleCount = 0;
+
+    CHECK(Uri != NULL);
+    CHECK(OutFs != NULL);
+    CHECK(OutPath != NULL);
 
     // separate the domain from the uri type
     CHAR16* Root = StrStr(Uri, L":");
@@ -60,10 +64,10 @@ static EFI_STATUS ParseUriIntoBootEntry(CHAR16* Uri, BOOT_ENTRY* BootEntry) {
     CHAR16* Path = StrStr(Root, L"/");
     *Path = L'\0';
     Path++; // skip the /
-    BootEntry->Path = CopyString(Path);
+    *OutPath = CopyString(Path);
 
     // convert `/` to `\` for uefi
-    for (CHAR16* C = BootEntry->Path; *C != CHAR_NULL; C++) {
+    for (CHAR16* C = *OutPath; *C != CHAR_NULL; C++) {
         if (*C == '/') {
             *C = '\\';
         }
@@ -136,7 +140,7 @@ static EFI_STATUS ParseUriIntoBootEntry(CHAR16* Uri, BOOT_ENTRY* BootEntry) {
             CHECK_TRACE(index != -1, "Could not find partition number `%d`", PartNum);
 
             // get the fs and set it
-            EFI_CHECK(gBS->HandleProtocol(Handles[index], &gEfiSimpleFileSystemProtocolGuid, (void**)BootEntry->Fs));
+            EFI_CHECK(gBS->HandleProtocol(Handles[index], &gEfiSimpleFileSystemProtocolGuid, (void**)OutFs));
         }
     } else if (StrCmp(Uri, L"guid") == 0 || StrCmp(Uri, L"uuid") == 0) {
         // guid://<guid>/
@@ -175,7 +179,7 @@ static EFI_STATUS ParseUriIntoBootEntry(CHAR16* Uri, BOOT_ENTRY* BootEntry) {
         CHECK_TRACE(index != -1, "Could not find partition or fs with guid of `%s`", Root);
 
         // get the fs from the guid
-        EFI_CHECK(gBS->HandleProtocol(Handles[index], &gEfiSimpleFileSystemProtocolGuid, (void**)BootEntry->Fs));
+        EFI_CHECK(gBS->HandleProtocol(Handles[index], &gEfiSimpleFileSystemProtocolGuid, (void**)OutFs));
     } else {
         CHECK_FAIL_TRACE("Unsupported resource type `%s`", Uri);
     }
@@ -270,7 +274,7 @@ static EFI_STATUS LoadBootEntries(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS, LIST_ENTR
             //------------------------------------------
             if(CHECK_OPTION(L"PATH") || CHECK_OPTION(L"KERNEL_PATH")) {
                 CHAR16* Path = StrStr(Line, L"=") + 1;
-                CHECK_AND_RETHROW(ParseUriIntoBootEntry(Path, CurrentEntry));
+                CHECK_AND_RETHROW(ParseUri(Path, &CurrentEntry->Fs, &CurrentEntry->Path));
 
             //------------------------------------------
             // command line arguments
@@ -300,12 +304,13 @@ static EFI_STATUS LoadBootEntries(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS, LIST_ENTR
             //------------------------------------------
             } else if (CHECK_OPTION(L"INITRD_PATH")) {
                 CHECK_TRACE(CurrentEntry->Protocol == BOOT_LINUX, "`INITRD_PATH` is only available for linux");
+                CHAR16* Path = StrStr(Line, L"=") + 1;
 
                 // create the module entry
                 BOOT_MODULE* Module = AllocateZeroPool(sizeof(BOOT_MODULE));
-                Module->Tag = L"INITRD";
-                Module->Path = CopyString(StrStr(Line, L"=") + 1);
                 Module->Fs = FS;
+                Module->Tag = L"INITRD";
+                CHECK_AND_RETHROW(ParseUri(Path, &Module->Fs, &Module->Path));
                 InsertTailList(&CurrentEntry->BootModules, &Module->Link);
 
             } else if (CHECK_OPTION(L"MODULE_PATH")) {
@@ -314,11 +319,12 @@ static EFI_STATUS LoadBootEntries(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS, LIST_ENTR
                         CurrentEntry->Protocol == BOOT_STIVALE ||
                         CurrentEntry->Protocol == BOOT_STIVALE2,
                         "`MODULE_PATH` is only available for mb2 and stivale{,2} (%d)", CurrentEntry->Protocol);
+                CHAR16* Path = StrStr(Line, L"=") + 1;
 
                 BOOT_MODULE* Module = AllocateZeroPool(sizeof(BOOT_MODULE));
-                Module->Path = CopyString(StrStr(Line, L"=") + 1);
-                CurrentModuleString->Tag = L"";
                 Module->Fs = FS;
+                Module->Tag = L"";
+                CHECK_AND_RETHROW(ParseUri(Path, &Module->Fs, &Module->Path));
                 InsertTailList(&CurrentEntry->BootModules, &Module->Link);
 
                 // this is the next one which will need a string

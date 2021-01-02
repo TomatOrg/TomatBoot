@@ -11,6 +11,7 @@ EFI_STATUS LoadBootModule(BOOT_MODULE* Module, UINTN* Base, UINTN* Size) {
 
     CHECK(Module != NULL);
     CHECK(Module->Fs != NULL);
+    CHECK(Module->Path != NULL);
 
     // open the executable file
     EFI_CHECK(Module->Fs->OpenVolume(Module->Fs, &root));

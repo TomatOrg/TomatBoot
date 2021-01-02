@@ -22,20 +22,20 @@
 #include "stivale.h"
 
 static UINT32 EfiTypeToStivaleType[] = {
-        [EfiReservedMemoryType] = STIVALE_RESERVED,
-        [EfiRuntimeServicesCode] = STIVALE_RESERVED,
-        [EfiRuntimeServicesData] = STIVALE_RESERVED,
-        [EfiMemoryMappedIO] = STIVALE_RESERVED,
-        [EfiMemoryMappedIOPortSpace] = STIVALE_RESERVED,
-        [EfiPalCode] = STIVALE_RESERVED,
-        [EfiUnusableMemory] = STIVALE_BAD_MEMORY,
-        [EfiACPIReclaimMemory] = STIVALE_ACPI_RECLAIM,
-        [EfiLoaderCode] = STIVALE_KERNEL_MODULES,
-        [EfiLoaderData] = STIVALE_KERNEL_MODULES,
-        [EfiBootServicesCode] = STIVALE_BOOTLODAER_RECLAIM,
-        [EfiBootServicesData] = STIVALE_BOOTLODAER_RECLAIM,
-        [EfiConventionalMemory] = STIVALE_USABLE,
-        [EfiACPIMemoryNVS] = STIVALE_ACPI_NVS
+    [EfiReservedMemoryType] = STIVALE_RESERVED,
+    [EfiRuntimeServicesCode] = STIVALE_RESERVED,
+    [EfiRuntimeServicesData] = STIVALE_RESERVED,
+    [EfiMemoryMappedIO] = STIVALE_RESERVED,
+    [EfiMemoryMappedIOPortSpace] = STIVALE_RESERVED,
+    [EfiPalCode] = STIVALE_RESERVED,
+    [EfiUnusableMemory] = STIVALE_BAD_MEMORY,
+    [EfiACPIReclaimMemory] = STIVALE_ACPI_RECLAIM,
+    [EfiLoaderCode] = STIVALE_KERNEL_MODULES,
+    [EfiLoaderData] = STIVALE_KERNEL_MODULES,
+    [EfiBootServicesCode] = STIVALE_BOOTLOADER_RECLAIM,
+    [EfiBootServicesData] = STIVALE_BOOTLOADER_RECLAIM,
+    [EfiConventionalMemory] = STIVALE_USABLE,
+    [EfiACPIMemoryNVS] = STIVALE_ACPI_NVS
 };
 
 void NORETURN JumpToStivaleKernel(STIVALE_STRUCT* strct, UINT64 Stack, void* KernelEntry, BOOLEAN level5);
@@ -175,6 +175,14 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     Struct->FramebufferHeight = gop->Mode->Info->VerticalResolution;
     Struct->FramebufferPitch = gop->Mode->Info->PixelsPerScanLine * 4;
     Struct->FramebufferBpp = 32;
+    Struct->FbMemoryModel = 1;
+    Struct->FbRedMaskSize = 8;
+    Struct->FbRedMaskShift = 0;
+    Struct->FbGreenMaskSize = 8;
+    Struct->FbGreenMaskShift = 8;
+    Struct->FbBlueMaskSize = 8;
+    Struct->FbBlueMaskShift = 16;
+    Struct->Flags |= STIVALE_STRUCT_EXT_FB_INFO;
 
     // set the acpi table
     void* acpi_table = NULL;
@@ -276,21 +284,47 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
     UINTN LastEnd = 0xFFFFFFFFFFFF;
     for (int i = 0; i < EntryCount; i++) {
         EFI_MEMORY_DESCRIPTOR* Desc = (EFI_MEMORY_DESCRIPTOR*)((UINTN)MemoryMap + DescriptorSize * i);
-        int Type = EfiTypeToStivaleType[Desc->Type];
+        EFI_PHYSICAL_ADDRESS PhysicalBase = Desc->PhysicalStart;
+        UINTN Length = EFI_PAGES_TO_SIZE(Desc->NumberOfPages);
+        EFI_PHYSICAL_ADDRESS PhysicalEnd = Desc->PhysicalStart + Length;
+
+        int Type = STIVALE_RESERVED;
+        if (Desc->Type < EfiMaxMemoryType) {
+            Type = EfiTypeToStivaleType[Desc->Type];
+        }
+
+        // don't include bootloader in kernel and modules
+        if (Type == STIVALE_KERNEL_MODULES) {
+            BOOLEAN IsKernelOrModules = FALSE;
+            if (Elf.PhysicalBase == PhysicalBase) {
+                IsKernelOrModules = TRUE;
+            } else if (Struct->Modules != 0) {
+                STIVALE_MODULE* Modules = (STIVALE_MODULE*)Struct->Modules;
+                for (int j = 0; j < Struct->ModuleCount; j++) {
+                    if (Modules->Begin == PhysicalBase) {
+                        IsKernelOrModules = TRUE;
+                    }
+                    Modules = (STIVALE_MODULE*)Modules->Next;
+                }
+            }
+
+            if (!IsKernelOrModules) {
+                Type = STIVALE_BOOTLOADER_RECLAIM;
+            }
+        }
 
         if (LastType == Type && LastEnd == Desc->PhysicalStart) {
-            StartFrom[-1].Length += EFI_PAGES_TO_SIZE(Desc->NumberOfPages);
-            LastEnd = Desc->PhysicalStart + EFI_PAGES_TO_SIZE(Desc->NumberOfPages);
+            StartFrom[-1].Length += Length;
         } else {
             StartFrom->Type = Type;
-            StartFrom->Length = EFI_PAGES_TO_SIZE(Desc->NumberOfPages);
-            StartFrom->Base = Desc->PhysicalStart;
+            StartFrom->Length = Length;
+            StartFrom->Base = PhysicalBase;
             StartFrom->Unused = 0;
             LastType = Type;
-            LastEnd = Desc->PhysicalStart + EFI_PAGES_TO_SIZE(Desc->NumberOfPages);
             StartFrom++;
             Struct->MemoryMapEntries++;
         }
+        LastEnd = PhysicalEnd;
     }
 
     // no interrupts

@@ -36,6 +36,14 @@ typedef struct {
     UINT64 Epoch;
     UINT64 Flags;
 #define STIVALE_STRUCT_BIOS         BIT0
+#define STIVALE_STRUCT_EXT_FB_INFO  BIT1
+    UINT8 FbMemoryModel;
+    UINT8 FbRedMaskSize;
+    UINT8 FbRedMaskShift;
+    UINT8 FbGreenMaskSize;
+    UINT8 FbGreenMaskShift;
+    UINT8 FbBlueMaskSize;
+    UINT8 FbBlueMaskShift;
 } STIVALE_STRUCT;
 
 #define STIVALE_USABLE              1
@@ -44,7 +52,7 @@ typedef struct {
 #define STIVALE_ACPI_NVS            4
 #define STIVALE_BAD_MEMORY          5
 #define STIVALE_KERNEL_MODULES      10
-#define STIVALE_BOOTLODAER_RECLAIM  0x1000
+#define STIVALE_BOOTLOADER_RECLAIM  0x1000
 
 typedef struct {
     UINT64 Base;

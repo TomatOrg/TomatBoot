@@ -261,7 +261,7 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     Framebuffer->FramebufferWidth = gop->Mode->Info->HorizontalResolution;
     Framebuffer->FramebufferHeight = gop->Mode->Info->VerticalResolution;
     Framebuffer->FramebufferPitch = gop->Mode->Info->PixelsPerScanLine * 4;
-    Framebuffer->FramebufferBpp = gop->Mode->Info->PixelFormat;
+    Framebuffer->FramebufferBpp = 32;
     Framebuffer->MemoryModel = 1;
     Framebuffer->RedMaskSize = 8;
     Framebuffer->RedMaskShift = 0;
