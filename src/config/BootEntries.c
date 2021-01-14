@@ -302,23 +302,7 @@ static EFI_STATUS LoadBootEntries(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS, LIST_ENTR
             //------------------------------------------
             // module
             //------------------------------------------
-            } else if (CHECK_OPTION(L"INITRD_PATH")) {
-                CHECK_TRACE(CurrentEntry->Protocol == BOOT_LINUX, "`INITRD_PATH` is only available for linux");
-                CHAR16* Path = StrStr(Line, L"=") + 1;
-
-                // create the module entry
-                BOOT_MODULE* Module = AllocateZeroPool(sizeof(BOOT_MODULE));
-                Module->Fs = FS;
-                Module->Tag = L"INITRD";
-                CHECK_AND_RETHROW(ParseUri(Path, &Module->Fs, &Module->Path));
-                InsertTailList(&CurrentEntry->BootModules, &Module->Link);
-
             } else if (CHECK_OPTION(L"MODULE_PATH")) {
-                CHECK_TRACE(
-                        CurrentEntry->Protocol == BOOT_MB2 ||
-                        CurrentEntry->Protocol == BOOT_STIVALE ||
-                        CurrentEntry->Protocol == BOOT_STIVALE2,
-                        "`MODULE_PATH` is only available for mb2 and stivale{,2} (%d)", CurrentEntry->Protocol);
                 CHAR16* Path = StrStr(Line, L"=") + 1;
 
                 BOOT_MODULE* Module = AllocateZeroPool(sizeof(BOOT_MODULE));
