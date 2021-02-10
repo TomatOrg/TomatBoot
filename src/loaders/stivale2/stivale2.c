@@ -639,6 +639,11 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
     // Jump to kernel
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    // clear the screen before booting just to indicate we got to here
+    SetMem32((void*)Framebuffer->FramebufferAddr,
+             Framebuffer->FramebufferPitch * Framebuffer->FramebufferHeight,
+             0x404000);
+
     // makes sure everything is done before here
     JumpToStivale2Kernel(Struct, Header.Stack, (void*)Elf.Entry, RequestedPml5);
     UNREACHABLE();

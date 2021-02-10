@@ -180,6 +180,7 @@ QEMU_ARGS += -debugcon stdio
 QEMU_ARGS += -monitor telnet:localhost:4321,server,nowait
 QEMU_ARGS += --no-shutdown
 QEMU_ARGS += --no-reboot
+QEMU_ARGS += -cpu host
 
 ifeq ($(shell uname -r | sed -n 's/.*\( *Microsoft *\).*/\1/p'), Microsoft)
     QEMU := qemu-system-x86_64.exe

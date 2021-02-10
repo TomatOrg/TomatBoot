@@ -10,6 +10,8 @@
 #include <config/BootConfig.h>
 #include <menus/Menus.h>
 #include <uefi/AcpiTimerLib.h>
+#include <loaders/elf/ElfLoader.h>
+#include <Library/TimerLib.h>
 
 // define all constructors
 extern EFI_STATUS EFIAPI UefiBootServicesTableLibConstructor(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE* SystemTable);
@@ -41,6 +43,18 @@ EFI_STATUS EFIAPI EfiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *System
     // just a signature that we booted
     EFI_CHECK(gST->ConOut->ClearScreen(gST->ConOut));
     TRACE("Hello World!");
+
+    // Prepare workaround for custom memory type
+    if (
+        // for AMI bioses
+        (
+            StrCmp(gST->FirmwareVendor, L"American Megatrends") == 0 &&
+            gST->FirmwareRevision <= 0x00040278
+        )
+    ) {
+        TRACE("Need workaround for memory type :(");
+        gKernelAndModulesMemoryType = EfiMemoryMappedIOPortSpace;
+    }
 
     // Load the boot configs and set the default one
     BOOT_CONFIG config;
