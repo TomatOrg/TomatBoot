@@ -31,8 +31,8 @@
 
 static UINT32 EfiTypeToStivaleType[] = {
     [EfiReservedMemoryType] = STIVALE2_RESERVED,
-    [EfiLoaderCode] = STIVALE2_KERNEL_AND_MODULES,
-    [EfiLoaderData] = STIVALE2_KERNEL_AND_MODULES,
+    [EfiLoaderCode] = STIVALE2_BOOTLOADER_RECLAIMABLE,
+    [EfiLoaderData] = STIVALE2_BOOTLOADER_RECLAIMABLE,
     [EfiBootServicesCode] = STIVALE2_BOOTLOADER_RECLAIMABLE,
     [EfiBootServicesData] = STIVALE2_BOOTLOADER_RECLAIMABLE,
     [EfiRuntimeServicesCode] = STIVALE2_RESERVED,

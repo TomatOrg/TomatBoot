@@ -2,6 +2,7 @@
 #include <Library/FileHandleLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <loaders/elf/ElfLoader.h>
 #include "Loaders.h"
 
 EFI_STATUS LoadBootModule(BOOT_MODULE* Module, UINTN* Base, UINTN* Size) {
@@ -20,7 +21,7 @@ EFI_STATUS LoadBootModule(BOOT_MODULE* Module, UINTN* Base, UINTN* Size) {
     // read it all
     *Base = BASE_4GB;
     EFI_CHECK(FileHandleGetSize(moduleImage, Size));
-    EFI_CHECK(gBS->AllocatePages(AllocateMaxAddress, EfiRuntimeServicesData, EFI_SIZE_TO_PAGES(*Size), Base));
+    EFI_CHECK(gBS->AllocatePages(AllocateMaxAddress, gKernelAndModulesMemoryType, EFI_SIZE_TO_PAGES(*Size), Base));
     CHECK_AND_RETHROW(FileRead(moduleImage, (void*)*Base, *Size, 0));
 
 cleanup:
