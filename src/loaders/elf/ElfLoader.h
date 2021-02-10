@@ -9,6 +9,7 @@ typedef struct _ELF_INFO {
     // if zero then physical address is used
     UINT64 VirtualOffset;
     EFI_PHYSICAL_ADDRESS PhysicalBase;
+    EFI_PHYSICAL_ADDRESS PhysicalTop;
 
     // The entry of the image
     UINTN Entry;
@@ -19,6 +20,12 @@ typedef struct _ELF_INFO {
     UINTN SectionEntrySize;
     UINTN StringSectionIndex;
 } ELF_INFO;
+
+/**
+ * This is the kernel and modules memory type that will be used
+ * when allocating memory for the kernel or modules
+ */
+extern EFI_MEMORY_TYPE gKernelAndModulesMemoryType;
 
 EFI_STATUS LoadElf32(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* fs, CHAR16* file, ELF_INFO* info);
 

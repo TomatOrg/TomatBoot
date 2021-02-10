@@ -16,6 +16,10 @@ EFI_STATUS LoadElf32(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* fs, CHAR16* file, ELF_INFO
     EFI_FILE_PROTOCOL* root = NULL;
     EFI_FILE_PROTOCOL* elfFile = NULL;
 
+    CHECK(info != NULL);
+    info->PhysicalBase = MAX_INT64;
+    info->PhysicalTop = 0;
+
     // open the executable file
     EFI_CHECK(fs->OpenVolume(fs, &root));
     EFI_CHECK(root->Open(root, &elfFile, file, EFI_FILE_MODE_READ, 0));
@@ -39,19 +43,28 @@ EFI_STATUS LoadElf32(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* fs, CHAR16* file, ELF_INFO
 
         switch (phdr.p_type) {
             // normal section
-            case PT_LOAD:
+            case PT_LOAD: {
                 // ignore empty sections
                 if (phdr.p_memsz == 0) continue;
 
                 // get the type and pages to allocate
-                EFI_MEMORY_TYPE MemType = (phdr.p_flags & PF_X) ? EfiLoaderCode : EfiLoaderData;
                 UINTN nPages = EFI_SIZE_TO_PAGES(ALIGN_VALUE(phdr.p_memsz, EFI_PAGE_SIZE));
 
                 // allocate the address
                 EFI_PHYSICAL_ADDRESS base = info->VirtualOffset ? phdr.p_vaddr - info->VirtualOffset : phdr.p_paddr;
-                EFI_CHECK(gBS->AllocatePages(AllocateAddress, MemType, nPages, &base));
+                TRACE("    BASE = %p, PAGES = %d", base, nPages);
+                EFI_CHECK(gBS->AllocatePages(AllocateAddress, gKernelAndModulesMemoryType, nPages, &base));
                 CHECK_AND_RETHROW(FileRead(elfFile, (void*)base, phdr.p_filesz, phdr.p_offset));
                 ZeroMem((void*)(base + phdr.p_filesz), phdr.p_memsz - phdr.p_filesz);
+
+                if (info->PhysicalBase > base) {
+                    info->PhysicalBase = base;
+                }
+
+                if (info->PhysicalTop < base + phdr.p_memsz) {
+                    info->PhysicalTop = base + phdr.p_memsz;
+                }
+            } break;
 
             // ignore default entry
             default:

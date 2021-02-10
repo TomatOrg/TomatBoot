@@ -289,28 +289,10 @@ EFI_STATUS LoadStivaleKernel(BOOT_ENTRY* Entry) {
         EFI_PHYSICAL_ADDRESS PhysicalEnd = Desc->PhysicalStart + Length;
 
         int Type = STIVALE_RESERVED;
-        if (Desc->Type < EfiMaxMemoryType) {
+        if (Desc->Type == gKernelAndModulesMemoryType) {
+            Type = STIVALE_KERNEL_MODULES;
+        } else if (Desc->Type < EfiMaxMemoryType) {
             Type = EfiTypeToStivaleType[Desc->Type];
-        }
-
-        // don't include bootloader in kernel and modules
-        if (Type == STIVALE_KERNEL_MODULES) {
-            BOOLEAN IsKernelOrModules = FALSE;
-            if (Elf.PhysicalBase == PhysicalBase) {
-                IsKernelOrModules = TRUE;
-            } else if (Struct->Modules != 0) {
-                STIVALE_MODULE* Modules = (STIVALE_MODULE*)Struct->Modules;
-                for (int j = 0; j < Struct->ModuleCount; j++) {
-                    if (Modules->Begin == PhysicalBase) {
-                        IsKernelOrModules = TRUE;
-                    }
-                    Modules = (STIVALE_MODULE*)Modules->Next;
-                }
-            }
-
-            if (!IsKernelOrModules) {
-                Type = STIVALE_BOOTLOADER_RECLAIM;
-            }
         }
 
         if (LastType == Type && LastEnd == Desc->PhysicalStart) {

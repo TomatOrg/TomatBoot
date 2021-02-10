@@ -614,26 +614,10 @@ EFI_STATUS LoadStivale2Kernel(BOOT_ENTRY* Entry) {
         EFI_PHYSICAL_ADDRESS PhysicalEnd = Desc->PhysicalStart + Length;
 
         int Type = STIVALE2_RESERVED;
-        if (Desc->Type < EfiMaxMemoryType) {
+        if (Desc->Type == gKernelAndModulesMemoryType) {
+            Type = STIVALE2_KERNEL_AND_MODULES;
+        } else if (Desc->Type < EfiMaxMemoryType) {
             Type = EfiTypeToStivaleType[Desc->Type];
-        }
-
-        // don't include bootloader in kernel and modules
-        if (Type == STIVALE2_KERNEL_AND_MODULES) {
-            BOOLEAN IsKernelOrModules = FALSE;
-            if (Elf.PhysicalBase == PhysicalBase) {
-                IsKernelOrModules = TRUE;
-            } else if (Modules != NULL) {
-                for (int j = 0; j < Modules->ModuleCount; j++) {
-                    if (Modules->Modules[j].Begin == PhysicalBase) {
-                        IsKernelOrModules = TRUE;
-                    }
-                }
-            }
-
-            if (!IsKernelOrModules) {
-                Type = STIVALE2_BOOTLOADER_RECLAIMABLE;
-            }
         }
 
         // check if we can merge

@@ -98,7 +98,8 @@ static void draw() {
     } else {
         WriteAt(0, 6, "No config file found!");
     }
-    WriteAt(0, 7, "UEFI Version: %d.%d", (gST->Hdr.Revision >> 16u) & 0xFFFFu, gST->Hdr.Revision & 0xFFFFu);
+    WriteAt(0, 7, "Firmware: %s (%08x)", gST->FirmwareVendor, gST->FirmwareRevision);
+    WriteAt(0, 8, "UEFI Version: %d.%d", (gST->Hdr.Revision >> 16u) & 0xFFFFu, gST->Hdr.Revision & 0xFFFFu);
 
     // options for what we can do
     WriteAt(0, 13, "Press B for BOOTMENU");
