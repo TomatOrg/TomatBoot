@@ -49,7 +49,7 @@ EFI_STATUS EFIAPI EfiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *System
         // for AMI bioses
         (
             StrCmp(gST->FirmwareVendor, L"American Megatrends") == 0 &&
-            gST->FirmwareRevision <= 0x00040278
+            gST->FirmwareRevision <= 0x0005000C
         )
     ) {
         TRACE("Need workaround for memory type :(");
