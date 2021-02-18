@@ -3,6 +3,7 @@
 ########################################################################################################################
 
 # Declare the default target
+.PHONY: default
 default: all
 
 ########################################################################################################################
@@ -132,6 +133,7 @@ DEPS := $(OBJS:%.o=%.d)
 #
 # The default target
 #
+.PHONY: all
 all: $(BIN_DIR)/$(PROJECT_NAME).efi
 
 #
@@ -162,7 +164,7 @@ $(BUILD_DIR)/%.c.o: %.c
 #
 # Build each of the c files
 #
-./build/%.nasm.o: %.nasm
+$(BUILD_DIR)/%.nasm.o: %.nasm
 	@echo NASM $@
 	@mkdir -p $(@D)
 	@nasm $(NASMFLAGS) -o $@ $<
@@ -170,5 +172,35 @@ $(BUILD_DIR)/%.c.o: %.c
 #
 # just delete the output folder
 #
+.PHONY: clean
 clean:
 	rm -rf $(OUT_DIR)
+
+
+########################################################################################################################
+# Test targets
+########################################################################################################################
+
+image: $(BIN_DIR)/$(PROJECT_NAME).efi
+	@mkdir -p ./image/EFI/BOOT/
+	@cp $(BIN_DIR)/$(PROJECT_NAME).efi ./image/EFI/BOOT/BOOTX64.EFI
+	@cp ./tests/binaries/example.cfg ./image/tomatboot.cfg
+	@cp ./tests/binaries/test.elf ./image/test.elf
+
+QEMU_ARGS += -m 4G -smp 4
+QEMU_ARGS += -machine q35
+QEMU_ARGS += -debugcon stdio
+QEMU_ARGS += -monitor telnet:localhost:4321,server,nowait
+QEMU_ARGS += --no-shutdown
+QEMU_ARGS += --no-reboot
+
+ifeq ($(shell uname -r | sed -n 's/.*\( *Microsoft *\).*/\1/p'), Microsoft)
+    QEMU := qemu-system-x86_64.exe
+else
+    QEMU := qemu-system-x86_64
+endif
+
+
+.PHONY: all
+qemu: image
+	$(QEMU) $(QEMU_ARGS) -bios OVMF.fd -hda fat:rw:image

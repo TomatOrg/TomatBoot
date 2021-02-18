@@ -1,0 +1,91 @@
+#ifndef __TOMATBOOT_CONFIG_H__
+#define __TOMATBOOT_CONFIG_H__
+
+#include <Base.h>
+#include <Uefi.h>
+
+/**
+ * The configuration
+ */
+typedef struct _CONFIG {
+    /**
+     * Timeout
+     */
+    INTN Timeout;
+
+    /**
+     * The default entry
+     */
+    INTN DefaultEntry;
+
+    /**
+     * The boot entries
+     */
+    LIST_ENTRY Entries;
+} CONFIG;
+
+/**
+ * The boot protocols supported by tomatboot
+ */
+typedef enum _PROTOCOL {
+    PROTOCOL_STIVALE,
+    PROTOCOL_STIVALE2,
+    PROTOCOL_LINUX,
+    PROTOCOL_MULTIBOOT2,
+} PROTOCOL;
+
+typedef struct _CONFIG_ENTRY {
+    LIST_ENTRY Link;
+
+    /**
+     * Protocol for this entry
+     */
+    PROTOCOL Protocol;
+
+    /**
+     * Cmdline to pass to the kernel
+     */
+    CHAR8* Cmdline;
+
+    /**
+     * The path of the kernel
+     */
+    EFI_DEVICE_PATH* KernelPath;
+
+    /**
+     * The modules of the boot entry
+     */
+    LIST_ENTRY Modules;
+} CONFIG_ENTRY;
+
+typedef struct _MODULE {
+    LIST_ENTRY Link;
+
+    /**
+     * String to identify this module
+     */
+    CHAR8* String;
+
+    /**
+     * The path of the module to load
+     */
+    EFI_DEVICE_PATH* Path;
+
+    /**
+     * The file is compressed and needs to be decompressed before jumping
+     * to the kernel
+     */
+    BOOLEAN Compressed;
+} MODULE;
+
+/**
+ * The boot config
+ */
+extern CONFIG gConfig;
+
+/**
+ * Parse the configurations of the boot loader
+ */
+EFI_STATUS ParseConfig();
+
+#endif //__TOMATBOOT_CONFIG_H__

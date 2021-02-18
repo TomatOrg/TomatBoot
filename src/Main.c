@@ -1,5 +1,6 @@
 #include <Uefi.h>
 #include <Util/Except.h>
+#include "Config.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // constructors
@@ -16,12 +17,6 @@ cleanup:
     return Status;
 }
 
-EFI_STATUS EFIAPI DxeDebugLibDestructor(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable);
-
-static void CallDestructor(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
-    WARN_ON_ERROR(DxeDebugLibDestructor(ImageHandle, SystemTable), "DebugLib destructor failed!");
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Entry point!
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -31,9 +26,12 @@ EFI_STATUS EfiMain(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
 
     TRACE("Hello World!");
 
+    TRACE("Calling edk2 constructors...");
     CHECK_AND_RETHROW(CallConstructors(ImageHandle, SystemTable));
 
+    TRACE("Reading the config...");
+    CHECK_AND_RETHROW(ParseConfig());
+
 cleanup:
-    CallDestructor(ImageHandle, SystemTable);
-    return Status;
+    while(1);
 }
