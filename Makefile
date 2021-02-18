@@ -22,7 +22,7 @@ LD				:= lld-link
 #
 OUT_DIR			:= out
 BIN_DIR			:= $(OUT_DIR)/bin
-BUILD_DIR		:= $(BUILD_DIR)/build
+BUILD_DIR		:= $(OUT_DIR)/build
 
 #
 # The default cflags
@@ -31,6 +31,8 @@ CFLAGS			:= -target x86_64-unknown-windows
 CFLAGS			+= -Wall -Werror -Os -flto -ggdb
 CFLAGS			+= -nostdlib -nostdinc -std=c11
 CFLAGS			+= -fshort-wchar -ffreestanding
+CFLAGS			+= -Isrc
+CFLAGS			+= -Wno-unused-label
 
 #
 # Add the git revision
@@ -72,8 +74,14 @@ UEFI_HDRS		:= $(shell find edk2/Include -name '*.h')
 
 
 ########################################################################################################################
-# EDK2 PCDs
+# EDK2 stuff
 ########################################################################################################################
+
+#
+# EDK2 includes
+#
+CFLAGS			+= -Iedk2/Include
+CFLAGS			+= -Iedk2/Include/X64
 
 
 
@@ -82,8 +90,11 @@ UEFI_HDRS		:= $(shell find edk2/Include -name '*.h')
 ########################################################################################################################
 
 # Get the objects and their dirs
-OBJS := $(SRCS:%=./build/%.o)
+OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
+
+# Include the deps if any
 DEPS := $(OBJS:%.o=%.d)
+-include $(DEPS)
 
 #
 # The default target
@@ -113,7 +124,7 @@ $(BUILD_DIR)/guids.c: $(UEFI_HDRS)
 $(BUILD_DIR)/%.c.o: %.c
 	@echo CC $@
 	@mkdir -p $(@D)
-	@$(CLANG) $(CFLAGS) -MMD -c -o $@ $<
+	@$(CC) $(CFLAGS) -MMD -c -o $@ $<
 
 #
 # Build each of the c files
