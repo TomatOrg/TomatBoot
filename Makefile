@@ -83,7 +83,40 @@ UEFI_HDRS		:= $(shell find edk2/Include -name '*.h')
 CFLAGS			+= -Iedk2/Include
 CFLAGS			+= -Iedk2/Include/X64
 
+#
+# Caller base name
+#
+CFLAGS			+= -DgEfiCallerBaseName=\"$(PROJECT_NAME)\"
 
+#
+# EDK2 sources
+#
+SRCS 			+= $(shell find edk2/Library/ -name '*.c')
+SRCS 			+= $(shell find edk2/Library/ -name '*.nasm')
+
+#
+# EDK2 PCDs
+#
+
+# boolean pcds
+
+# uint32 pcds
+EDK2_PCD_UINT32	:= PcdMaximumUnicodeStringLength=0
+EDK2_PCD_UINT32 += PcdMaximumAsciiStringLength=0
+EDK2_PCD_UINT32 += PcdFixedDebugPrintErrorLevel=0xFFFFFFFF
+EDK2_PCD_UINT32 += PcdDebugPrintErrorLevel=0xFFFFFFFF
+
+# uint16 pcds
+
+# uint8 pcds
+EDK2_PCD_UINT8 	:= PcdDebugPropertyMask=DEBUG_PROPERTY_ASSERT_BREAKPOINT_ENABLED
+EDK2_PCD_UINT8 	+= PcdDebugClearMemoryValue=0xAF
+
+# setup the actual full token
+CFLAGS 			+= $(EDK2_PCD_UINT32:%=-D_PCD_GET_MODE_32_%)
+CFLAGS 			+= $(EDK2_PCD_UINT16:%=-D_PCD_GET_MODE_16_%)
+CFLAGS 			+= $(EDK2_PCD_UINT8:%=-D_PCD_GET_MODE_8_%)
+CFLAGS 			+= $(EDK2_PCD_BOOL:%=-D_PCD_GET_MODE_BOOL_%)
 
 ########################################################################################################################
 # Targets
