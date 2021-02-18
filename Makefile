@@ -104,10 +104,12 @@ SRCS 			+= $(shell find edk2/Library/ -name '*.nasm')
 # uint32 pcds
 EDK2_PCD_UINT32	:= PcdMaximumUnicodeStringLength=0
 EDK2_PCD_UINT32 += PcdMaximumAsciiStringLength=0
+EDK2_PCD_UINT32 += PcdMaximumDevicePathNodeCount=0
 EDK2_PCD_UINT32 += PcdFixedDebugPrintErrorLevel=0xFFFFFFFF
 EDK2_PCD_UINT32 += PcdDebugPrintErrorLevel=0xFFFFFFFF
 
 # uint16 pcds
+EDK2_PCD_UINT16	:= PcdUefiFileHandleLibPrintBufferSize=1536
 
 # uint8 pcds
 EDK2_PCD_UINT8 	:= PcdDebugPropertyMask=DEBUG_PROPERTY_ASSERT_BREAKPOINT_ENABLED

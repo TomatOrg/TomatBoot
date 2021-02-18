@@ -22,6 +22,9 @@
 #define CHECK_LABEL(expr, label, ...)   CHECK_STATUS_LABEL(expr, RETURN_INVALID_PARAMETER, label, ##__VA_ARGS__)
 #define CHECK(expr, ...)                CHECK_STATUS_LABEL(expr, RETURN_INVALID_PARAMETER, cleanup, ##__VA_ARGS__)
 
+#define EFI_CHECK_LABEL(expr, label, ...) CHECK_STATUS_LABEL((Status = (expr)) == EFI_SUCCESS, Status, label, ##__VA_ARGS__)
+#define EFI_CHECK(expr, ...) EFI_CHECK_LABEL(expr, cleanup, ##__VA_ARGS__)
+
 #define CHECK_FAIL_STATUS_LABEL(status, label, ...) CHECK_STATUS_LABEL(0, status, label, ##__VA_ARGS__)
 #define CHECK_FAIL_STATUS(status, ...)              CHECK_STATUS(0, status, ##__VA_ARGS__)
 #define CHECK_FAIL_LABEL(label, ...)                CHECK_LABEL(0, label, ##__VA_ARGS__)

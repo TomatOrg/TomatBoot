@@ -6,11 +6,15 @@
 // constructors
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+EFI_STATUS EFIAPI UefiBootServicesTableLibConstructor(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable);
+EFI_STATUS EFIAPI DevicePathLibConstructor(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable);
 EFI_STATUS EFIAPI DxeDebugLibConstructor(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable);
 
 static EFI_STATUS CallConstructors(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     EFI_STATUS Status = EFI_SUCCESS;
 
+    CHECK_AND_RETHROW(UefiBootServicesTableLibConstructor(ImageHandle, SystemTable));
+    CHECK_AND_RETHROW(DevicePathLibConstructor(ImageHandle, SystemTable));
     CHECK_AND_RETHROW(DxeDebugLibConstructor(ImageHandle, SystemTable));
 
 cleanup:
