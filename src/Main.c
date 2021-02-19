@@ -108,26 +108,8 @@ EFI_STATUS EfiMain(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     CHECK_AND_RETHROW(LoadExtFs());
     CHECK_AND_RETHROW(ConnectControllers());
 
-    EFI_HANDLE* Handles = NULL;
-    UINTN HandleCount = 0;
-    EFI_CHECK(gBS->LocateHandleBuffer(ByProtocol, &gEfiSimpleFileSystemProtocolGuid, NULL, &HandleCount, &Handles));
-    for (int i = 0; i < HandleCount; i++) {
-        EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* SimpleFileSystem = NULL;
-        EFI_CHECK(gBS->HandleProtocol(Handles[i], &gEfiSimpleFileSystemProtocolGuid, (void**)&SimpleFileSystem));
-
-        EFI_FILE_PROTOCOL* RootFile;
-        EFI_CHECK(SimpleFileSystem->OpenVolume(SimpleFileSystem, &RootFile));
-
-        TRACE("Opening hello");
-
-        EFI_FILE_PROTOCOL* Yes;
-        RootFile->Open(RootFile, &Yes, L"Hello", 0, 0);
-
-        TRACE("Done");
-    }
-
-//    TRACE("Reading the Config...");
-//    CHECK_AND_RETHROW(ParseConfig());
+    TRACE("Reading the Config...");
+    CHECK_AND_RETHROW(ParseConfig());
 
 cleanup:
     TRACE("Done...");

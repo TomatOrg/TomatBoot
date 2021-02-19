@@ -2,6 +2,7 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/DevicePathLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <Protocol/LoadedImage.h>
 #include "DevicePathUtils.h"
 #include "Except.h"
 
@@ -164,5 +165,38 @@ CloseLastFile:
     // to the caller.
     //
     ASSERT (EFI_ERROR (Status));
+    return Status;
+}
+
+
+EFI_STATUS GetBootDevicePath(EFI_DEVICE_PATH** BootDrive) {
+    EFI_STATUS Status = EFI_SUCCESS;
+    EFI_DEVICE_PATH* BootImage = NULL;
+
+    CHECK(BootDrive != NULL);
+    *BootDrive = NULL;
+
+    // get the boot image device path
+    EFI_CHECK(gBS->HandleProtocol(gImageHandle, &gEfiLoadedImageDevicePathProtocolGuid, (void**)&BootImage));
+
+    // now remove the last element (Which would be the device path)
+    BootImage = RemoveLastDevicePathNode(BootImage);
+    CHECK_STATUS(BootImage, EFI_OUT_OF_RESOURCES);
+
+    // for hard drives we need to remove the
+    // partition as well, so we can get all the
+    // filesystems on that drive
+    EFI_DEVICE_PATH* Node = LastDevicePathNode(BootImage);
+    if (Node->Type == MEDIA_DEVICE_PATH && Node->SubType == MEDIA_HARDDRIVE_DP) {
+        Node = RemoveLastDevicePathNode(BootImage);
+        CHECK_STATUS(Node != NULL, EFI_OUT_OF_RESOURCES);
+        FreePool(BootImage);
+        BootImage = Node;
+    }
+
+    // set it
+    *BootDrive = BootImage;
+
+cleanup:
     return Status;
 }

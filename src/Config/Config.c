@@ -24,37 +24,6 @@ CONFIG gConfig = {
     .Entries = INITIALIZE_LIST_HEAD_VARIABLE(gConfig.Entries)
 };
 
-/**
- * Returns the device path of the boot drive
- *
- * @param BootDrive [OUT] The boot drive
- */
-static EFI_STATUS GetBootDevicePath(EFI_DEVICE_PATH** BootDrive) {
-    EFI_STATUS Status = EFI_SUCCESS;
-    EFI_DEVICE_PATH* BootImage = NULL;
-
-    CHECK(BootDrive != NULL);
-    *BootDrive = NULL;
-
-    // get the boot image device path
-    EFI_CHECK(gBS->HandleProtocol(gImageHandle, &gEfiLoadedImageDevicePathProtocolGuid, (void**)&BootImage));
-
-    // now remove the last element (Which would be the device path)
-    BootImage = RemoveLastDevicePathNode(BootImage);
-    CHECK_STATUS(BootImage, EFI_OUT_OF_RESOURCES);
-
-    // set it
-    *BootDrive = BootImage;
-
-    // display it for debugging
-    CHAR16* Text = ConvertDevicePathToText(BootImage, TRUE, TRUE);
-    CHECK_STATUS(Text != NULL, EFI_OUT_OF_RESOURCES);
-    TRACE("Boot drive: %s", Text);
-    FreePool(Text);
-
-cleanup:
-    return Status;
-}
 
 /**
  * The possible paths for the Config file
@@ -75,47 +44,34 @@ static CHAR16* mConfigPaths[] = {
  * @param ConfigFile    [OUT]   The handle to the Config file
  * @param DevicePath    [IN]    The device path to search under
  */
-static EFI_STATUS SearchForConfigUnder(EFI_FILE_PROTOCOL** ConfigFile, EFI_DEVICE_PATH* DevicePath) {
+static EFI_STATUS SearchForConfigUnder(EFI_FILE_PROTOCOL** ConfigFile, EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS) {
     EFI_STATUS Status = EFI_SUCCESS;
-    EFI_DEVICE_PATH* NewPath = NULL;
-    FILEPATH_DEVICE_PATH* FilePath = NULL;
+    EFI_FILE_PROTOCOL* RootFile = NULL;
 
+    CHECK(FS != NULL);
     CHECK(ConfigFile != NULL);
     *ConfigFile = NULL;
 
-    // allocate this once
-    FilePath = (FILEPATH_DEVICE_PATH*)CreateDeviceNode(MEDIA_DEVICE_PATH, MEDIA_FILEPATH_DP, SIZE_OF_FILEPATH_DEVICE_PATH + 255);
-    CHECK_STATUS(FilePath != NULL, EFI_OUT_OF_RESOURCES);
+    // open the root
+    EFI_CHECK(FS->OpenVolume(FS, &RootFile));
 
     // try each of them
     for (INTN Index = 0; Index < ARRAY_SIZE(mConfigPaths); Index++) {
-        // Create it
-        StrCpyS(FilePath->PathName, 255, mConfigPaths[Index]);
-        NewPath = AppendDevicePathNode(DevicePath, (EFI_DEVICE_PATH_PROTOCOL*)FilePath);
-        CHECK_STATUS(NewPath != NULL, EFI_OUT_OF_RESOURCES);
-
         // try to open it
-        Status = OpenFileByDevicePath(&NewPath, ConfigFile, EFI_FILE_MODE_READ, 0);
+        Status = RootFile->Open(RootFile, ConfigFile, mConfigPaths[Index], EFI_FILE_MODE_READ, 0);
         if (Status == EFI_SUCCESS) {
             // found it!
             goto cleanup;
         }
         CHECK_STATUS(Status == EFI_NOT_FOUND, Status);
-
-        // free them
-        FreePool(NewPath);
-        NewPath = NULL;
     }
 
     // we failed to find the Config file....
     Status = EFI_NOT_FOUND;
 
 cleanup:
-    if (NewPath != NULL) {
-        FreePool(NewPath);
-    }
-    if (FilePath != NULL) {
-        FreePool(FilePath);
+    if (RootFile != NULL) {
+        WARN_ON_ERROR(FileHandleClose(RootFile), "Failed to close root file");
     }
     return Status;
 }
@@ -128,6 +84,8 @@ cleanup:
 static EFI_STATUS SearchForConfig(EFI_FILE_PROTOCOL** ConfigFile) {
     EFI_STATUS Status = EFI_SUCCESS;
     EFI_DEVICE_PATH* BootDevicePath = NULL;
+    EFI_HANDLE* Handles = NULL;
+    UINTN HandleCount = 0;
 
     CHECK(ConfigFile != NULL);
     *ConfigFile = NULL;
@@ -135,19 +93,29 @@ static EFI_STATUS SearchForConfig(EFI_FILE_PROTOCOL** ConfigFile) {
     // get the boot device path
     CHECK_AND_RETHROW(GetBootDevicePath(&BootDevicePath));
 
-    // depending on the type we will need to do different searches
-    EFI_DEVICE_PATH* LastNode = LastDevicePathNode(BootDevicePath);
-    if (LastNode->Type == MEDIA_DEVICE_PATH && LastNode->SubType == MEDIA_HARDDRIVE_DP) {
-        // TODO: try all the partitions somehow...
-        EFI_CHECK(SearchForConfigUnder(ConfigFile, BootDevicePath));
-    } else {
-        // this is another form of boot drive, just try the main boot drive
-        EFI_CHECK(SearchForConfigUnder(ConfigFile, BootDevicePath));
+    // get all the filesystems with this device path
+    EFI_CHECK(gBS->LocateHandleBuffer(ByProtocol, &gEfiSimpleFileSystemProtocolGuid, NULL, &HandleCount, &Handles));
+    for (int i = 0; i < HandleCount; i++) {
+        // open it
+        EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* FS = NULL;
+        EFI_CHECK(gBS->HandleProtocol(Handles[i], &gEfiSimpleFileSystemProtocolGuid, (void**)&FS));
+
+        // search for config
+        Status = SearchForConfigUnder(ConfigFile, FS);
+        if (Status == EFI_NOT_FOUND) {
+            continue;
+        }
+        CHECK_AND_RETHROW(Status);
     }
+
+    CHECK_STATUS(*ConfigFile != NULL, EFI_NOT_FOUND, "Could not find the config file");
 
 cleanup:
     if (BootDevicePath != NULL) {
         FreePool(BootDevicePath);
+    }
+    if (Handles != NULL) {
+        FreePool(Handles);
     }
     return Status;
 }

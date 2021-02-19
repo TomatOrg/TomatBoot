@@ -12,6 +12,9 @@ static EFI_STATUS ResolveBootResource(CHAR16* Root, CHAR16* Path, EFI_DEVICE_PAT
     EFI_STATUS Status = EFI_SUCCESS;
     EFI_DEVICE_PATH* NewPath = NULL;
     FILEPATH_DEVICE_PATH* FilePath = NULL;
+    BOOLEAN DeleteNewPath = TRUE;
+    EFI_HANDLE* Handles = NULL;
+    UINTN HandleCount = 0;
 
     if (*Root == CHAR_NULL) {
         // the partition number is missing, this means we are
@@ -21,15 +24,43 @@ static EFI_STATUS ResolveBootResource(CHAR16* Root, CHAR16* Path, EFI_DEVICE_PAT
         // now remove the last element (Which would be the device path)
         NewPath = RemoveLastDevicePathNode(NewPath);
         CHECK_STATUS(NewPath != NULL, EFI_OUT_OF_RESOURCES);
+
     } else {
         // there is a provided partition number
         UINTN PartNum = StrDecimalToUintn(Root);
         CHECK(PartNum >= 1, "Invalid partition number `%s`", Root);
 
-        // TODO: get the device path of the hard drive and iterate all its child filesystems to
-        //       find the correct one
-        CHECK_FAIL_STATUS(EFI_UNSUPPORTED);
+        // get the boot device path, then iterate the filesystems and check if there is
+        // one with the correct partition
+        CHECK_AND_RETHROW(GetBootDevicePath(&NewPath));
+
+        // get all the filesystems with this device path
+        EFI_CHECK(gBS->LocateHandleBuffer(ByProtocol, &gEfiSimpleFileSystemProtocolGuid, NULL, &HandleCount, &Handles));
+        for (int i = 0; i < HandleCount; i++) {
+            // open it
+            EFI_CHECK(gBS->HandleProtocol(Handles[i], &gEfiDevicePathProtocolGuid, (void **)&NewPath));
+            DeleteNewPath = FALSE;
+
+            if (NewPath->Type != MEDIA_DEVICE_PATH || NewPath->SubType != MEDIA_HARDDRIVE_DP) {
+                // not a valid hard drive, aka, doesn't have partition
+                NewPath = NULL;
+                continue;
+            }
+
+            // check if correct partition
+            HARDDRIVE_DEVICE_PATH* Harddrive = (HARDDRIVE_DEVICE_PATH*)NewPath;
+            if (Harddrive->PartitionNumber == PartNum) {
+                NewPath = NULL;
+                continue;
+            }
+
+            // found it!
+            break;
+        }
     }
+
+    // check if we found it
+    CHECK_STATUS(NewPath != NULL, EFI_NOT_FOUND, "The root for boot resource `%a` could not be found...", Root);
 
     // allocate the node for the device path
     FilePath = (FILEPATH_DEVICE_PATH*)CreateDeviceNode(MEDIA_DEVICE_PATH, MEDIA_FILEPATH_DP, SIZE_OF_FILEPATH_DEVICE_PATH + 255);
@@ -41,11 +72,14 @@ static EFI_STATUS ResolveBootResource(CHAR16* Root, CHAR16* Path, EFI_DEVICE_PAT
     CHECK_STATUS(*DevicePath != NULL, EFI_OUT_OF_RESOURCES);
 
 cleanup:
-    if (NewPath == NULL) {
+    if (NewPath == NULL && DeleteNewPath) {
         FreePool(NewPath);
     }
     if (FilePath != NULL) {
         FreePool(FilePath);
+    }
+    if (Handles != NULL) {
+        FreePool(Handles);
     }
     return Status;
 }

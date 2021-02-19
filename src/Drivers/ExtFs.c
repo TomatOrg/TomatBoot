@@ -195,10 +195,10 @@ static EFI_STATUS ExtReadInode(EXT_VOLUME* Volume, int inode, EXT_FILE* File) {
     UINTN InodeBlock = Volume->Bgdt.INodeTableBlk;
     UINTN InodeSize = Volume->SuperBlock.INodeStructSize;
     EFI_CHECK(Volume->DiskIo->ReadDisk(Volume->DiskIo, Volume->MediaId,
-                                       Volume->BlockSize * InodeBlock + InodeSize * inode, sizeof(EXT_BGDT), &File->INode));
+                                       Volume->BlockSize * InodeBlock + InodeSize * inode, sizeof(EXT_INODE_ENTRY), &File->INode));
 
     // Set the file info struct
-    File->FileInfo->FileSize = File->INode.SizeLo + ((UINT64)File->INode.SizeHi << 0x20) - Volume->BlockSize;
+    File->FileInfo->FileSize = File->INode.SizeLo + ((UINT64)File->INode.SizeHi << 0x20);
     File->FileInfo->PhysicalSize = File->FileInfo->FileSize;
     EpochToEfiTime(File->INode.CTime, &File->FileInfo->CreateTime);
     EpochToEfiTime(File->INode.ATime, &File->FileInfo->LastAccessTime);
@@ -253,39 +253,42 @@ static EFI_STATUS InternalExtRead(EXT_FILE* File, UINTN* BufferSize, VOID* Buffe
 
     if (File->INode.Alloc.Ext4.Header.Magic == 0xF30A && File->INode.Alloc.Ext4.Header.Max == 4) {
         // this is an ext4 allocation method
+        UINT64 OffsetFromFile = 0;
 
-        // TODO: bleh this is wrong...
-//        for (int i = 0; i < File->INode.Alloc.Ext4.Header.Extends; i++) {
-//            // get the extend and block for this big block
-//            EXT4_EXT* Extend = &File->INode.Alloc.Ext4.Extend[i];
-//            UINT64 BigBlock = Extend->BlockLo + ((UINT64)Extend->BlockHi << 32);
-//
-//            // calculate the range
-//            UINT64 Offset = BigBlock * File->Volume->BlockSize;
-//            UINT64 Length = File->Volume->BlockSize * Extend->Length;
-//
-//            // check if we are in range
-//            if (Offset + Length < File->Offset) {
-//                continue;
-//            }
-//
-//            // recalc the length to read and offset to read from
-//            // also set the total amount read and the file offset
-//            Length = MIN(Length - (File->Offset - Offset), *BufferSize);
-//            Offset = File->Offset;
-//            TotalRead += Length;
-//            File->Offset += Length;
-//            *BufferSize -= Length;
-//
-//            // Do the actual read and increment the buffer
-//            EFI_CHECK(File->Volume->DiskIo->ReadDisk(File->Volume->DiskIo, File->Volume->MediaId, Offset, Length, Buffer));
-//            Buffer += Length;
-//
-//            if (*BufferSize == 0) {
-//                break;
-//            }
-//        }
-        CHECK_FAIL_STATUS(EFI_UNSUPPORTED);
+        for (int i = 0; i < File->INode.Alloc.Ext4.Header.Extends; i++) {
+            // get the extend and block for this big block
+            EXT4_EXT* Extend = &File->INode.Alloc.Ext4.Extend[i];
+            UINT64 BigBlock = Extend->BlockLo + ((UINT64)Extend->BlockHi << 32);
+            UINT64 Offset = BigBlock * File->Volume->BlockSize;
+            UINT64 Length = File->Volume->BlockSize * Extend->Length;
+
+            // skip this big block if it is before the file offset
+            if (OffsetFromFile + Length < File->Offset) {
+                OffsetFromFile += Length;
+                continue;
+            }
+
+            // recalc the offset and length according to file offset
+            UINTN OffsetFromStartOfBlock = File->Offset - ALIGN_DOWN(File->Offset, File->Volume->BlockSize);
+            Offset += OffsetFromStartOfBlock;
+            Length -= OffsetFromStartOfBlock;
+            Length = MIN(Length, LeftToRead);
+
+            // Do the actual read and increment the buffer
+            EFI_CHECK(File->Volume->DiskIo->ReadDisk(File->Volume->DiskIo, File->Volume->MediaId, Offset, Length, Buffer));
+
+            // increment everything
+            Buffer += Length;
+            TotalRead += Length;
+            LeftToRead -= Length;
+            OffsetFromFile += Length;
+            File->Offset += Length;
+
+            // are we done?
+            if (LeftToRead == 0) {
+                break;
+            }
+        }
     } else {
         // this is either ext2 or ext3 allocation method
 
@@ -299,7 +302,6 @@ static EFI_STATUS InternalExtRead(EXT_FILE* File, UINTN* BufferSize, VOID* Buffe
                 Status = EFI_SUCCESS;
                 break;
             }
-            TRACE("%d -> %d", BlockNo, Block);
 
             // get the length to read and offset to read from
             UINT64 Offset = Block * File->Volume->BlockSize + (File->Offset - ALIGN_DOWN(File->Offset, 512));
@@ -339,31 +341,29 @@ static EFI_STATUS ExtOpen(EFI_FILE_PROTOCOL* This, EFI_FILE_PROTOCOL** NewHandle
 
     // return to offset zero
     File->Offset = 0;
-    UINTN RootSize = File->FileInfo->FileSize;
-    while(RootSize != 0) {
-        // read it
-        EXT_DIRECTORY_ENTRY Dir;
-        UINTN ToRead = sizeof(EXT_DIRECTORY_ENTRY);
-        CHECK_AND_RETHROW(InternalExtRead(File, &ToRead, (void*)&Dir));
-        CHECK(ToRead == sizeof(EXT_DIRECTORY_ENTRY));
 
-        if (Dir.EntryLength == 0) {
+    // read all of the entries
+    UINTN DirSize = File->FileInfo->FileSize;
+    void* DirBuffer = AllocatePool(DirSize);
+    CHECK_AND_RETHROW(InternalExtRead(File, &DirSize, (void*)DirBuffer));
+
+    // now iterate them
+    while(DirSize != 0) {
+        // take the current dir
+        EXT_DIRECTORY_ENTRY* Dir = DirBuffer;
+
+        if (Dir->NameLength == 0) {
             // End of directory
             Status = EFI_NOT_FOUND;
             goto cleanup;
         }
 
         // read the filename
-        CHAR8* Filename = AllocatePool(Dir.NameLength + 1);
-        ToRead = Dir.NameLength;
-        CHECK_AND_RETHROW(InternalExtRead(File, &ToRead, (void*)Filename));
-        CHECK(ToRead == Dir.NameLength);
-        Filename[Dir.NameLength] = '\0';
-        TRACE("Got file `%a`", Filename);
-        FreePool(Filename);
+        TRACE("Got file `%*a`", Dir->NameLength, Dir->Name);
 
-        // decrement the remaining size and continue
-        RootSize -= Dir.EntryLength;
+        // next
+        DirBuffer += Dir->EntryLength;
+        DirSize -= Dir->EntryLength;
     }
 
 cleanup:
