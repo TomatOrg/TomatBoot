@@ -8,5 +8,5 @@ partitions:
     label: boot
   - fs: ext4
     size: fit
-    content: 'image/ext'
+    content: 'image/ext4'
     label: rootfs
