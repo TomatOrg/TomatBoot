@@ -15,8 +15,7 @@ PROJECT_NAME	:= TomatBoot
 #
 # Set the c compiler and the fuse linker
 #
-CC 				:= clang
-LD				:= lld-link
+CC 				:= x86_64-w64-mingw32-gcc
 
 #
 # Output folders
@@ -28,25 +27,17 @@ BUILD_DIR		:= $(OUT_DIR)/build
 #
 # The default cflags
 #
-CFLAGS			:= -target x86_64-unknown-windows
-CFLAGS			+= -Wall -Werror -Os -flto -ggdb
+CFLAGS			:= -Wall -Werror -Os -flto -ffat-lto-objects -g
 CFLAGS			+= -nostdlib -nostdinc -std=c11
 CFLAGS			+= -fshort-wchar -ffreestanding
 CFLAGS			+= -Isrc
+CFLAGS 			+= -Wl,-eEfiMain -Wl,-subsystem,10
 CFLAGS			+= -Wno-unused-label
 
 #
 # Add the git revision
 #
 CFLAGS			+= -D__GIT_REVISION__=\"$(shell git rev-parse HEAD)\"
-
-#
-# The default link flags
-#
-LDFLAGS			:= -target x86_64-unknown-windows
-LDFLAGS			+= -nostdlib -fuse-ld=$(LD)
-LDFLAGS			+= -Wl,-entry:EfiMain
-LDFLAGS			+= -Wl,-subsystem:efi_application
 
 #
 # Assembler flags
@@ -100,11 +91,13 @@ SRCS 			+= $(shell find edk2/Library/ -name '*.nasm')
 #
 
 # boolean pcds
+EDK2_PCD_BOOL 	:= PcdVerifyNodeInList=FALSE
 
 # uint32 pcds
 EDK2_PCD_UINT32	:= PcdMaximumUnicodeStringLength=0
 EDK2_PCD_UINT32 += PcdMaximumAsciiStringLength=0
 EDK2_PCD_UINT32 += PcdMaximumDevicePathNodeCount=0
+EDK2_PCD_UINT32 += PcdMaximumLinkedListLength=0
 EDK2_PCD_UINT32 += PcdFixedDebugPrintErrorLevel=0xFFFFFFFF
 EDK2_PCD_UINT32 += PcdDebugPrintErrorLevel=0xFFFFFFFF
 
@@ -144,7 +137,7 @@ all: $(BIN_DIR)/$(PROJECT_NAME).efi
 $(BIN_DIR)/$(PROJECT_NAME).efi: $(OBJS)
 	@echo LD $@
 	@mkdir -p $(@D)
-	@$(CC) $(LDFLAGS) -o $@ $^
+	@$(CC) $(CFLAGS) -o $@ $^
 
 #
 # specifically for the uefi lib

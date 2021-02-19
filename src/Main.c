@@ -1,20 +1,19 @@
 #include <Uefi.h>
 #include <Util/Except.h>
-#include "Config.h"
+#include <Library/UefiBootServicesTableLib.h>
+#include "Config/Config.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // constructors
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 EFI_STATUS EFIAPI UefiBootServicesTableLibConstructor(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable);
-EFI_STATUS EFIAPI DevicePathLibConstructor(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable);
 EFI_STATUS EFIAPI DxeDebugLibConstructor(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable);
 
 static EFI_STATUS CallConstructors(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     EFI_STATUS Status = EFI_SUCCESS;
 
     CHECK_AND_RETHROW(UefiBootServicesTableLibConstructor(ImageHandle, SystemTable));
-    CHECK_AND_RETHROW(DevicePathLibConstructor(ImageHandle, SystemTable));
     CHECK_AND_RETHROW(DxeDebugLibConstructor(ImageHandle, SystemTable));
 
 cleanup:
@@ -28,12 +27,13 @@ cleanup:
 EFI_STATUS EfiMain(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     EFI_STATUS Status = EFI_SUCCESS;
 
-    TRACE("Hello World!");
-
-    TRACE("Calling edk2 constructors...");
+    // setup nicely
     CHECK_AND_RETHROW(CallConstructors(ImageHandle, SystemTable));
+    EFI_CHECK(SystemTable->ConOut->ClearScreen(SystemTable->ConOut));
 
-    TRACE("Reading the config...");
+    TRACE("Hello world!");
+
+    TRACE("Reading the Config...");
     CHECK_AND_RETHROW(ParseConfig());
 
 cleanup:

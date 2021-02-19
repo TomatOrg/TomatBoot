@@ -1,7 +1,6 @@
 #ifndef __TOMATBOOT_CONFIG_H__
 #define __TOMATBOOT_CONFIG_H__
 
-#include <Base.h>
 #include <Uefi.h>
 
 /**
@@ -28,6 +27,7 @@ typedef struct _CONFIG {
  * The boot protocols supported by tomatboot
  */
 typedef enum _PROTOCOL {
+    PROTOCOL_INVALID,
     PROTOCOL_STIVALE,
     PROTOCOL_STIVALE2,
     PROTOCOL_LINUX,
@@ -41,6 +41,11 @@ typedef struct _CONFIG_ENTRY {
      * Protocol for this entry
      */
     PROTOCOL Protocol;
+
+    /**
+     * The name
+     */
+    CHAR16* Name;
 
     /**
      * Cmdline to pass to the kernel
@@ -79,7 +84,7 @@ typedef struct _MODULE {
 } MODULE;
 
 /**
- * The boot config
+ * The boot Config
  */
 extern CONFIG gConfig;
 

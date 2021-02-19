@@ -13,6 +13,18 @@ with open(sys.argv[1], 'w') as out:
     out.write('// AUTO-GENERATED FILE\n')
     out.write('#include <Uefi.h>\n')
 
+    # TODO: these are dummy
+    out.write('')
+    dummies = [
+        'gEfiVirtualDiskGuid',
+        'gEfiVirtualCdGuid',
+        'gEfiPersistentVirtualDiskGuid',
+        'gEfiPersistentVirtualCdGuid'
+    ]
+    for dummy in dummies:
+        out.write(f'EFI_GUID {dummy} = {{0}};')
+    out.write('')
+
     #
     # This cursed regex will match against the guids in the source files and will allow
     # us to automatically generate a file containing all of them
@@ -39,11 +51,27 @@ with open(sys.argv[1], 'w') as out:
                 guids[i] = guids[i][0]
 
             # now search for the guid variable names
+            last_guid = None
             for line in text.splitlines():
-                if line.startswith('extern EFI_GUID'):
-                    name = line.split()[2]
-                    guid = guids.pop(0)
+                tokens = line.split()
+                if len(tokens) < 3:
+                    continue
+                if tokens[0] == 'extern' and tokens[1] == 'EFI_GUID':
+                    name = tokens[2]
                     if name.endswith(';'):
                         name = name[:-1]
+                    if name in dummies:
+                        continue
+
+                    if len(guids) == 0:
+                        if name == 'gEfiDebugPortVariableGuid' or name == 'gEfiDebugPortDevicePathGuid':
+                            guid = last_guid
+                        else:
+                            assert False, name
+                    else:
+                        guid = guids.pop(0)
+
                     out.write(f'EFI_GUID {name} = {{ {guid} }};\n')
+
+                    last_guid = guid
 
