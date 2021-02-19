@@ -6,6 +6,23 @@
 #include "DevicePathUtils.h"
 #include "Except.h"
 
+BOOLEAN InsideDevicePath(EFI_DEVICE_PATH* All, EFI_DEVICE_PATH* One) {
+    // iterate this one
+    EFI_DEVICE_PATH* Path;
+    for (
+            Path = One;
+            DevicePathNodeLength(Path) == DevicePathNodeLength(All) &&
+            !IsDevicePathEndType(Path) &&
+            CompareMem(Path, All, DevicePathNodeLength(All)) == 0;
+            Path = NextDevicePathNode(Path), All = NextDevicePathNode(All)
+            ) {
+    }
+
+    // return true if we reached the end of the one device path
+    // that we were looking for
+    return IsDevicePathEndType(Path);
+}
+
 EFI_DEVICE_PATH* LastDevicePathNode(EFI_DEVICE_PATH* Dp) {
     if (Dp == NULL) {
         return NULL;
@@ -178,6 +195,9 @@ EFI_STATUS GetBootDevicePath(EFI_DEVICE_PATH** BootDrive) {
 
     // get the boot image device path
     EFI_CHECK(gBS->HandleProtocol(gImageHandle, &gEfiLoadedImageDevicePathProtocolGuid, (void**)&BootImage));
+
+    EFI_DEVICE_PATH* LastNode = LastDevicePathNode(BootImage);
+    CHECK(LastNode->Type == MEDIA_DEVICE_PATH && LastNode->SubType == MEDIA_FILEPATH_DP);
 
     // now remove the last element (Which would be the device path)
     BootImage = RemoveLastDevicePathNode(BootImage);

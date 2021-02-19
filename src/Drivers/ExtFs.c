@@ -1,18 +1,21 @@
 
 #include <Uefi.h>
+
 #include <Protocol/DiskIo.h>
 #include <Protocol/BlockIo.h>
 #include <Protocol/DriverBinding.h>
 #include <Protocol/SimpleFileSystem.h>
 
+#include <Guid/FileInfo.h>
+
+#include <Library/BaseLib.h>
+#include <Library/TimeBaseLib.h>
+#include <Library/BaseMemoryLib.h>
 #include <Library/DevicePathLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 
 #include <Util/Except.h>
-#include <Guid/FileInfo.h>
-#include <Library/TimeBaseLib.h>
-#include <Library/BaseMemoryLib.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Ext structures
@@ -178,13 +181,7 @@ typedef struct _EXT_FILE {
     UINT64 Offset;
 } EXT_FILE;
 
-/**
- * Read the inode entry from the volume
- *
- * @param Volume    [IN] The volume to read from
- * @param INode     [IN] The inode info
- */
-static EFI_STATUS ExtReadInode(EXT_VOLUME* Volume, int inode, EXT_FILE* File) {
+static EFI_STATUS ExtReadINode(EXT_VOLUME* Volume, int inode, EXT_INODE_ENTRY* INode) {
     EFI_STATUS Status = EFI_SUCCESS;
 
     // 1 based
@@ -195,7 +192,15 @@ static EFI_STATUS ExtReadInode(EXT_VOLUME* Volume, int inode, EXT_FILE* File) {
     UINTN InodeBlock = Volume->Bgdt.INodeTableBlk;
     UINTN InodeSize = Volume->SuperBlock.INodeStructSize;
     EFI_CHECK(Volume->DiskIo->ReadDisk(Volume->DiskIo, Volume->MediaId,
-                                       Volume->BlockSize * InodeBlock + InodeSize * inode, sizeof(EXT_INODE_ENTRY), &File->INode));
+                                       Volume->BlockSize * InodeBlock + InodeSize * inode, sizeof(EXT_INODE_ENTRY), INode));
+
+
+cleanup:
+    return Status;
+}
+
+static EFI_STATUS ExtSetFileInfo(EXT_FILE* File) {
+    EFI_STATUS Status = EFI_SUCCESS;
 
     // Set the file info struct
     File->FileInfo->FileSize = File->INode.SizeLo + ((UINT64)File->INode.SizeHi << 0x20);
@@ -216,17 +221,13 @@ cleanup:
     return Status;
 }
 
-//----------------------------------------------------------------------------------------------------------------------
-// File interface implemenation
-//----------------------------------------------------------------------------------------------------------------------
 
-static EFI_STATUS ResolveBlock(EXT_FILE* File, UINT32 BlockNo, UINT32* Block) {
+static EFI_STATUS ResolveBlock(EXT_INODE_ENTRY* INode, UINT32 BlockNo, UINT32* Block) {
     EFI_STATUS Status = EFI_SUCCESS;
 
     // process direct blocks (0 - 11)
     if (BlockNo < 12) {
-        TRACE("%d", File->INode.Alloc.Ext2.Blocks[BlockNo]);
-        *Block = File->INode.Alloc.Ext2.Blocks[BlockNo];
+        *Block = INode->Alloc.Ext2.Blocks[BlockNo];
     } else {
         // Process isngle indirect blocks (12 - (256 + 11))
         CHECK_FAIL_STATUS(EFI_UNSUPPORTED, "TODO: Support indirect blocks");
@@ -236,53 +237,53 @@ static EFI_STATUS ResolveBlock(EXT_FILE* File, UINT32 BlockNo, UINT32* Block) {
         Status = EFI_END_OF_FILE;
     }
 
-cleanup:
+    cleanup:
     return Status;
 }
 
 #define ALIGN_DOWN(addr, size) ((addr)&(~((size)-1)))
 
-static EFI_STATUS InternalExtRead(EXT_FILE* File, UINTN* BufferSize, VOID* Buffer) {
+static EFI_STATUS InternalExtRead(EXT_VOLUME* Volume, EXT_INODE_ENTRY* INode, UINTN ReadOffset, UINTN* BufferSize, VOID* Buffer) {
     EFI_STATUS Status = EFI_SUCCESS;
 
-    CHECK(File != NULL);
+    CHECK(INode != NULL);
     CHECK(BufferSize != NULL);
 
     UINT64 TotalRead = 0;
     UINT64 LeftToRead = *BufferSize;
 
-    if (File->INode.Alloc.Ext4.Header.Magic == 0xF30A && File->INode.Alloc.Ext4.Header.Max == 4) {
+    if (INode->Alloc.Ext4.Header.Magic == 0xF30A && INode->Alloc.Ext4.Header.Max == 4) {
         // this is an ext4 allocation method
         UINT64 OffsetFromFile = 0;
 
-        for (int i = 0; i < File->INode.Alloc.Ext4.Header.Extends; i++) {
+        for (int i = 0; i < INode->Alloc.Ext4.Header.Extends; i++) {
             // get the extend and block for this big block
-            EXT4_EXT* Extend = &File->INode.Alloc.Ext4.Extend[i];
+            EXT4_EXT* Extend = &INode->Alloc.Ext4.Extend[i];
             UINT64 BigBlock = Extend->BlockLo + ((UINT64)Extend->BlockHi << 32);
-            UINT64 Offset = BigBlock * File->Volume->BlockSize;
-            UINT64 Length = File->Volume->BlockSize * Extend->Length;
+            UINT64 Offset = BigBlock * Volume->BlockSize;
+            UINT64 Length = Volume->BlockSize * Extend->Length;
 
             // skip this big block if it is before the file offset
-            if (OffsetFromFile + Length < File->Offset) {
+            if (OffsetFromFile + Length < ReadOffset) {
                 OffsetFromFile += Length;
                 continue;
             }
 
             // recalc the offset and length according to file offset
-            UINTN OffsetFromStartOfBlock = File->Offset - ALIGN_DOWN(File->Offset, File->Volume->BlockSize);
+            UINTN OffsetFromStartOfBlock = ReadOffset - ALIGN_DOWN(ReadOffset, Volume->BlockSize);
             Offset += OffsetFromStartOfBlock;
             Length -= OffsetFromStartOfBlock;
             Length = MIN(Length, LeftToRead);
 
             // Do the actual read and increment the buffer
-            EFI_CHECK(File->Volume->DiskIo->ReadDisk(File->Volume->DiskIo, File->Volume->MediaId, Offset, Length, Buffer));
+            EFI_CHECK(Volume->DiskIo->ReadDisk(Volume->DiskIo, Volume->MediaId, Offset, Length, Buffer));
 
             // increment everything
             Buffer += Length;
             TotalRead += Length;
             LeftToRead -= Length;
             OffsetFromFile += Length;
-            File->Offset += Length;
+            ReadOffset += Length;
 
             // are we done?
             if (LeftToRead == 0) {
@@ -293,27 +294,28 @@ static EFI_STATUS InternalExtRead(EXT_FILE* File, UINTN* BufferSize, VOID* Buffe
         // this is either ext2 or ext3 allocation method
 
         // get the starting block
-        UINT32 BlockNo = ALIGN_DOWN(File->Offset, File->Volume->BlockSize) / File->Volume->BlockSize;
+        UINT32 BlockNo = ALIGN_DOWN(ReadOffset, Volume->BlockSize) / Volume->BlockSize;
         do {
             // get the block number
             UINT32 Block = 0;
-            Status = ResolveBlock(File, BlockNo, &Block);
+            Status = ResolveBlock(INode, BlockNo, &Block);
             if (Status == EFI_END_OF_FILE) {
                 Status = EFI_SUCCESS;
                 break;
             }
 
             // get the length to read and offset to read from
-            UINT64 Offset = Block * File->Volume->BlockSize + (File->Offset - ALIGN_DOWN(File->Offset, 512));
-            UINT64 Length = MIN(LeftToRead, File->Volume->BlockSize);
-            EFI_CHECK(File->Volume->DiskIo->ReadDisk(File->Volume->DiskIo, File->Volume->MediaId, Offset, Length, Buffer));
+            UINT64 OffsetFromStartOfBlock = ReadOffset - ALIGN_DOWN(ReadOffset, Volume->BlockSize);
+            UINT64 Offset = Block * Volume->BlockSize + OffsetFromStartOfBlock;
+            UINT64 Length = MIN(LeftToRead, Volume->BlockSize - OffsetFromStartOfBlock);
+            EFI_CHECK(Volume->DiskIo->ReadDisk(Volume->DiskIo, Volume->MediaId, Offset, Length, Buffer));
 
             // add to the total read, decrement from the left
             // to read and increment the offset, also get the
             // next block for the next read
             TotalRead += Length;
             LeftToRead -= Length;
-            File->Offset += Length;
+            ReadOffset += Length;
             BlockNo += 1;
         } while(LeftToRead != 0);
     }
@@ -330,25 +332,46 @@ cleanup:
     return Status;
 }
 
-static EFI_STATUS ExtOpen(EFI_FILE_PROTOCOL* This, EFI_FILE_PROTOCOL** NewHandle, CHAR16* FileName, UINT64 OpenMode, UINT64 Attributes) {
+/**
+ * Given a path and a root file this will search for the file/folder in the
+ * relative path
+ *
+ * @param File          [IN]        The File to search from
+ * @param Filename      [IN,OUT]    The filename to search for, on exit the pointer to the actual file
+ * @param FinalEntry    [OUT]       The inode of the file
+ * @return
+ */
+static EFI_STATUS IterateExtDir(EXT_FILE* File, CHAR8** Filename, EXT_INODE_ENTRY* FinalEntry) {
     EFI_STATUS Status = EFI_SUCCESS;
-    EXT_FILE* File = (EXT_FILE*)This;
+    CHAR8* Name = *Filename;
+    void* DirBuffer = NULL;
+    BOOLEAN IsEnd = FALSE;
+    CHAR8* End = NULL;
+    UINTN NameLength = 0;
+    UINTN DirSize = 0;
 
-    CHECK(File != NULL);
+    // copy aside
+    EXT_INODE_ENTRY INode = File->INode;
 
-    // check this is a directory
-    CHECK_STATUS(File->FileInfo->Attribute & EFI_FILE_DIRECTORY, EFI_UNSUPPORTED, "Tries to open from a file handle");
-
-    // return to offset zero
-    File->Offset = 0;
+reiterate:
+    End = AsciiStrStr(Name, "\\");
+    if (End == NULL) {
+        // this is the last file
+        End = Name + AsciiStrLen(Name);
+        IsEnd = TRUE;
+    }
+    NameLength = (End - Name);
 
     // read all of the entries
-    UINTN DirSize = File->FileInfo->FileSize;
-    void* DirBuffer = AllocatePool(DirSize);
-    CHECK_AND_RETHROW(InternalExtRead(File, &DirSize, (void*)DirBuffer));
+    DirSize = INode.SizeLo + ((UINT64)INode.SizeHi << 32);
+    if (DirBuffer != NULL) {
+        FreePool(DirBuffer);
+    }
+    DirBuffer = AllocatePool(DirSize);
+    CHECK_STATUS(DirBuffer != NULL, EFI_OUT_OF_RESOURCES);
+    CHECK_AND_RETHROW(InternalExtRead(File->Volume, &INode, 0, &DirSize, (void*)DirBuffer));
 
-    // now iterate them
-    while(DirSize != 0) {
+    do {
         // take the current dir
         EXT_DIRECTORY_ENTRY* Dir = DirBuffer;
 
@@ -358,17 +381,46 @@ static EFI_STATUS ExtOpen(EFI_FILE_PROTOCOL* This, EFI_FILE_PROTOCOL** NewHandle
             goto cleanup;
         }
 
-        // read the filename
-        TRACE("Got file `%*a`", Dir->NameLength, Dir->Name);
+        // check the length
+        if (Dir->NameLength != NameLength) {
+            goto next;
+        }
 
-        // next
+        // check if the name match
+        if (AsciiStrnCmp(Dir->Name, Name, NameLength) != 0) {
+            goto next;
+        }
+
+        // read the inode
+        CHECK_AND_RETHROW(ExtReadINode(File->Volume, Dir->INode, &INode));
+
+        if (IsEnd) {
+            // last entry, copy the name and final entry
+            *FinalEntry = INode;
+            *Filename = Name;
+            goto cleanup;
+        } else {
+            // Found this one! now go to the next folder...
+            Name = End + 1;
+            goto reiterate;
+        }
+
+    next:
+        // we done with this one
         DirBuffer += Dir->EntryLength;
         DirSize -= Dir->EntryLength;
-    }
+    } while(DirSize != 0);
 
 cleanup:
+    if (DirBuffer != NULL) {
+        FreePool(DirBuffer);
+    }
     return Status;
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+// File interface implemenation
+//----------------------------------------------------------------------------------------------------------------------
 
 static EFI_STATUS ExtClose(EFI_FILE_PROTOCOL* This) {
     EFI_STATUS Status = EFI_SUCCESS;
@@ -398,10 +450,11 @@ static EFI_STATUS ExtRead(EFI_FILE_PROTOCOL* This, UINTN* BufferSize, VOID* Buff
     EXT_FILE* File = (EXT_FILE*)This;
 
     CHECK(This != NULL);
-    CHECK_STATUS(File->FileInfo->Attribute & EFI_FILE_DIRECTORY, EFI_UNSUPPORTED,
+    CHECK_STATUS(!(File->FileInfo->Attribute & EFI_FILE_DIRECTORY), EFI_UNSUPPORTED,
                  "Tried to read on directory handle");
 
-    CHECK_AND_RETHROW(InternalExtRead((EXT_FILE*)This, BufferSize, Buffer));
+    CHECK_AND_RETHROW(InternalExtRead(File->Volume, &File->INode, File->Offset, BufferSize, Buffer));
+    File->Offset += *BufferSize;
 
 cleanup:
     return Status;
@@ -421,7 +474,7 @@ EFI_STATUS ExtSetPosition(EFI_FILE_PROTOCOL* This, UINT64 Position) {
     EXT_FILE* File = (EXT_FILE*)This;
 
     CHECK(This != NULL);
-    CHECK_STATUS(File->FileInfo->Attribute & EFI_FILE_DIRECTORY, EFI_UNSUPPORTED,
+    CHECK_STATUS(!(File->FileInfo->Attribute & EFI_FILE_DIRECTORY), EFI_UNSUPPORTED,
                  "Tried to set position on directory handle");
 
     File->Offset = MIN(Position, File->FileInfo->FileSize);
@@ -437,7 +490,7 @@ EFI_STATUS ExtGetPosition(EFI_FILE_PROTOCOL* This, UINT64* Position) {
     CHECK(Position != NULL);
 
     CHECK(This != NULL);
-    CHECK_STATUS(File->FileInfo->Attribute & EFI_FILE_DIRECTORY, EFI_UNSUPPORTED,
+    CHECK_STATUS(!(File->FileInfo->Attribute & EFI_FILE_DIRECTORY), EFI_UNSUPPORTED,
                  "Tried to get position on directory handle");
 
     *Position = File->Offset;
@@ -494,6 +547,88 @@ cleanup:
     return Status;
 }
 
+static EFI_STATUS ExtOpen(EFI_FILE_PROTOCOL* This, EFI_FILE_PROTOCOL** NewHandle, CHAR16* FileName, UINT64 OpenMode, UINT64 Attributes) {
+    EFI_STATUS Status = EFI_SUCCESS;
+    EXT_FILE* ThisFile = (EXT_FILE*)This;
+    CHAR8* Filename = NULL;
+    EXT_FILE* NewFile = NULL;
+
+    // check params
+    CHECK(ThisFile != NULL);
+    CHECK(FileName != NULL);
+    CHECK(NewHandle != NULL);
+    *NewHandle = NULL;
+
+    // check the open mode
+    CHECK_STATUS(OpenMode == 0 || OpenMode == EFI_FILE_MODE_READ, EFI_UNSUPPORTED, "We do not support file read/write");
+
+    // check this is a directory
+    CHECK_STATUS(ThisFile->FileInfo->Attribute & EFI_FILE_DIRECTORY, EFI_UNSUPPORTED, "Tries to open from a file handle");
+
+    // convert the path to ASCII for ease of use
+    UINTN FilenameLen = StrLen(FileName) + 1;
+    Filename = AllocatePool(FilenameLen);
+    CHECK_STATUS(Filename != NULL, EFI_OUT_OF_RESOURCES);
+    EFI_CHECK(UnicodeStrToAsciiStrS(FileName, Filename, FilenameLen));
+
+    // find the correct dir
+    EXT_INODE_ENTRY NewFileInode;
+    CHAR8* TmpFileName = Filename;
+    Status = IterateExtDir(ThisFile, &TmpFileName, &NewFileInode);
+    if (Status == EFI_NOT_FOUND) {
+        goto cleanup;
+    }
+    CHECK_AND_RETHROW(Status);
+
+    // now prepare a new file structure
+    NewFile = AllocateZeroPool(sizeof(EXT_FILE));
+    CHECK_STATUS(NewFile != NULL, EFI_OUT_OF_RESOURCES);
+
+    // Allocate the file info struct
+    FilenameLen = AsciiStrLen(TmpFileName);
+    NewFile->FileInfo = AllocateZeroPool(sizeof(EFI_FILE_INFO) + (FilenameLen + 1) * sizeof(CHAR16));
+    CHECK_STATUS(NewFile->FileInfo != NULL, EFI_OUT_OF_RESOURCES);
+    NewFile->FileInfo->Size = sizeof(EFI_FILE_INFO) + (FilenameLen + 1) * sizeof(CHAR16);
+
+    // copy the filename to the info struct
+    StrCpyS(NewFile->FileInfo->FileName, FilenameLen + 1, &FileName[TmpFileName - Filename]);
+
+    // set the parent volume
+    NewFile->Volume = ThisFile->Volume;
+    NewFile->Offset = 0;
+
+    // read the inode and set the file info
+    NewFile->INode = NewFileInode;
+    CHECK_AND_RETHROW(ExtSetFileInfo(NewFile));
+
+    // set all of the functions properly
+    NewFile->FileInterface.Revision = EFI_FILE_REVISION;
+    NewFile->FileInterface.Open = ExtOpen;
+    NewFile->FileInterface.Close = ExtClose;
+    NewFile->FileInterface.Delete = ExtDelete;
+    NewFile->FileInterface.Read = ExtRead;
+    NewFile->FileInterface.Write = ExtWrite;
+    NewFile->FileInterface.GetPosition = ExtGetPosition;
+    NewFile->FileInterface.SetPosition = ExtSetPosition;
+    NewFile->FileInterface.GetInfo = ExtGetInfo;
+    NewFile->FileInterface.SetInfo = ExtSetInfo;
+    NewFile->FileInterface.Flush = ExtFlush;
+
+    // set the new handle
+    *NewHandle = (EFI_FILE_PROTOCOL*)NewFile;
+
+cleanup:
+    if (Status != EFI_SUCCESS) {
+        if (NewFile != NULL) {
+            FreePool(NewFile);
+        }
+    }
+    if (Filename != NULL) {
+        FreePool(Filename);
+    }
+    return Status;
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 // File system interface implemenation
 //----------------------------------------------------------------------------------------------------------------------
@@ -523,8 +658,9 @@ static EFI_STATUS ExtOpenVolume(EFI_SIMPLE_FILE_SYSTEM_PROTOCOL* This, EFI_FILE_
     // set the parent volume
     File->Volume = Volume;
 
-    // read the root inode
-    CHECK_AND_RETHROW(ExtReadInode(Volume, 2, File));
+    // read the inode and set the file info
+    CHECK_AND_RETHROW(ExtReadINode(Volume, 2, &File->INode));
+    CHECK_AND_RETHROW(ExtSetFileInfo(File));
 
     // set all of the functions properly
     File->FileInterface.Revision = EFI_FILE_REVISION;

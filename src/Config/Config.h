@@ -93,4 +93,9 @@ extern CONFIG gConfig;
  */
 EFI_STATUS ParseConfig();
 
+/**
+ * Print nicely the config entry
+ */
+void PrintConfigEntry(CONFIG_ENTRY* Entry);
+
 #endif //__TOMATBOOT_CONFIG_H__

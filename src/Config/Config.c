@@ -102,13 +102,13 @@ static EFI_STATUS SearchForConfig(EFI_FILE_PROTOCOL** ConfigFile) {
 
         // search for config
         Status = SearchForConfigUnder(ConfigFile, FS);
-        if (Status == EFI_NOT_FOUND) {
-            continue;
+        if (Status == EFI_SUCCESS) {
+            goto cleanup;
         }
-        CHECK_AND_RETHROW(Status);
+        CHECK_STATUS(Status == EFI_NOT_FOUND, Status);
     }
 
-    CHECK_STATUS(*ConfigFile != NULL, EFI_NOT_FOUND, "Could not find the config file");
+    CHECK_FAIL_STATUS(EFI_NOT_FOUND, "Could not find the config file");
 
 cleanup:
     if (BootDevicePath != NULL) {
@@ -167,10 +167,7 @@ EFI_STATUS ParseConfig() {
                     // insert to the list
                     CHECK_STATUS(CurrentEntry->KernelPath != NULL, EFI_NOT_FOUND, "Missing kernel path!");
                     InsertTailList(&gConfig.Entries, &CurrentEntry->Link);
-
-                    TRACE("Added `%s`", CurrentEntry->Name);
-                    TRACE("    Cmdline: `%a`", CurrentEntry->Cmdline);
-
+                    PrintConfigEntry(CurrentEntry);
                     CurrentEntry = NULL;
                 }
             }
@@ -184,6 +181,9 @@ EFI_STATUS ParseConfig() {
             CurrentEntry->Name = StrDup(&Line[1]);
             CHECK_STATUS(CurrentEntry->Name != NULL, EFI_OUT_OF_RESOURCES);
             InitializeListHead(&CurrentEntry->Modules);
+
+            // no last module this time
+            LastModule = NULL;
 
         } else if (CurrentEntry == NULL) {
 
@@ -244,17 +244,22 @@ EFI_STATUS ParseConfig() {
                 CHECK_STATUS(CurrentEntry->Protocol != PROTOCOL_INVALID, EFI_NOT_FOUND, "Missing protocol");
 
                 // allocate it
-                LastModule = AllocateZeroPool(sizeof(MODULE));
+                MODULE* NewModule = AllocateZeroPool(sizeof(MODULE));
 
                 // check if compressed
                 if (Value[0] == '$') {
-                    LastModule->Compressed = TRUE;
+                    NewModule->Compressed = TRUE;
                     Value++;
                 }
 
                 // parse and insert the URI
-                CHECK_AND_RETHROW(ParseURI(Value, &LastModule->Path));
-                InsertTailList(&CurrentEntry->Modules, &LastModule->Link);
+                CHECK_AND_RETHROW(ParseURI(Value, &NewModule->Path));
+                InsertTailList(&CurrentEntry->Modules, &NewModule->Link);
+
+                // there is no last module, set this as the last one
+                if (LastModule == NULL) {
+                    LastModule = NewModule;
+                }
             });
 
             CHECK_OPTION("MODULE_STRING", {
@@ -263,6 +268,13 @@ EFI_STATUS ParseConfig() {
 
                 LastModule->String = ConvertToAscii(Value);
                 CHECK_STATUS(LastModule->String != NULL, EFI_OUT_OF_RESOURCES);
+
+                // increment for the next module string
+                if (IsNodeAtEnd(&CurrentEntry->Modules, &LastModule->Link)) {
+                    LastModule = NULL;
+                } else {
+                    LastModule = BASE_CR(GetNextNode(&CurrentEntry->Modules, &LastModule->Link), MODULE, Link);
+                }
             });
         }
 
@@ -272,6 +284,18 @@ EFI_STATUS ParseConfig() {
         Line = NULL;
     }
 
+    // add the last entry
+    if (CurrentEntry != NULL) {
+        if (CurrentEntry->Protocol == PROTOCOL_INVALID) {
+            // empty entry, ignore
+            FreePool(CurrentEntry->Name);
+        } else {
+            // insert to the list
+            CHECK_STATUS(CurrentEntry->KernelPath != NULL, EFI_NOT_FOUND, "Missing kernel path!");
+            InsertTailList(&gConfig.Entries, &CurrentEntry->Link);
+            PrintConfigEntry(CurrentEntry);
+        }
+    }
 
 cleanup:
     if (ConfigFile != NULL) {
@@ -281,4 +305,19 @@ cleanup:
         FreePool(Line);
     }
     return Status;
+}
+
+void PrintConfigEntry(CONFIG_ENTRY* Entry) {
+    // print it nicely because why not
+    TRACE("Added `%s`", Entry->Name);
+    TRACE("  Protocol: `%d`", Entry->Protocol);
+    TRACE("  Cmdline: `%a`", Entry->Cmdline);
+    TRACE("  Modules:");
+    LIST_ENTRY* List = &Entry->Modules;
+    for (LIST_ENTRY* Iter = GetFirstNode(List); Iter != &Entry->Modules; Iter = GetNextNode(List, Iter)) {
+        MODULE* Module = BASE_CR(Iter, MODULE, Link);
+        CHAR16* Text = ConvertDevicePathToText(Module->Path, TRUE, TRUE);
+        TRACE("    %a - %s%a", Module->String, Text, Module->Compressed ? " (Compressed)" : "");
+        FreePool(Text);
+    }
 }

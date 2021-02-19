@@ -6,14 +6,16 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Protocol/LoadedImage.h>
 #include <Library/DevicePathLib.h>
+#include <Protocol/BlockIo.h>
 #include "URI.h"
 
 static EFI_STATUS ResolveBootResource(CHAR16* Root, CHAR16* Path, EFI_DEVICE_PATH** DevicePath) {
     EFI_STATUS Status = EFI_SUCCESS;
     EFI_DEVICE_PATH* NewPath = NULL;
+    EFI_DEVICE_PATH* TempPath = NULL;
     FILEPATH_DEVICE_PATH* FilePath = NULL;
-    BOOLEAN DeleteNewPath = TRUE;
     EFI_HANDLE* Handles = NULL;
+    BOOLEAN DeleteDevicePath = FALSE;
     UINTN HandleCount = 0;
 
     if (*Root == CHAR_NULL) {
@@ -21,8 +23,13 @@ static EFI_STATUS ResolveBootResource(CHAR16* Root, CHAR16* Path, EFI_DEVICE_PAT
         // looking for the root file system
         EFI_CHECK(gBS->HandleProtocol(gImageHandle, &gEfiLoadedImageDevicePathProtocolGuid, (void**)&NewPath));
 
+        // make sure the last node is a filepath
+        EFI_DEVICE_PATH* LastNode = LastDevicePathNode(NewPath);
+        CHECK(LastNode->Type == MEDIA_DEVICE_PATH && LastNode->SubType == MEDIA_FILEPATH_DP);
+
         // now remove the last element (Which would be the device path)
         NewPath = RemoveLastDevicePathNode(NewPath);
+        DeleteDevicePath = TRUE;
         CHECK_STATUS(NewPath != NULL, EFI_OUT_OF_RESOURCES);
 
     } else {
@@ -32,24 +39,29 @@ static EFI_STATUS ResolveBootResource(CHAR16* Root, CHAR16* Path, EFI_DEVICE_PAT
 
         // get the boot device path, then iterate the filesystems and check if there is
         // one with the correct partition
-        CHECK_AND_RETHROW(GetBootDevicePath(&NewPath));
+        CHECK_AND_RETHROW(GetBootDevicePath(&TempPath));
 
         // get all the filesystems with this device path
         EFI_CHECK(gBS->LocateHandleBuffer(ByProtocol, &gEfiSimpleFileSystemProtocolGuid, NULL, &HandleCount, &Handles));
         for (int i = 0; i < HandleCount; i++) {
             // open it
             EFI_CHECK(gBS->HandleProtocol(Handles[i], &gEfiDevicePathProtocolGuid, (void **)&NewPath));
-            DeleteNewPath = FALSE;
+            EFI_DEVICE_PATH* Last = LastDevicePathNode(NewPath);
 
-            if (NewPath->Type != MEDIA_DEVICE_PATH || NewPath->SubType != MEDIA_HARDDRIVE_DP) {
+            // skip anything which is not on our boot drive
+            if (!InsideDevicePath(NewPath, TempPath)) {
+                continue;
+            }
+
+            if (Last->Type != MEDIA_DEVICE_PATH || Last->SubType != MEDIA_HARDDRIVE_DP) {
                 // not a valid hard drive, aka, doesn't have partition
                 NewPath = NULL;
                 continue;
             }
 
             // check if correct partition
-            HARDDRIVE_DEVICE_PATH* Harddrive = (HARDDRIVE_DEVICE_PATH*)NewPath;
-            if (Harddrive->PartitionNumber == PartNum) {
+            HARDDRIVE_DEVICE_PATH* Harddrive = (HARDDRIVE_DEVICE_PATH*)Last;
+            if (Harddrive->PartitionNumber != PartNum) {
                 NewPath = NULL;
                 continue;
             }
@@ -72,8 +84,11 @@ static EFI_STATUS ResolveBootResource(CHAR16* Root, CHAR16* Path, EFI_DEVICE_PAT
     CHECK_STATUS(*DevicePath != NULL, EFI_OUT_OF_RESOURCES);
 
 cleanup:
-    if (NewPath == NULL && DeleteNewPath) {
+    if (NewPath == NULL && DeleteDevicePath) {
         FreePool(NewPath);
+    }
+    if (TempPath != NULL) {
+        FreePool(TempPath);
     }
     if (FilePath != NULL) {
         FreePool(FilePath);
