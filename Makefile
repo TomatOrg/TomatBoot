@@ -134,7 +134,7 @@ all: $(BIN_DIR)/$(PROJECT_NAME).efi
 #
 # Link it to a final binary
 #
-$(BIN_DIR)/$(PROJECT_NAME).efi: $(OBJS)
+$(BIN_DIR)/$(PROJECT_NAME).efi: $(OBJS) | Makefile
 	@echo LD $@
 	@mkdir -p $(@D)
 	@$(CC) $(CFLAGS) -o $@ $^
@@ -176,12 +176,6 @@ clean:
 # Test targets
 ########################################################################################################################
 
-image: $(BIN_DIR)/$(PROJECT_NAME).efi
-	@mkdir -p ./image/EFI/BOOT/
-	@cp $(BIN_DIR)/$(PROJECT_NAME).efi ./image/EFI/BOOT/BOOTX64.EFI
-	@cp ./tests/binaries/example.cfg ./image/tomatboot.cfg
-	@cp ./tests/binaries/test.elf ./image/test.elf
-
 QEMU_ARGS += -m 4G -smp 4
 QEMU_ARGS += -machine q35
 QEMU_ARGS += -debugcon stdio
@@ -195,7 +189,30 @@ else
     QEMU := qemu-system-x86_64
 endif
 
+#
+# Target to create the image
+#
+$(BIN_DIR)/image.img: \
+		$(BIN_DIR)/$(PROJECT_NAME).efi \
+		./tests/artifacts/example.cfg \
+		./tests/artifacts/test.elf \
+		./tests/artifacts/image.yaml
+	mkdir -p ./image/fat/EFI/BOOT/
+	cp $(BIN_DIR)/$(PROJECT_NAME).efi ./image/fat/EFI/BOOT/BOOTX64.EFI
+	mkdir -p ./image/ext4/boot
+	cp ./tests/artifacts/example.cfg ./image/ext4/boot/tomatboot.cfg
+	cp ./tests/artifacts/test.elf ./image/ext4/boot/test.elf
+	./tools/image-builder/image-builder.py ./tests/artifacts/image.yaml $(BIN_DIR)/image.img
 
-.PHONY: all
-qemu: image
-	$(QEMU) $(QEMU_ARGS) -bios OVMF.fd -hda fat:rw:image
+#
+# Target to make an image as a phony target
+#
+.PHONY: image
+image: $(BIN_DIR)/image.img
+
+#
+# Target to start in qemu
+#
+.PHONY: qemu
+qemu: $(BIN_DIR)/image.img
+	$(QEMU) $(QEMU_ARGS) -bios OVMF.fd -hda $(BIN_DIR)/image.img

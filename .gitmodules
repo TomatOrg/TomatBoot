@@ -1,0 +1,3 @@
+[submodule "tools/image-builder"]
+	path = tools/image-builder
+	url = git@github.com:TomatOrg/image-builder.git

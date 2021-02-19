@@ -43,8 +43,9 @@
 
 #define WARN_ON(expr, fmt, ...) \
     do { \
-        if (expr) { \
-            WARN(fmt, ##__VA_ARGS__); \
+        EFI_STATUS __Status = expr; \
+        if (__Status != EFI_SUCCESS) { \
+            WARN("Got an error %r: " fmt " at %a (%a:%d)", __Status, ##__VA_ARGS__, __FUNCTION__, __FILE__, __LINE__); \
         } \
     } while(0)
 

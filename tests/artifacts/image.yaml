@@ -1,0 +1,12 @@
+size: 100M
+type: gpt
+partitions:
+  - fs: fat32
+    size: 50M
+    bootable: true
+    content: 'image/fat'
+    label: boot
+  - fs: ext4
+    size: fit
+    content: 'image/ext'
+    label: rootfs
