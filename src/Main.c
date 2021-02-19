@@ -1,6 +1,7 @@
 #include <Uefi.h>
 #include <Util/Except.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <Drivers/ExtFs.h>
 #include "Config/Config.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -31,7 +32,9 @@ EFI_STATUS EfiMain(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     CHECK_AND_RETHROW(CallConstructors(ImageHandle, SystemTable));
     EFI_CHECK(SystemTable->ConOut->ClearScreen(SystemTable->ConOut));
 
-    TRACE("Hello world!");
+    TRACE("Registering drivers and connecting them...");
+//    CHECK_AND_RETHROW(LoadExtFs());
+//    EFI_CHECK(gBS->ConnectController(gImageHandle, NULL, NULL, TRUE));
 
     TRACE("Reading the Config...");
     CHECK_AND_RETHROW(ParseConfig());
