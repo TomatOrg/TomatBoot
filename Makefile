@@ -214,5 +214,15 @@ image: $(BIN_DIR)/image.img
 # Target to start in qemu
 #
 .PHONY: qemu
-qemu: $(BIN_DIR)/image.img
-	$(QEMU) $(QEMU_ARGS) -bios OVMF.fd -hda $(BIN_DIR)/image.img
+qemu: $(BIN_DIR)/image.img tests/artifacts/OVMF.fd
+	$(QEMU) $(QEMU_ARGS) -bios tests/artifacts/OVMF.fd -hda $(BIN_DIR)/image.img
+
+#
+# Get an ovmf image for testing purposes
+#
+tests/artifacts/OVMF.fd:
+	rm -f OVMF-X64.zip
+	mkdir -p $(@D)
+	wget -P $(@D) https://efi.akeo.ie/OVMF/OVMF-X64.zip
+	cd $(@D) && unzip OVMF-X64.zip
+	rm -f tests/artifacts/BUILD_INFO tests/artifacts/OVMF-X64.zip tests/artifacts/readme.txt

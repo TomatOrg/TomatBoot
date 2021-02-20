@@ -77,11 +77,13 @@ static void Draw() {
 }
 
 MENU EnterMainMenu(BOOLEAN first) {
+    EFI_STATUS Status = EFI_SUCCESS;
+
     // set params
     CONFIG_ENTRY* DefaultEntry = GetEntryAt(gConfig.DefaultEntry);
-    const UINTN TIMER_INTERVAL = 250000 /* 1/40 sec */;
-    const UINTN INITIAL_TIMEOUT_COUNTER = (gConfig.Timeout * 10000000) / TIMER_INTERVAL;
-//    const UINTN BAR_WIDTH = 80;
+    const UINTN TIMER_INTERVAL = 25000 /* 1/40 sec */;
+    const UINTN INITIAL_TIMEOUT_COUNTER = (gConfig.Timeout * 1000000) / TIMER_INTERVAL;
+    const UINTN BAR_WIDTH = 80;
 
     // check for timeout
     if (gConfig.Timeout <= 0 && DefaultEntry != NULL) {
@@ -92,38 +94,73 @@ MENU EnterMainMenu(BOOLEAN first) {
     Draw();
 
     // setup the timer if needed
-    UINTN TimeoutCounter = INITIAL_TIMEOUT_COUNTER;
-    TRACE("%d", TimeoutCounter);
-    ASSERT_EFI_ERROR(gBS->Stall(100000000));
+    INTN TimeoutCounter = INITIAL_TIMEOUT_COUNTER;
 
-//    do {
-//        // TODO: check key stroke
-//
-//        // got a timeout on the timer
-//        TimeoutCounter--;
-//
-//        if (TimeoutCounter == 0) {
-//            ASSERT_EFI_ERROR(gBS->Stall(1000000));
-//
-//            // timeout expired, boot default entry
-//            gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_LIGHTGRAY, EFI_BLACK));
-//            goto boot_default_entry;
-//        } else {
-//            // set bar color
-//            gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_BLACK, EFI_LIGHTGRAY));
-//
-//            // write new chunk of bar
-//            int start = ((INITIAL_TIMEOUT_COUNTER - TimeoutCounter - 1) * BAR_WIDTH) / INITIAL_TIMEOUT_COUNTER;
-//            int end = ((INITIAL_TIMEOUT_COUNTER - TimeoutCounter) * BAR_WIDTH) / INITIAL_TIMEOUT_COUNTER;
-//            for(int i = start; i <= end; i++) {
-//                WriteAt(i, 22, " ");
-//            }
-//
-//            // restart the timer
-//            ASSERT_EFI_ERROR(gBS->Stall(TIMER_INTERVAL));
-//        }
-//
-//    } while(TRUE);
+    do {
+        // check if we got a key stroke
+        EFI_INPUT_KEY Key = { 0 };
+        Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &Key);
+        if (Status == EFI_SUCCESS) {
+            // we got a keystroke!
+
+            // disable progress bar if enabled
+            if (TimeoutCounter >= 0) {
+                TimeoutCounter = -1;
+                gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_LIGHTGRAY, EFI_BLACK));
+                for (int i = 0; i < BAR_WIDTH; i++) {
+                    WriteAt(i, 22, " ");
+                }
+            }
+
+            // handle the key press
+            switch (Key.UnicodeChar) {
+                // enter boot menu
+                case L'b':
+                case L'B': return MENU_BOOT_MENU;
+
+                // enter setup
+                case L's':
+                case L'S': return MENU_SETUP;
+
+                // shutdown
+                case CHAR_TAB: return MENU_SHUTDOWN;
+
+                // other key, don't care
+                default: break;
+            }
+        }
+        CHECK_STATUS(Status == EFI_SUCCESS || Status == EFI_NOT_READY, Status);
+
+        // if we have the timer enabled (aka, the counter is larger than 0) then
+        // process the progress bar in here
+        if (TimeoutCounter >= 0) {
+            // got a timeout on the timer
+            TimeoutCounter--;
+
+            if (TimeoutCounter == 0) {
+                // timeout expired, boot default entry
+                gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_LIGHTGRAY, EFI_BLACK));
+                goto boot_default_entry;
+            } else {
+                // set bar color
+                gST->ConOut->SetAttribute(gST->ConOut, EFI_TEXT_ATTR(EFI_BLACK, EFI_LIGHTGRAY));
+
+                // write new chunk of bar
+                int start = ((INITIAL_TIMEOUT_COUNTER - TimeoutCounter - 1) * BAR_WIDTH) / INITIAL_TIMEOUT_COUNTER;
+                int end = ((INITIAL_TIMEOUT_COUNTER - TimeoutCounter) * BAR_WIDTH) / INITIAL_TIMEOUT_COUNTER;
+                for(int i = start; i <= end; i++) {
+                    WriteAt(i, 22, " ");
+                }
+
+                // restart the timer
+                EFI_CHECK(gBS->Stall(TIMER_INTERVAL));
+            }
+        } else {
+            // if there is no counter use WaitForEvent instead of polling
+            UINTN Index = 0;
+            EFI_CHECK(gBS->WaitForEvent(1, &gST->ConIn->WaitForKey, &Index));
+        }
+    } while(TRUE);
 
 boot_default_entry:
     // boot the default entry
@@ -131,4 +168,9 @@ boot_default_entry:
 
     TRACE("Booting default entry: %s", DefaultEntry->Name);
     while(1);
+
+cleanup:
+    ERROR(":(");
+    CpuDeadLoop();
+    return MENU_SHUTDOWN;
 }
