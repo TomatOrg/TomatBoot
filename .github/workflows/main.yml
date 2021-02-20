@@ -12,7 +12,7 @@ jobs:
 
       # Setup
       - name: Install packages
-        run: sudo apt install nasm clang lld
+        run: sudo apt install nasm gcc-mingw-w64-x86-64
 
       # Finally build it
       - name: Build the EFI module
