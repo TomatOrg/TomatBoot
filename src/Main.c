@@ -4,6 +4,7 @@
 #include <Drivers/ExtFs.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Protocol/SimpleFileSystem.h>
+#include <Menu/Menus.h>
 #include "Config/Config.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -11,12 +12,16 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 EFI_STATUS EFIAPI UefiBootServicesTableLibConstructor(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable);
+EFI_STATUS EFIAPI UefiRuntimeServicesTableLibConstructor(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable);
+EFI_STATUS EFIAPI RuntimeDriverLibConstruct(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable);
 EFI_STATUS EFIAPI DxeDebugLibConstructor(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable);
 
 static EFI_STATUS CallConstructors(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     EFI_STATUS Status = EFI_SUCCESS;
 
     CHECK_AND_RETHROW(UefiBootServicesTableLibConstructor(ImageHandle, SystemTable));
+    CHECK_AND_RETHROW(UefiRuntimeServicesTableLibConstructor(ImageHandle, SystemTable));
+    CHECK_AND_RETHROW(RuntimeDriverLibConstruct(ImageHandle, SystemTable));
     CHECK_AND_RETHROW(DxeDebugLibConstructor(ImageHandle, SystemTable));
 
 cleanup:
@@ -110,6 +115,9 @@ EFI_STATUS EfiMain(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
 
     TRACE("Reading the Config...");
     CHECK_AND_RETHROW(ParseConfig());
+
+    // start the menu system
+    StartMenus();
 
 cleanup:
     TRACE("Done...");

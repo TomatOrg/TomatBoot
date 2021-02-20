@@ -321,3 +321,14 @@ void PrintConfigEntry(CONFIG_ENTRY* Entry) {
         FreePool(Text);
     }
 }
+
+CONFIG_ENTRY* GetEntryAt(int index) {
+    LIST_ENTRY* List = &gConfig.Entries;
+    for (LIST_ENTRY* Iter = GetFirstNode(List); Iter != &gConfig.Entries; Iter = GetNextNode(List, Iter)) {
+        index -= 1;
+        if (index == 0) {
+            return BASE_CR(Iter, CONFIG_ENTRY, Link);
+        }
+    }
+    return NULL;
+}

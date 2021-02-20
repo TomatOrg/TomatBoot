@@ -98,4 +98,6 @@ EFI_STATUS ParseConfig();
  */
 void PrintConfigEntry(CONFIG_ENTRY* Entry);
 
+CONFIG_ENTRY* GetEntryAt(int index);
+
 #endif //__TOMATBOOT_CONFIG_H__
