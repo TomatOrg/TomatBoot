@@ -19,7 +19,7 @@ with open(sys.argv[1], 'w') as out:
         'gEfiVirtualDiskGuid',
         'gEfiVirtualCdGuid',
         'gEfiPersistentVirtualDiskGuid',
-        'gEfiPersistentVirtualCdGuid'
+        'gEfiPersistentVirtualCdGuid',
     ]
     for dummy in dummies:
         out.write(f'EFI_GUID {dummy} = {{0}};')
@@ -63,7 +63,9 @@ with open(sys.argv[1], 'w') as out:
                     if name in dummies:
                         continue
 
-                    if len(guids) == 0:
+                    if name == 'gEfiAcpi10TableGuid':
+                        guid = last_guid
+                    elif len(guids) == 0:
                         if name == 'gEfiDebugPortVariableGuid' or name == 'gEfiDebugPortDevicePathGuid':
                             guid = last_guid
                         else:
