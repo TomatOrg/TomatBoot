@@ -146,7 +146,7 @@ $(BIN_DIR)/$(PROJECT_NAME).efi: $(OBJS) | Makefile
 $(BUILD_DIR)/guids.c: $(UEFI_HDRS)
 	@echo Generating EFI guids
 	@mkdir -p $(@D)
-	@./scripts/gen_guids.py $@
+	@env python3 ./scripts/gen_guids.py $@
 
 #
 # Build each of the c files
