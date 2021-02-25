@@ -8,6 +8,7 @@
 #include <Library/UefiRuntimeLib.h>
 #include <Util/Except.h>
 #include <Library/BaseLib.h>
+#include <Loaders/Loader.h>
 
 #include "MainMenu.h"
 #include "Menus.h"
@@ -68,9 +69,8 @@ static void Draw() {
     WriteAt(0, 8, "UEFI Version: %d.%d", (gST->Hdr.Revision >> 16u) & 0xFFFFu, gST->Hdr.Revision & 0xFFFFu);
 
     // options
-    WriteAt(0, 13, "Press B for BOOTMENU");
-    WriteAt(0, 14, "Press S for SETUP");
-    WriteAt(0, 15, "Press TAB for SHUTDOWN");
+    WriteAt(0, 14, "Press B for BOOTMENU");
+    WriteAt(0, 15, "Press E for EDIT");
 
     // draw the logo
     DrawImage(30 + ((width - 30) / 2) - 14, 1, TomatoImage, 13, 14);
@@ -93,8 +93,11 @@ MENU EnterMainMenu(BOOLEAN first) {
     // draw the menu
     Draw();
 
-    // setup the timer if needed
-    INTN TimeoutCounter = INITIAL_TIMEOUT_COUNTER;
+    // setup the timer
+    INTN TimeoutCounter = -1;
+    if (first) {
+        TimeoutCounter = INITIAL_TIMEOUT_COUNTER;
+    }
 
     do {
         // check if we got a key stroke
@@ -118,12 +121,9 @@ MENU EnterMainMenu(BOOLEAN first) {
                 case L'b':
                 case L'B': return MENU_BOOT_MENU;
 
-                // enter setup
-                case L's':
-                case L'S': return MENU_SETUP;
-
-                // shutdown
-                case CHAR_TAB: return MENU_SHUTDOWN;
+                // enter editor
+                case L'e':
+                case L'E': return MENU_EDIT;
 
                 // other key, don't care
                 default: break;
@@ -156,8 +156,10 @@ MENU EnterMainMenu(BOOLEAN first) {
                 EFI_CHECK(gBS->Stall(TIMER_INTERVAL));
             }
         } else {
-            // if there is no counter use WaitForEvent instead of polling
+            // if there is no counter use WaitForEvent instead of polling so
+            // we won't burn the cpu lol
             UINTN Index = 0;
+            TRACE("Waiting for event...");
             EFI_CHECK(gBS->WaitForEvent(1, &gST->ConIn->WaitForKey, &Index));
         }
     } while(TRUE);
@@ -165,12 +167,11 @@ MENU EnterMainMenu(BOOLEAN first) {
 boot_default_entry:
     // boot the default entry
     ClearScreen(EFI_TEXT_ATTR(EFI_LIGHTGRAY, EFI_BLACK));
-
     TRACE("Booting default entry: %s", DefaultEntry->Name);
-    while(1);
+    LoadKernel(DefaultEntry);
 
 cleanup:
     ERROR(":(");
     CpuDeadLoop();
-    return MENU_SHUTDOWN;
+    return MENU_MAIN_MENU;
 }

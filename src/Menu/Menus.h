@@ -6,8 +6,7 @@
 typedef enum _MENU {
     MENU_MAIN_MENU,
     MENU_BOOT_MENU,
-    MENU_SETUP,
-    MENU_SHUTDOWN,
+    MENU_EDIT,
 } MENU;
 
 void StartMenus();

@@ -15,6 +15,7 @@ EFI_STATUS EFIAPI UefiBootServicesTableLibConstructor(EFI_HANDLE ImageHandle, EF
 EFI_STATUS EFIAPI UefiRuntimeServicesTableLibConstructor(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable);
 EFI_STATUS EFIAPI RuntimeDriverLibConstruct(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable);
 EFI_STATUS EFIAPI DxeDebugLibConstructor(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable);
+EFI_STATUS EFIAPI BaseRngLibConstructor();
 
 static EFI_STATUS CallConstructors(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable) {
     EFI_STATUS Status = EFI_SUCCESS;
@@ -23,6 +24,8 @@ static EFI_STATUS CallConstructors(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* Sys
     CHECK_AND_RETHROW(UefiRuntimeServicesTableLibConstructor(ImageHandle, SystemTable));
     CHECK_AND_RETHROW(RuntimeDriverLibConstruct(ImageHandle, SystemTable));
     CHECK_AND_RETHROW(DxeDebugLibConstructor(ImageHandle, SystemTable));
+
+    CHECK_AND_RETHROW(BaseRngLibConstructor());
 
 cleanup:
     return Status;

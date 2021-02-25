@@ -252,8 +252,10 @@ static EFI_STATUS InternalExtRead(EXT_VOLUME* Volume, EXT_INODE_ENTRY* INode, UI
     UINT64 TotalRead = 0;
     UINT64 LeftToRead = *BufferSize;
 
+
     if (INode->Alloc.Ext4.Header.Magic == 0xF30A && INode->Alloc.Ext4.Header.Max == 4) {
         // this is an ext4 allocation method
+
         UINT64 OffsetFromFile = 0;
 
         for (int i = 0; i < INode->Alloc.Ext4.Header.Extends; i++) {
@@ -308,6 +310,9 @@ static EFI_STATUS InternalExtRead(EXT_VOLUME* Volume, EXT_INODE_ENTRY* INode, UI
             UINT64 OffsetFromStartOfBlock = ReadOffset - ALIGN_DOWN(ReadOffset, Volume->BlockSize);
             UINT64 Offset = Block * Volume->BlockSize + OffsetFromStartOfBlock;
             UINT64 Length = MIN(LeftToRead, Volume->BlockSize - OffsetFromStartOfBlock);
+            Length = MIN(LeftToRead, Volume->BlockSize);
+
+            // Do the actual read
             EFI_CHECK(Volume->DiskIo->ReadDisk(Volume->DiskIo, Volume->MediaId, Offset, Length, Buffer));
 
             // add to the total read, decrement from the left
@@ -316,7 +321,7 @@ static EFI_STATUS InternalExtRead(EXT_VOLUME* Volume, EXT_INODE_ENTRY* INode, UI
             TotalRead += Length;
             LeftToRead -= Length;
             ReadOffset += Length;
-            BlockNo += 1;
+            BlockNo++;
         } while(LeftToRead != 0);
     }
 
@@ -324,7 +329,7 @@ static EFI_STATUS InternalExtRead(EXT_VOLUME* Volume, EXT_INODE_ENTRY* INode, UI
     *BufferSize = TotalRead;
 
     // if we read nothing we reached the end of the file
-    if (TotalRead == 0) {
+    if (TotalRead == 0 && LeftToRead != 0) {
         Status = EFI_END_OF_FILE;
     }
 

@@ -57,11 +57,16 @@ Some keys take *URIs* as values; these are described in the next section.
     * `KERNEL_PATH` - The URI path of the kernel.
     * `MODULE_PATH` - The URI path to a module.
     * `MODULE_STRING` - A string to be passed to a module.
+    * `KASLR` - If set to `yes`, it enables Kernel Address Layout Randomisation for 64-bit relocatable kernels.
 
-  Note that one can define these 2 last variable multiple times to specify multiple
-  modules.
-  The entries will be matched in order. E.g.: the 1st module path entry will be matched
-  to the 1st module string entry that appear, and so on.
+* multiboot2 protocol:
+    * `KERNEL_PATH` - The URI path of the kernel.
+    * `MODULE_PATH` - The URI path to a module.
+    * `MODULE_STRING` - A string to be passed to a module.
+  
+Note that one can define `MODULE_PATH` and `MODULE_STRING` variables multiple times to specify multiple modules. 
+The entries will be matched in order. E.g.: the 1st module path entry will be matched to the 1st module string entry that 
+appear, and so on.
 
 ## URIs
 

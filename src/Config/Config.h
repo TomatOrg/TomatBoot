@@ -61,6 +61,11 @@ typedef struct _CONFIG_ENTRY {
      * The modules of the boot entry
      */
     LIST_ENTRY Modules;
+
+    /**
+     * Should kaslr be enabled, only relevant for stivale & stivale 2
+     */
+    BOOLEAN KASLR;
 } CONFIG_ENTRY;
 
 typedef struct _MODULE {

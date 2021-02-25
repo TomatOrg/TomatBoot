@@ -266,14 +266,37 @@ EFI_STATUS ParseConfig() {
                 CHECK_STATUS(CurrentEntry->Protocol != PROTOCOL_INVALID, EFI_NOT_FOUND, "Missing protocol");
                 CHECK_STATUS(LastModule != NULL, EFI_NOT_FOUND, "MODULE_STRING before a MODULE_PATH");
 
-                LastModule->String = ConvertToAscii(Value);
-                CHECK_STATUS(LastModule->String != NULL, EFI_OUT_OF_RESOURCES);
+                // the protocols this is relevant to
+                if (
+                    CurrentEntry->Protocol == PROTOCOL_STIVALE ||
+                    CurrentEntry->Protocol == PROTOCOL_STIVALE2 ||
+                    CurrentEntry->Protocol == PROTOCOL_MULTIBOOT2
+                ) {
+                    LastModule->String = ConvertToAscii(Value);
+                    CHECK_STATUS(LastModule->String != NULL, EFI_OUT_OF_RESOURCES);
 
-                // increment for the next module string
-                if (IsNodeAtEnd(&CurrentEntry->Modules, &LastModule->Link)) {
-                    LastModule = NULL;
+                    // increment for the next module string
+                    if (IsNodeAtEnd(&CurrentEntry->Modules, &LastModule->Link)) {
+                        LastModule = NULL;
+                    } else {
+                        LastModule = BASE_CR(GetNextNode(&CurrentEntry->Modules, &LastModule->Link), MODULE, Link);
+                    }
                 } else {
-                    LastModule = BASE_CR(GetNextNode(&CurrentEntry->Modules, &LastModule->Link), MODULE, Link);
+                    WARN("MODULE_STRING is only relevant for stivale/stivale2/multiboot2");
+                }
+            });
+
+            CHECK_OPTION("KASLR", {
+                CHECK_STATUS(CurrentEntry->Protocol != PROTOCOL_INVALID, EFI_NOT_FOUND, "Missing protocol");
+
+                // warn, don't error on it
+                WARN_ON(CurrentEntry->Protocol == PROTOCOL_STIVALE || CurrentEntry->Protocol == PROTOCOL_STIVALE2,
+                        "KASLR Is only relevant for stivale/stivale2");
+
+                if (StrCmp(Value, L"yes") == 0) {
+                    CurrentEntry->KASLR = TRUE;
+                } else {
+                    CurrentEntry->KASLR = FALSE;
                 }
             });
         }

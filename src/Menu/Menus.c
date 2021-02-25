@@ -1,5 +1,6 @@
 #include <Library/BaseLib.h>
 #include <Library/UefiRuntimeLib.h>
+#include <Util/Except.h>
 #include "Menus.h"
 #include "MainMenu.h"
 
@@ -18,13 +19,9 @@ void StartMenus() {
 //                current_menu = EnterBootMenu();
                 break;
 //
-            case MENU_SETUP:
+            case MENU_EDIT:
 //                current_menu = EnterSetupMenu();
-                break;
-
-            case MENU_SHUTDOWN:
-                EfiResetSystem(EfiResetShutdown, EFI_SUCCESS, sizeof("shutdown"), "shutdown");
-                CpuDeadLoop();
+                TRACE("Main menu");
                 break;
         }
 

@@ -14,7 +14,7 @@ static EFI_STATUS FileRead(EFI_FILE_PROTOCOL* File, UINTN Offset, void* Buffer, 
     EFI_CHECK(FileHandleSetPosition(File, Offset));
 
     UINTN GotSize = Size;
-    EFI_CHECK(FileHandleRead(File, Buffer, &GotSize));
+    EFI_CHECK(FileHandleRead(File, &GotSize, Buffer));
     CHECK_STATUS(GotSize == Size, EFI_END_OF_FILE);
 
 cleanup:
@@ -79,6 +79,7 @@ EFI_STATUS Elf64LoadSection(EFI_FILE_PROTOCOL* File, void** Buffer, UINTN* Buffe
 
     // read the header
     Elf64_Ehdr hdr = { 0 };
+    EFI_CHECK(FileHandleSetPosition(File, 0));
     CHECK_AND_RETHROW(FileRead(File, 0, &hdr, sizeof(Elf64_Ehdr)));
 
     // verify the elf file
@@ -93,14 +94,14 @@ EFI_STATUS Elf64LoadSection(EFI_FILE_PROTOCOL* File, void** Buffer, UINTN* Buffe
     CHECK_AND_RETHROW(FileRead(File, hdr.e_shoff + hdr.e_shstrndx * hdr.e_shentsize, &StrTabSection, sizeof(StrTabSection)));
     Names = AllocatePool(StrTabSection.sh_size);
     CHECK_STATUS(Names != NULL, EFI_OUT_OF_RESOURCES);
-    CHECK_AND_RETHROW(FileRead(File, StrTabSection.sh_offset, &Names, StrTabSection.sh_size));
+    CHECK_AND_RETHROW(FileRead(File, StrTabSection.sh_offset, Names, StrTabSection.sh_size));
 
     // iterate the section and find the correct one
     Elf64_Shdr Section = { 0 };
     for (int i = 0; i < hdr.e_shnum; i++) {
         CHECK_AND_RETHROW(FileRead(File, hdr.e_shoff + i * hdr.e_shentsize, &Section, sizeof(Section)));
 
-        if (AsciiStrStr(&Names[Section.sh_name], Name) == 0) {
+        if (AsciiStrCmp(&Names[Section.sh_name], Name) == 0) {
             // read the section
             NewBuffer = AllocatePool(Section.sh_size);
             CHECK_STATUS(NewBuffer != NULL, EFI_OUT_OF_RESOURCES);
@@ -142,6 +143,7 @@ EFI_STATUS Elf64Load(EFI_FILE_PROTOCOL* File, ELF_INFO* ElfInfo, UINT64 Slide, E
 
     // read the header
     Elf64_Ehdr hdr = { 0 };
+    EFI_CHECK(FileHandleSetPosition(File, 0));
     CHECK_AND_RETHROW(FileRead(File, 0, &hdr, sizeof(Elf64_Ehdr)));
 
     // verify the elf file
