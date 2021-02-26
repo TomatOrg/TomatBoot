@@ -112,6 +112,10 @@ EFI_STATUS LoadStivaleKernel(CONFIG_ENTRY* Config) {
         Info.EntryPoint = StivaleHeader->entry_point;
     }
 
+    TRACE("  Stivale header:");
+    TRACE("    Entry: %p", Info.EntryPoint);
+    TRACE("    Stack: %p", StivaleHeader->stack);
+
     //------------------------------------------------------------------------------------------------------------------
     // 5 Level paging
     //------------------------------------------------------------------------------------------------------------------
@@ -263,6 +267,8 @@ EFI_STATUS LoadStivaleKernel(CONFIG_ENTRY* Config) {
     // get the best mode depending on the initial config
     UINTN Width = StivaleHeader->framebuffer_width;
     UINTN Height = StivaleHeader->framebuffer_height;
+    if (Config->OverrideWidth != 0) Width = Config->OverrideWidth;
+    if (Config->OverrideHeight != 0) Height = Config->OverrideHeight;
     UINTN Scanline = Width;
     EFI_PHYSICAL_ADDRESS Framebuffer = 0;
     CHECK_AND_RETHROW(SelectBestGopMode(&Width, &Height, &Scanline, &Framebuffer));
@@ -304,6 +310,9 @@ EFI_STATUS LoadStivaleKernel(CONFIG_ENTRY* Config) {
     // we done bois
     EFI_CHECK(gBS->ExitBootServices(gImageHandle, MapKey));
 
+    // setup machine state properly
+    DisableInterrupts();
+
     // set in the struct
     StivaleStruct->memory_map_addr = (uint64_t)Descriptors;
 
@@ -311,7 +320,12 @@ EFI_STATUS LoadStivaleKernel(CONFIG_ENTRY* Config) {
     struct stivale_mmap_entry* LastEntry = Descriptors;
     for (UINTN Index = 0; Index < MemoryMapSize / DescriptorSize; Index++) {
         EFI_MEMORY_DESCRIPTOR* Descriptor = Descriptors + DescriptorSize * Index;
-        UINT32 Type = EfiTypeToStivaleType[Descriptor->Type];
+
+        // convert it, assume reserved if unknown
+        UINT32 Type = STIVALE_MMAP_RESERVED;
+        if (Descriptor->Type < EfiMaxMemoryType) {
+            Type = EfiTypeToStivaleType[Descriptor->Type];
+        }
 
         if (
             Index != 0 &&

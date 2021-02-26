@@ -11,27 +11,27 @@ StivaleSpinup:
 
     ; check if we need to switch to 5
     ; level page tables
-    test r9, r9
-    jne Translate5Level
+    cmp r9, 0
+    jne .Translate5Level
 
     ; no need, jump directly to kernel
-    jmp bit64
+    jmp .bit64
 
-Translate5Level:
+.Translate5Level:
     ; load our gdt which has compat mode entry
     mov rbx, rdx
     push rcx
     lgdt [gdt_ptr]
-    lea rbx, [bit64]
+    lea rbx, [.bit64]
 
     ; Jump into the compatibility mode CS
     push 0x10
-    lea rax, [.cmp_mode]
+    lea rax, [.CompatMode]
     push rax
     DB 0x48, 0xcb ; retfq
 
 [BITS 32]
-.cmp_mode:
+.CompatMode:
 
     ; Now in compatibility mode.
     mov ax, 0x18
@@ -79,7 +79,7 @@ Translate5Level:
     retf
 
 [BITS 64]
-bit64:
+.bit64:
     ; reset all other regs
     xor rax, rax
     xor rbx, rbx

@@ -63,9 +63,15 @@ typedef struct _CONFIG_ENTRY {
     LIST_ENTRY Modules;
 
     /**
-     * Should kaslr be enabled, only relevant for stivale & stivale 2
+     * Should kaslr be enabled
      */
     BOOLEAN KASLR;
+
+    /**
+     * Alternative resolution for the kernel
+     */
+    UINTN OverrideWidth;
+    UINTN OverrideHeight;
 } CONFIG_ENTRY;
 
 typedef struct _MODULE {

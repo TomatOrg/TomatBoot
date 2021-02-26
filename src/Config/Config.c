@@ -299,6 +299,19 @@ EFI_STATUS ParseConfig() {
                     CurrentEntry->KASLR = FALSE;
                 }
             });
+
+            CHECK_OPTION("RESOLUTION", {
+                CHECK_STATUS(CurrentEntry->Protocol != PROTOCOL_INVALID, EFI_NOT_FOUND, "Missing protocol");
+                CHAR16* Start = Value;
+
+                // parse it
+                EFI_CHECK(StrDecimalToUintnS(Value, &Value, &CurrentEntry->OverrideWidth));
+                CHECK(Value[0] == 'x', "Invalid resolution format `%s`", Start);
+                Value++;
+                EFI_CHECK(StrDecimalToUintnS(Value, &Value, &CurrentEntry->OverrideHeight));
+
+                // TODO: technically there is BPP as well but we ignore it
+            });
         }
 
         // finally free the line

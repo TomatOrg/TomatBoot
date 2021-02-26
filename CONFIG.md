@@ -2,12 +2,12 @@
 
 ## Location of the config file
 
-Limine scans for a config file on *the boot drive*. Every partition on the boot drive
+TomatBoot scans for a config file on *the boot drive*. Every partition on the boot drive
 is scanned sequentially (first partition first, last partition last) for the presence
 of either a `/boot/tomatboot.cfg`, `/tomatboot.cfg`, `/boot/limine.cfg`, or a
 `/limine.cfg` file, in that order.
 
-Once the file is located, Limine will use it as its config file. Other possible
+Once the file is located, TomatBoot will use it as its config file. Other possible
 candidates in subsequent partitions or directories are ignored.
 
 It is thus imperative that the intended config file is placed in a location that will
@@ -15,7 +15,7 @@ not be shadowed by another potentially candidate config file.
 
 ## Structure of the config file
 
-The Limine configuration file is comprised of *assignments* and *entries*.
+The TomatBoot configuration file is comprised of *assignments* and *entries*.
 
 ### Entries and sub-entries
 
@@ -47,22 +47,18 @@ Some keys take *URIs* as values; these are described in the next section.
 *Locally assignable (non protocol specific)* keys are:
 * `PROTOCOL` - The boot protocol that will be used to boot the kernel. Valid protocols are: `linux`, `stivale`, `stivale2`, `chainload`.
 * `KERNEL_CMDLINE` - The command line string to be passed to the kernel. Can be omitted.
+* `RESOLUTION` - The resolution to be used should the kernel request a graphical framebuffer. This setting takes the form of `<width>x<height>x<bpp>` and overrides any resolution requested by the kernel, or automatic resolution requests. If the resolution is not available, TomatBoot will pick another one automatically.
 
 *Locally assignable (protocol specific)* keys are:
 * Linux protocol:
     * `KERNEL_PATH` - The URI path of the kernel.
     * `MODULE_PATH` - The URI path to a module (such as initramfs).
 
-* stivale and stivale2 protocols:
+* stivale protocols:
     * `KERNEL_PATH` - The URI path of the kernel.
     * `MODULE_PATH` - The URI path to a module.
     * `MODULE_STRING` - A string to be passed to a module.
     * `KASLR` - If set to `yes`, it enables Kernel Address Layout Randomisation for 64-bit relocatable kernels.
-
-* multiboot2 protocol:
-    * `KERNEL_PATH` - The URI path of the kernel.
-    * `MODULE_PATH` - The URI path to a module.
-    * `MODULE_STRING` - A string to be passed to a module.
   
 Note that one can define `MODULE_PATH` and `MODULE_STRING` variables multiple times to specify multiple modules. 
 The entries will be matched in order. E.g.: the 1st module path entry will be matched to the 1st module string entry that 
@@ -70,7 +66,7 @@ appear, and so on.
 
 ## URIs
 
-A URI is a path that Limine uses to locate resources in the whole system. It is
+A URI is a path that TomatBoot uses to locate resources in the whole system. It is
 comprised of a *resource*, a *root*, and a *path*. It takes the form of:
 ```
 resource://root/path
